@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="void">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sergey Bezhaev — Path · AI / Digital / Build</title>
+  <meta name="description" content="Сергей Бежаев — AI, digital, сайты, маркетинг, автоматизация. Авторская разработка: Azimut Clinic, Grillz Customs, Elena Shop. Site author Sergey Bezhaev lecmedea@gmail.com 2025–2026.">
+  <meta name="author" content="Sergey Bezhaev">
+  <meta name="theme-color" content="#0a0a0b">
+  <link rel="canonical" href="https://lecmedea.github.io/sergey-bezhaev-path/">
+  <meta property="og:title" content="Sergey Bezhaev — Path">
+  <meta property="og:description" content="Путь. Модули. Результат. AI · digital · product. Авторская разработка, не «сайт в подарок».">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/path.css">
+</head>
+<body>
+  <!-- Top chrome — без traffic lights, аккордеоны -->
+  <header class="mac-bar" aria-label="Workspace bar">
+    <div class="mac-bar__left">
+      <nav class="acc-nav" aria-label="Main accordion">
+        <div class="acc">
+          <button type="button" class="acc__btn" aria-expanded="false" data-acc="profile">Профиль</button>
+          <div class="acc__panel" id="acc-profile" hidden>
+            <button type="button" data-go="1">Кто я · полный срез</button>
+            <button type="button" data-go="1">Компетенции</button>
+            <button type="button" data-go="6">Bad Balance</button>
+            <a href="mailto:lecmedea@gmail.com">Письмо в лоб</a>
+          </div>
+        </div>
+        <div class="acc">
+          <button type="button" class="acc__btn" aria-expanded="false" data-acc="forum">Форум</button>
+          <div class="acc__panel" id="acc-forum" hidden>
+            <p class="acc__hint">Мини-площадка без модераторов в пиджаках. Пиши в Telegram — отвечаю как человек, не как тикет.</p>
+            <a href="https://t.me/notoruis" target="_blank" rel="noopener">@notoruis → зал ожидания</a>
+            <a href="https://t.me/iicnica" target="_blank" rel="noopener">ИИчница · канал</a>
+            <a href="https://vc.ru/ai/2299807-ai-blogery-v-rossii" target="_blank" rel="noopener">vc.ru · AI-блогеры</a>
+          </div>
+        </div>
+        <div class="acc">
+          <button type="button" class="acc__btn" aria-expanded="false" data-acc="gallery">Галерея</button>
+          <div class="acc__panel" id="acc-gallery" hidden>
+            <button type="button" data-go="7">Дом · прогулка</button>
+            <button type="button" data-go="2">Скриншоты кейсов</button>
+            <button type="button" data-go="3">El Bezhano grillz</button>
+          </div>
+        </div>
+        <div class="acc">
+          <button type="button" class="acc__btn" aria-expanded="false" data-acc="settings">Настройки</button>
+          <div class="acc__panel acc__panel--themes" id="acc-settings" hidden>
+            <p class="acc__hint">Тема сайта · 5 скинов. Текущая — Void Path.</p>
+            <div class="theme-grid" role="listbox" aria-label="Темы">
+              <button type="button" class="theme-card is-active" data-theme="void" title="Void Path">
+                <span class="theme-swatch theme-swatch--void"></span>
+                <em>Void Path</em>
+                <small>текущая</small>
+              </button>
+              <button type="button" class="theme-card" data-theme="violet" title="Violet Core">
+                <span class="theme-swatch theme-swatch--violet"></span>
+                <em>Violet Core</em>
+                <small>фиолетовый</small>
+              </button>
+              <button type="button" class="theme-card" data-theme="ussr" title="Гостиная СССР">
+                <span class="theme-swatch theme-swatch--ussr"></span>
+                <em>СССР lounge</em>
+                <small>ретро</small>
+              </button>
+              <button type="button" class="theme-card" data-theme="usa" title="US mid-century">
+                <span class="theme-swatch theme-swatch--usa"></span>
+                <em>USA mid-century</em>
+                <small>ретро</small>
+              </button>
+              <button type="button" class="theme-card" data-theme="japan" title="Washitsu">
+                <span class="theme-swatch theme-swatch--japan"></span>
+                <em>Japan washitsu</em>
+                <small>ретро</small>
+              </button>
+            </div>
+            <button type="button" class="theme-card theme-card--wide" data-theme="paris" title="Parisian salon">
+              <span class="theme-swatch theme-swatch--paris"></span>
+              <em>Paris salon</em>
+              <small>ретро гостиная</small>
+            </button>
+          </div>
+        </div>
+        <div class="acc">
+          <button type="button" class="acc__btn" aria-expanded="false" data-acc="switch">Switch</button>
+          <div class="acc__panel" id="acc-switch" hidden>
+            <p class="acc__hint">Переключатель реальности. Один клик — и ты уже не «просто полистал».</p>
+            <button type="button" id="btnChaos">хаос-режим · 8 сек</button>
+            <button type="button" id="btnSnap">snap to nearest bay</button>
+            <button type="button" data-go="0">рестарт пути</button>
+          </div>
+        </div>
+        <div class="acc">
+          <button type="button" class="acc__btn" aria-expanded="false" data-acc="soft">ПО</button>
+          <div class="acc__panel" id="acc-soft" hidden>
+            <button type="button" data-go="5">Стек и софт</button>
+            <p class="acc__hint">2ГИС e-mail parser · TG chat → Excel · AI coding · static sites · bots</p>
+          </div>
+        </div>
+      </nav>
+    </div>
+    <div class="mac-bar__center">
+      <span class="mac-title">sergey.bezhaev — portfolio.workspace</span>
+    </div>
+    <div class="mac-bar__right">
+      <span class="mac-pill" id="sectionLabel">01 · Origin</span>
+      <span class="mac-clock" id="macClock"></span>
+    </div>
+  </header>
+
+  <div class="theme-wash" id="themeWash" aria-hidden="true"></div>
+
+  <main class="track" id="track" tabindex="0" aria-label="Horizontal path portfolio">
+    <!-- 0 Origin · Sun -->
+    <section class="bay" data-label="01 · Origin" data-name="Origin" id="bay-0">
+      <div class="bay__inner bay__inner--hero">
+        <div class="hero-depth">
+          <div class="stud-field" aria-hidden="true"></div>
+          <p class="eyebrow">Horizontal path · 2025–2026 · no cap</p>
+          <h1>
+            <span class="h1-line">Sergey Bezhaev</span>
+            <span class="h1-sub">AI · Digital · Build</span>
+          </h1>
+          <p class="lead">
+            Собираю системы из модулей: стратегия, код, контент, автоматизация.
+            Не вертикальная лента — <em>путь</em>. Каждый кейс — блок, который щёлкает на место.
+            Работаю жёстко, красиво и по делу. Если «сделай красиво за 20к и забудь» — мимо.
+          </p>
+          <div class="trend-row" aria-label="Теги">
+            <span class="trend">#buildinpublic</span>
+            <span class="trend">#AIfirst</span>
+            <span class="trend">#no_mid</span>
+            <span class="trend">main character energy</span>
+            <span class="trend">skill issue? fix it</span>
+          </div>
+          <div class="hero-cta">
+            <button type="button" class="btn btn--primary" data-go="2">Кейсы →</button>
+            <button type="button" class="btn btn--ghost" data-go="8">Право · дисклеймер</button>
+            <a class="btn btn--ghost" href="mailto:lecmedea@gmail.com">Написать</a>
+          </div>
+          <p class="hint-scroll">↓ колёсико · вправо по орбите</p>
+        </div>
+        <figure class="hero-visual">
+          <img src="assets/path-modules.jpg" alt="" width="1280" height="720" decoding="async">
+          <figcaption>Модули. Свет. Порядок. Без «ну примерно так».</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 1 Profile · Mercury -->
+    <section class="bay" data-label="02 · Профиль" data-name="Профиль" id="bay-1">
+      <div class="bay__inner bay__inner--split">
+        <div>
+          <p class="eyebrow">Профиль · без воды</p>
+          <h2>Кто я, если коротко и по-честному</h2>
+          <p class="body">
+            AI-креатор и digital-маркетолог. Управление контентными проектами, коммуникационные экосистемы,
+            запуск сайтов, прикладная автоматизация. Маркетинговое мышление + продюсирование + визуальный вкус
+            + AI coding. Москва / remote / hybrid. Не «универсальный солдат на всё», а человек, который
+            доводит связку <strong>смысл → продукт → цифра</strong> до рабочего контура.
+          </p>
+          <p class="body body--punch">
+            Что приношу: AI-инфлюенсеров и виртуальных персонажей; контент под бизнес-задачу; сайты
+            от структуры до HTML/CSS/JS и интеграций; автоматизацию рутины; управление проектами без
+            театра со статусами «в процессе уже третий месяц».
+          </p>
+          <ul class="chip-row">
+            <li>Москва / remote</li>
+            <li>+7 999 996-22-06</li>
+            <li>lecmedea@gmail.com</li>
+            <li>@notoruis</li>
+            <li>@iicnica</li>
+          </ul>
+          <div class="module-grid">
+            <article class="mod">
+              <span class="mod__stud" aria-hidden="true"></span>
+              <h3>Build</h3>
+              <p>Сайты, прототипы, API, GitHub Pages, serverless, CRM-формы.</p>
+            </article>
+            <article class="mod">
+              <span class="mod__stud" aria-hidden="true"></span>
+              <h3>Signal</h3>
+              <p>SMM, воронки, AI-инфлюенсеры, gen-video, публичная экспертиза.</p>
+            </article>
+            <article class="mod">
+              <span class="mod__stud" aria-hidden="true"></span>
+              <h3>Ops</h3>
+              <p>KPI, реестры, парсеры, TG→Excel, контроль сроков без нытья.</p>
+            </article>
+          </div>
+        </div>
+        <div class="about-stack">
+          <div class="light-card" data-light="cool">
+            <span>Свет A</span>
+            <p>Холодный · точность</p>
+          </div>
+          <div class="light-card" data-light="warm">
+            <span>Свет B</span>
+            <p>Тёплый · доверие</p>
+          </div>
+          <div class="light-card" data-light="edge">
+            <span>Свет C</span>
+            <p>Контраст · фокус</p>
+          </div>
+          <p class="about-note">Одна форма — три режима. Простота Apple, логика Lego, характер — мой.</p>
+          <div class="soft-card">
+            <h3>Свой софт</h3>
+            <ul>
+              <li>Парсер e-mail из 2ГИС</li>
+              <li>Анализ Telegram-чатов → напоминания + Excel-реестр</li>
+              <li>AI coding: Codex / Claude Code / Grok — прототипы и прод</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2 Azimut · Venus -->
+    <section class="bay bay--case" data-label="03 · Azimut" data-name="Azimut" id="bay-2">
+      <div class="bay__inner bay__inner--case">
+        <div class="case-meta">
+          <p class="eyebrow">Кейс · 2026 · full-cycle</p>
+          <h2>Azimut Clinic</h2>
+          <p class="case-url"><a href="https://azimutclinic.ru/" target="_blank" rel="noopener">azimutclinic.ru</a></p>
+          <p class="body">
+            Полный digital-контур клиники ментального здоровья: 17+ страниц, SEO, формы → amoCRM + Sheets,
+            AI-консультант, Telegram-бот 24/7, правовой архив, тесты, интерактивы.
+            От витрины — к операционной системе записи. Solo full-cycle, тысячи коммитов, без «ну дизайнер дорисует».
+          </p>
+          <ul class="tags">
+            <li>HTML/CSS/JS</li>
+            <li>amoCRM</li>
+            <li>AI chat</li>
+            <li>Telegram bot</li>
+            <li>Yandex Cloud</li>
+            <li>GitHub Pages</li>
+          </ul>
+          <a class="btn btn--primary" href="https://azimutclinic.ru/" target="_blank" rel="noopener">Открыть сайт</a>
+        </div>
+        <div class="case-frame">
+          <div class="case-frame__chrome">
+            <em>azimutclinic.ru</em>
+          </div>
+          <div class="case-frame__shot">
+            <img src="assets/shot-azimut.jpg" alt="Скриншот azimutclinic.ru" loading="lazy" decoding="async">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 Grillz · Earth -->
+    <section class="bay bay--case" data-label="04 · Grillz" data-name="Grillz" id="bay-3">
+      <div class="bay__inner bay__inner--case">
+        <div class="case-meta">
+          <p class="eyebrow">Кейс · бренд · A1</p>
+          <h2>Grillz Customs Moscow</h2>
+          <p class="case-url"><a href="https://grillzcustoms.ru/" target="_blank" rel="noopener">grillzcustoms.ru</a></p>
+          <p class="body">
+            Премиальная витрина кастомных grillz: структура, уникальность, услуги, процесс, сертификаты, FAQ, лиды.
+            Концепция, копирайт, визуал, HTML/CSS/JS, GitHub Pages, развитие.
+          </p>
+          <p class="body body--punch">
+            В проекте — <strong>топ-менеджер класса A1</strong>: стратегия, упаковка, контроль качества,
+            запуск и сопровождение. Не «кнопочки подвигал», а продуктовая ответственность end-to-end.
+          </p>
+          <ul class="tags">
+            <li>Brand site</li>
+            <li>Lead gen</li>
+            <li>A1 management</li>
+            <li>GitHub Pages</li>
+          </ul>
+          <a class="btn btn--primary" href="https://grillzcustoms.ru/" target="_blank" rel="noopener">Открыть сайт</a>
+        </div>
+        <div class="case-visual-col">
+          <div class="case-frame">
+            <div class="case-frame__chrome"><em>grillzcustoms.ru</em></div>
+            <div class="case-frame__shot">
+              <img src="assets/shot-grillz.jpg" alt="Скриншот grillzcustoms.ru" loading="lazy" decoding="async">
+            </div>
+          </div>
+          <figure class="grillz-shine">
+            <img src="assets/grillz-el-bezhano.jpg" alt="Кастомные grillz El Bezhano" loading="lazy">
+            <div class="shine-layer" aria-hidden="true"></div>
+            <figcaption>El Bezhano · slow shine, no seizure mode</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 Elena · Mars -->
+    <section class="bay bay--case" data-label="05 · Elena" data-name="Elena" id="bay-4">
+      <div class="bay__inner bay__inner--case">
+        <div class="case-meta">
+          <p class="eyebrow">Кейс · e-com · flow</p>
+          <h2>Elena Shop</h2>
+          <p class="case-url"><a href="https://елена.shop" target="_blank" rel="noopener">елена.shop</a></p>
+          <p class="body">
+            Авторский e-com / витрина: эстетика, сценарии, свет, ритм, композиция.
+            Маркетинговая логика + визуальная глубина. Тот самый flow, где хочется листать, а не «закрыть вкладку от стыда».
+          </p>
+          <ul class="tags">
+            <li>Shop</li>
+            <li>Visual system</li>
+            <li>Flow UX</li>
+            <li>Brand</li>
+          </ul>
+          <a class="btn btn--primary" href="https://xn--80aalc7a.shop" target="_blank" rel="noopener">Открыть сайт</a>
+        </div>
+        <div class="case-frame">
+          <div class="case-frame__chrome"><em>elena.shop</em></div>
+          <div class="case-frame__shot">
+            <img src="assets/shot-elena.jpg" alt="Скриншот elena.shop" loading="lazy" decoding="async"
+                 onerror="this.parentElement.classList.add('is-fallback')">
+            <div class="case-frame__body case-frame__body--elena fallback-only">
+              <div class="orb orb--a"></div>
+              <div class="orb orb--b"></div>
+              <p class="frame-note">Свет · форма · покупка</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 Soft / Grantek · Jupiter -->
+    <section class="bay" data-label="06 · ПО" data-name="ПО" id="bay-5">
+      <div class="bay__inner">
+        <p class="eyebrow">ПО · стек · B2B</p>
+        <h2>Софт, который работает, пока ты спишь</h2>
+        <div class="soft-grid">
+          <article class="rail-card">
+            <h3>Grantek Cable</h3>
+            <p>B2B-сайт дилера КПП: каталог, доверие, КП, мобильная навигация. <a href="https://lecmedea.github.io/Grantek-cabel/" target="_blank" rel="noopener">Открыть</a></p>
+          </article>
+          <article class="rail-card">
+            <h3>2ГИС → e-mail</h3>
+            <p>Парсер контактов для маркетинговых баз. Без ручного ада copy-paste.</p>
+          </article>
+          <article class="rail-card">
+            <h3>Telegram → Excel</h3>
+            <p>Договорённости, задачи, дедлайны, реестр. Чат перестаёт быть чёрной дырой.</p>
+          </article>
+          <article class="rail-card">
+            <h3>AI coding stack</h3>
+            <p>Codex · Claude Code · Grok · static + serverless · bots · CRM hooks.</p>
+          </article>
+          <article class="rail-card">
+            <h3>ИРИ · экосистемы</h3>
+            <p>Контент-системы, до 15 original units/day, сети 1M+.</p>
+          </article>
+          <article class="rail-card">
+            <h3>Automation mindset</h3>
+            <p>Если задачу делаешь второй раз руками — её надо автоматизировать. Точка.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 TikTok AI + Bad Balance · Saturn -->
+    <section class="bay" data-label="07 · AI / BB" data-name="AI · BB" id="bay-6">
+      <div class="bay__inner bay__inner--stack">
+        <div class="split-block">
+          <div>
+            <p class="eyebrow">TikTok · AI-блогеры</p>
+            <h2>Первый, кто собрал AI-блогера в РФ — и не стыдно показать</h2>
+            <p class="body">
+              Публично: статья на vc.ru, канал <strong>@iicnica</strong>, рост аудитории с нуля,
+              персонаж-хэдлайнер с характером, голосом и продающей логикой.
+              Не «поигрался с нейросеткой вечером», а медиа-продукт: сценарии, визуал, дистрибуция, монетизация.
+            </p>
+            <p class="body">
+              Для брендов, инфо-продуктов, медиа: цифровая личность без отпусков, капризов и «я сегодня не в ресурсе».
+              Размещение, кастомные персонажи, контент-конвейер. Подробности — в статье, без лишней биографии третьих лиц.
+            </p>
+            <div class="trend-row">
+              <span class="trend">#AIinfluencer</span>
+              <span class="trend">#firstmover</span>
+              <span class="trend">lock in</span>
+              <span class="trend">cooked? nah, cooking</span>
+            </div>
+            <div class="hero-cta">
+              <a class="btn btn--primary" href="https://vc.ru/ai/2299807-ai-blogery-v-rossii" target="_blank" rel="noopener">vc.ru статья</a>
+              <a class="btn btn--ghost" href="https://www.tiktok.com/@iicnica" target="_blank" rel="noopener">TikTok @iicnica</a>
+              <a class="btn btn--ghost" href="https://t.me/iicnica" target="_blank" rel="noopener">TG канал</a>
+            </div>
+          </div>
+          <div class="bb-card">
+            <p class="eyebrow">Коллаб</p>
+            <h3>Сотрудничество с Bad Balance</h3>
+            <p>
+              Работал в связке с легендой русскоязычного хип-хопа — <strong>Bad Balance</strong>.
+              Креатив, digital, продюсирование смыслов там, где важны характер, улица и уважение к культуре.
+              Не «поставил логотип на баннер», а живой контакт с большой сценой.
+            </p>
+            <p class="bb-tag">hip-hop · legacy · digital craft</p>
+          </div>
+        </div>
+
+        <div class="partners-block">
+          <p class="eyebrow">Партнёры</p>
+          <h2>С кем работал</h2>
+          <p class="body body--narrow">Слоты под логотипы. Четыре бесконечные вертикальные ленты — подставь свои файлы, и поедет.</p>
+          <div class="marquee-4" aria-label="Ленты логотипов партнёров">
+            <div class="marquee-col marquee-col--1">
+              <div class="marquee-track">
+                <div class="logo-slot">Partner logo</div>
+                <div class="logo-slot">Partner logo</div>
+                <div class="logo-slot">Partner logo</div>
+                <div class="logo-slot">Partner logo</div>
+                <div class="logo-slot">Partner logo</div>
+                <div class="logo-slot">Partner logo</div>
+                <div class="logo-slot">Partner logo</div>
+                <div class="logo-slot">Partner logo</div>
+              </div>
+            </div>
+            <div class="marquee-col marquee-col--2">
+              <div class="marquee-track marquee-track--rev">
+                <div class="logo-slot">Partner logo</div>
+                <div class="logo-slot">Partner logo</div>
+                <div class="logo-slot">Partner logo</div>
+                <div class="logo-slot">Partner logo</div>
+                <div class="logo-slot">Partner logo</div>
+                <div class="logo-slot">Partner logo</div>
+                <div class="logo-slot">Partner logo</div>
+                <div class="logo-slot">Partner logo</div>
+              </div>
+            </div>
+            <div class="marquee-col marquee-col--3">
+              <div class="marquee-track">
+                <div class="logo-slot">Partner logo</div>
+                <div class="logo-slot">Partner logo</div>
+                <div class="logo-slot">Partner logo</div>
+                <div class="logo-slot">Partner logo</div>
+                <div class="logo-slot">Partner logo</div>
+                <div class="logo-slot">Partner logo</div>
+                <div class="logo-slot">Partner logo</div>
+                <div class="logo-slot">Partner logo</div>
+              </div>
+            </div>
+            <div class="marquee-col marquee-col--4">
+              <div class="marquee-track marquee-track--rev">
+                <div class="logo-slot">Partner logo</div>
+                <div class="logo-slot">Partner logo</div>
+                <div class="logo-slot">Partner logo</div>
+                <div class="logo-slot">Partner logo</div>
+                <div class="logo-slot">Partner logo</div>
+                <div class="logo-slot">Partner logo</div>
+                <div class="logo-slot">Partner logo</div>
+                <div class="logo-slot">Partner logo</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7 Gallery House · Uranus -->
+    <section class="bay bay--house" data-label="08 · Галерея" data-name="Галерея" id="bay-7">
+      <div class="bay__inner bay__inner--house">
+        <div class="house-head">
+          <p class="eyebrow">Галерея · интерактив</p>
+          <h2>Дом. Зайди. Пощёлкай свет. Не сломай ничего.</h2>
+          <p class="body body--narrow">
+            Улица → дверь → зум внутрь → комнаты. Выключатель на стене, рамки под будущие JPEG.
+            Это не «3D-экскурсия из 2009», это прогулка в ярком pop-стиле с нормальной логикой.
+          </p>
+        </div>
+        <div class="house-stage" id="houseStage">
+          <div class="house-view" id="houseView">
+            <!-- street layer -->
+            <div class="house-scene is-active" data-scene="street">
+              <div class="street-compose">
+                <button type="button" class="hotspot hotspot--door" id="doorHot" aria-label="Дверь"></button>
+                <img class="house-img" id="houseImg" src="assets/house/house-closed.jpg" alt="Дом на улице">
+                <button type="button" class="hotspot hotspot--lamp" id="lampHot" aria-label="Фонарь">
+                  <img src="assets/house/lamp.jpg" alt="">
+                </button>
+              </div>
+              <p class="house-hint" id="houseHint">Кликни дверь · фонарь меняет свет в окнах</p>
+            </div>
+            <!-- rooms -->
+            <div class="house-scene" data-scene="hall">
+              <img class="room-img" src="assets/house/room-hall.jpg" alt="Прихожая / лестница" data-lightable>
+              <button type="button" class="wall-switch" data-switch aria-label="Выключатель" title="Свет"></button>
+              <div class="room-nav">
+                <button type="button" data-room="living">Гостиная →</button>
+                <button type="button" data-room="bedroom">Спальня →</button>
+                <button type="button" data-room="bath">Ванная →</button>
+                <button type="button" data-room="attic">Чердак ↑</button>
+              </div>
+              <div class="frame-slots" aria-hidden="true">
+                <span class="frame-slot"></span><span class="frame-slot"></span>
+              </div>
+            </div>
+            <div class="house-scene" data-scene="living">
+              <img class="room-img" src="assets/house/room-living.jpg" alt="Гостиная" data-lightable>
+              <button type="button" class="wall-switch" data-switch aria-label="Выключатель"></button>
+              <div class="room-nav">
+                <button type="button" data-room="hall">← Зал</button>
+                <button type="button" data-room="bedroom">Спальня</button>
+              </div>
+              <div class="frame-slots" aria-hidden="true">
+                <span class="frame-slot"></span><span class="frame-slot"></span><span class="frame-slot"></span>
+              </div>
+            </div>
+            <div class="house-scene" data-scene="bedroom">
+              <img class="room-img" src="assets/house/room-bedroom.jpg" alt="Спальня" data-lightable>
+              <button type="button" class="wall-switch" data-switch aria-label="Выключатель"></button>
+              <div class="room-nav">
+                <button type="button" data-room="hall">← Зал</button>
+                <button type="button" data-room="attic">Чердак</button>
+              </div>
+              <div class="frame-slots" aria-hidden="true">
+                <span class="frame-slot"></span><span class="frame-slot"></span>
+              </div>
+            </div>
+            <div class="house-scene" data-scene="bath">
+              <img class="room-img" src="assets/house/room-bath.jpg" alt="Ванная" data-lightable>
+              <button type="button" class="wall-switch" data-switch aria-label="Выключатель"></button>
+              <div class="room-nav">
+                <button type="button" data-room="hall">← Зал</button>
+              </div>
+              <div class="frame-slots" aria-hidden="true">
+                <span class="frame-slot"></span>
+              </div>
+            </div>
+            <div class="house-scene" data-scene="attic">
+              <img class="room-img" src="assets/house/room-attic.jpg" alt="Чердак" data-lightable>
+              <button type="button" class="wall-switch" data-switch aria-label="Выключатель"></button>
+              <div class="room-nav">
+                <button type="button" data-room="hall">↓ Вниз</button>
+                <button type="button" data-room="bedroom">Спальня</button>
+              </div>
+              <div class="frame-slots" aria-hidden="true">
+                <span class="frame-slot"></span><span class="frame-slot"></span>
+              </div>
+            </div>
+          </div>
+          <div class="house-controls">
+            <button type="button" class="btn btn--ghost" id="houseBack">← назад</button>
+            <button type="button" class="btn btn--ghost" id="houseStreet">выйти на улицу</button>
+            <span class="house-state" id="houseState">улица · дверь закрыта</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8 Legal · Neptune -->
+    <section class="bay bay--legal" data-label="09 · Право" data-name="Право" id="bay-8">
+      <div class="bay__inner bay__inner--legal">
+        <p class="eyebrow">Публичное уведомление · 2025–2026</p>
+        <h2>Авторство, ИС и правила игры</h2>
+        <p class="legal-lead">
+          Все сайты, интерфейсы, тексты, визуальные системы, программный код, структура, UX-сценарии,
+          AI-контуры и иные результаты интеллектуальной деятельности, представленные на этом ресурсе
+          и связанные с проектами Сергея Бежаева, являются <strong>авторской разработкой</strong>
+          и предметом <strong>интеллектуальной собственности</strong> автора, если иное прямо и письменно
+          не оформлено отдельным договором об отчуждении исключительного права или лицензионным договором.
+        </p>
+
+        <div class="legal-grid">
+          <article class="legal-card">
+            <h3>1. Что я продаю на самом деле</h3>
+            <p>
+              Я разрабатываю сайт (и смежные digital-контуры), <strong>укомплектовываю</strong> его
+              (контент, интеграции, публикации, настройка) и <strong>продаю вместе с дальнейшим сопровождением</strong>
+              со своей стороны. Это услуга по созданию, запуску и поддержке продукта — а не «подарок исходников
+              с переходом всех прав навсегда без договора».
+            </p>
+          </article>
+          <article class="legal-card">
+            <h3>2. Что я не передаю</h3>
+            <p>
+              <strong>Я не передаю никому свою авторскую разработку «по умолчанию».</strong>
+              До и после оплаты работа остаётся моей авторской собственностью в части
+              неисключимых / непереданных исключительных прав, пока стороны не подписали
+              письменный документ о передаче (отчуждении) исключительного права либо лицензии
+              с ясным объёмом, территорией, сроком и вознаграждением.
+            </p>
+          </article>
+          <article class="legal-card legal-card--hot">
+            <h3>3. Нормы РФ, на которые опираюсь</h3>
+            <ul class="law-list">
+              <li><strong>ГК РФ ст. 1225, 1226, 1228, 1229</strong> — охраняемые результаты ИД; исключительное право; автор; принадлежность права.</li>
+              <li><strong>ГК РФ ст. 1255–1259</strong> — авторские права; объекты; возникновение права в силу создания произведения; личные неимущественные права автора (в т.ч. право авторства, право на имя) — <em>неотчуждаемы</em> (ст. 1265).</li>
+              <li><strong>ГК РФ ст. 1270</strong> — исключительное право на произведение; использование третьими лицами — только с согласия правообладателя, кроме случаев, прямо указанных в законе.</li>
+              <li><strong>ГК РФ ст. 1233–1235, 1285–1286</strong> — распоряжение исключительным правом: договор об отчуждении / лицензионный договор — <em>письменная форма</em>.</li>
+              <li><strong>ГК РФ ст. 1295–1297</strong> — служебное произведение и произведения, созданные по заказу: режим распределения прав определяется законом и договором; при отсутствии ясного письменного отчуждения споры решаются по факту отношений и документов — а не «по ощущениям заказчика».</li>
+              <li><strong>ГК РФ ст. 1301, 1252, 1253</strong> — ответственность за нарушение исключительного права; защита; компенсация / убытки.</li>
+              <li><strong>ГК РФ ст. 434, 160–162</strong> — форма сделки; письменная форма существенных условий.</li>
+              <li><strong>ФЗ «Об информации…» № 149-ФЗ</strong> — правовой режим информации и информационных систем.</li>
+              <li><strong>ФЗ «О персональных данных» № 152-ФЗ</strong> — при обработке ПДн оператор и поручения оформляются отдельно; код/дизайн сайта ≠ автоматическая передача прав на ПО.</li>
+              <li><strong>Бернская конвенция</strong> (для РФ) — охрана произведений без формальностей; право авторства защищено международно.</li>
+            </ul>
+          </article>
+          <article class="legal-card">
+            <h3>4. Публичная оферта на будущие заказы</h3>
+            <p>
+              Размещая заказ / предоплату / ТЗ без отдельного договора об отчуждении исключительного права,
+              заказчик принимает, что получает: (а) работоспособный результат на согласованном хостинге/домене;
+              (б) право использования в обычной хозяйственной деятельности в рамках согласованного объёма;
+              (в) сопровождение автором на согласованных условиях.
+              <strong>Исключительное право на код, дизайн-систему, оригинальные тексты, уникальные UX-модули
+              и AI-контуры остаётся за Сергеем Бежаевым</strong>, пока не подписан договор об отчуждении
+              с отдельной ценой за переход прав.
+            </p>
+          </article>
+          <article class="legal-card">
+            <h3>5. Офер / чек-лист ≠ передача прав</h3>
+            <p>
+              Рабочие коммерческие предложения, чек-листы запуска, сметы модулей, описания пилотов AI,
+              критерии «сайт открывается / формы работают» — это <strong>описание работ и результата услуг</strong>,
+              а не договор отчуждения исключительного права. Если в документе нет прямых формулировок
+              «отчуждение исключительного права», «передача исключительных прав в полном объёме»,
+              «лицензия на условиях…» — <strong>такой передачи не происходило</strong>.
+            </p>
+          </article>
+          <article class="legal-card">
+            <h3>6. Запреты без согласия правообладателя</h3>
+            <ul>
+              <li>Копирование, переработка, «перекрас» и выдача за свою разработку</li>
+              <li>Передача исходников третьим подрядчикам «на доработку» без моего ведома, если это нарушает согласованный режим</li>
+              <li>Снятие копирайта, подмена авторства, удаление технических следов авторства</li>
+              <li>Использование AI-модулей, уникальных интерактивов и текстов вне согласованного контура</li>
+            </ul>
+          </article>
+          <article class="legal-card legal-card--warn">
+            <h3>7. Сопровождение — не «мы теперь хозяева репо»</h3>
+            <p>
+              Оплата запуска и/или ежемесячного сопровождения = доступ к развитию продукта автором,
+              правки, публикации, консультации. Это <strong>не</strong> купля-продажа исключительного права
+              и не бессрочный «отдай git и исчезни», если иное не куплено отдельно и не оформлено письменно.
+            </p>
+          </article>
+          <article class="legal-card">
+            <h3>8. Контакты правообладателя</h3>
+            <p>
+              Автор и правообладатель (в объёме, не переданном письменно): <strong>Сергей Бежаев</strong><br>
+              E-mail: <a href="mailto:lecmedea@gmail.com">lecmedea@gmail.com</a><br>
+              Telegram: <a href="https://t.me/notoruis" target="_blank" rel="noopener">@notoruis</a><br>
+              Период публичной фиксации авторства на этом сайте: <strong>2025–2026</strong>
+            </p>
+          </article>
+        </div>
+
+        <p class="legal-foot">
+          Настоящий текст является публичным уведомлением о правовом режиме результатов моей работы
+          и условиями взаимодействия с заказчиками. Не является индивидуальной юридической консультацией.
+          Споры — в соответствии с законодательством Российской Федерации.
+        </p>
+      </div>
+    </section>
+
+    <!-- 9 Contact · Pluto -->
+    <section class="bay bay--end" data-label="10 · Контакт" data-name="Контакт" id="bay-9">
+      <div class="bay__inner bay__inner--end">
+        <p class="eyebrow">Дальше</p>
+        <h2>Соберём следующий блок — по-взрослому</h2>
+        <p class="body">
+          Full-time / project / hybrid. AI, сайты, маркетинг, автоматизация.
+          Если готов платить за результат и уважать авторство — пиши.
+          Если ищешь «сделай и забудь, права потом разберёмся» — уже разобрались, см. предыдущий отсек.
+        </p>
+        <div class="contact-row">
+          <a class="btn btn--primary" href="mailto:lecmedea@gmail.com">lecmedea@gmail.com</a>
+          <a class="btn btn--ghost" href="https://t.me/notoruis" target="_blank" rel="noopener">Telegram @notoruis</a>
+          <a class="btn btn--ghost" href="tel:+79999962206">+7 999 996-22-06</a>
+        </div>
+        <p class="end-sign">Site author Sergey Bezhaev · lecmedea@gmail.com · 2025–2026</p>
+        <p class="end-sign end-sign--dim">Все права на авторскую разработку защищены · ГК РФ IV часть</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Bottom control deck: asteroid + planets -->
+  <footer class="deck" aria-label="Path controls">
+    <div class="deck__left">
+      <button type="button" class="deck-btn" id="btnPrev" aria-label="Previous">◀</button>
+      <button type="button" class="deck-btn" id="btnNext" aria-label="Next">▶</button>
+      <button type="button" class="deck-btn deck-btn--text" id="btnHome">Солнце</button>
+    </div>
+    <div class="deck__center">
+      <div class="scrub scrub--orbit" id="scrub" role="slider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0" aria-label="Path progress">
+        <div class="scrub__track">
+          <div class="scrub__fill" id="scrubFill"></div>
+          <img class="scrub__asteroid" id="scrubThumb" src="assets/asteroid.jpg" alt="" draggable="false">
+        </div>
+        <div class="scrub__planets" id="scrubPlanets" aria-hidden="true"></div>
+        <div class="scrub__names" id="scrubNames" aria-hidden="true"></div>
+      </div>
+      <p class="scrub__meta"><span id="progressPct">0%</span> · <span id="bayIndex">1 / 10</span></p>
+    </div>
+    <div class="deck__right">
+      <span class="deck-led" id="led" title="Active"></span>
+      <span class="deck-label">ORBIT CONTROL</span>
+    </div>
+  </footer>
+
+  <p class="site-credit">Site author Sergey Bezhaev lecmedea@gmail.com 2025–2026</p>
+
+  <audio id="doorClick" preload="auto" src="assets/ui/click.wav"></audio>
+
+  <script src="js/path.js"></script>
+</body>
+</html>

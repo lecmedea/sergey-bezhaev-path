@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+  <defs><radialGradient id="g" cx="35%" cy="30%"><stop offset="0%" stop-color="#C4A574"/><stop offset="100%" stop-color="#E8CDA0"/></radialGradient>
+  <filter id="s"><feDropShadow dx="0" dy="1" stdDeviation="1.2" flood-opacity="0.45"/></filter></defs>
+  <circle cx="24" cy="24" r="12" fill="url(#g)" filter="url(#s)"/>
+  
+  
+</svg>
