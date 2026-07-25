@@ -1392,3 +1392,43 @@ body.is-chaos .bay {
   .bay__inner { padding: 28px 18px 20px; }
   .acc-nav { max-width: 58vw; overflow-x: auto; }
 }
+
+/* Mobile overflow safety */
+@media (max-width: 720px) {
+  html, body {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+  .bay__inner,
+  .bay__copy,
+  .mac-bar,
+  .deck {
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+  .bay__copy h1,
+  .bay__copy h2,
+  .bay__copy p,
+  .bay__copy li,
+  .module-card,
+  .soft-card {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    max-width: 100%;
+  }
+  .acc-nav {
+    max-width: min(62vw, 100%);
+  }
+  .module-grid,
+  .soft-grid {
+    grid-template-columns: 1fr;
+  }
+  .deck__center {
+    min-width: 0;
+    flex: 1;
+  }
+  .scrub {
+    max-width: 100%;
+  }
+}
