@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/path.css">
-  <link rel="stylesheet" href="css/boot.css?v=20260726-boot6">
+  <link rel="stylesheet" href="css/boot.css?v=20260726-feat7">
 </head>
 <body class="path-body">
   <!-- Top chrome — без traffic lights, аккордеоны -->
@@ -125,7 +125,7 @@
           <div class="stud-field" aria-hidden="true"></div>
           <p class="eyebrow">Horizontal path · 2025–2026 · no cap</p>
           <h1>
-            <span class="h1-line">Sergey Bezhaev</span>
+            <span class="h1-line" data-i18n="hero_title">Bezhaev Industries</span>
             <span class="h1-sub">AI · Digital · Build</span>
           </h1>
           <p class="lead">
@@ -145,7 +145,7 @@
             <button type="button" class="btn btn--ghost" data-go="8">Право · дисклеймер</button>
             <a class="btn btn--ghost" href="mailto:lecmedea@gmail.com">Написать</a>
           </div>
-          <p class="hint-scroll">↓ колёсико · вправо по орбите</p>
+          <p class="hint-scroll" data-i18n="hero_credit">Sergey Bezhaev 2026</p>
         </div>
         <figure class="hero-visual">
           <img src="assets/path-modules.jpg" alt="" width="1280" height="720" decoding="async">
@@ -706,9 +706,11 @@
 
   <audio id="doorClick" preload="auto" src="assets/ui/click.wav"></audio>
 
-  <script src="js/jarvis.js?v=20260726-headvid"></script>
-  <script src="js/boot.js?v=20260726-boot6"></script>
-  <script src="js/path.js"></script>
+  <script src="js/path.js?v=20260726-feat7"></script>
+  <script src="js/i18n.js?v=20260726-feat7"></script>
+  <script src="js/gestures.js?v=20260726-feat7"></script>
+  <script src="js/jarvis.js?v=20260726-feat7"></script>
+  <script src="js/boot.js?v=20260726-feat7"></script>
   <script>
     document.getElementById('btnOpenJarvis')?.addEventListener('click', () => {
       window.PathJarvis?.mount?.();
@@ -718,4 +720,4 @@
   </script>
 </body>
 </html>
-<!-- rebuild 20260726-boot6 -->
+<!-- rebuild 20260726-feat7 -->

@@ -301,8 +301,8 @@
             Сайт использует cookies. Запуск только со звуком.
           </p>
           <div class="boot__plate-actions">
-            <button type="button" class="boot__plate-btn" id="bootEnableSound" data-boot-go>${btnA}</button>
-            <button type="button" class="boot__plate-btn" id="bootEnableSoundAlt" data-boot-go>${btnB}</button>
+            <button type="button" class="boot__plate-btn boot__plate-btn--ok" id="bootEnableSound" data-boot-go>${btnA}</button>
+            <button type="button" class="boot__plate-btn boot__plate-btn--danger" id="bootEnableSoundAlt" data-boot-go>${btnB}</button>
           </div>
         </div>
       </div>

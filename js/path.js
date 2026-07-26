@@ -70,6 +70,29 @@
     track.scrollTo({ left, behavior });
   }
 
+  // Public API for JARVIS / gestures / i18n
+  window.PathAPI = {
+    goToIndex,
+    goRelative(delta) {
+      goToIndex(active + delta);
+    },
+    goHome() {
+      goToIndex(0);
+    },
+    goNext() {
+      goToIndex(active + 1);
+    },
+    goPrev() {
+      goToIndex(active - 1);
+    },
+    getActive() {
+      return active;
+    },
+    getTotal() {
+      return total;
+    }
+  };
+
   function updateUI() {
     const p = progress();
     const pct = Math.round(p * 100);
