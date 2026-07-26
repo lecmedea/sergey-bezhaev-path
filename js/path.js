@@ -126,39 +126,65 @@
     });
   }
 
-  // Dual-axis: vertical scroll inside each bay; horizontal path via track
-  // Shift+wheel or pure deltaX → always horizontal. Else: bay vertical first.
+  // Trackpad / wheel → horizontal path (primary). Vertical bay scroll only when
+  // the bay really overflows and the gesture is mid-content (not stuck).
   function wheelToPath(event) {
-    if (event.target.closest(".deck, .mac-bar, .acc__panel, .jarvis-hud__panel, .sophia-hud__panel, .gesture-hud")) {
+    if (event.defaultPrevented) return;
+    if (
+      event.target.closest(
+        ".deck, .mac-bar, .acc__panel, .jarvis-hud__panel, .sophia-hud__panel, .gesture-hud, .assist-panel__scroll, .jarvis-hud__chat-log, .sophia-hud__chat-log"
+      )
+    ) {
       return;
     }
-    const dy = event.deltaY;
-    const dx = event.deltaX;
-    if (dy === 0 && dx === 0) return;
 
-    // explicit horizontal intent
-    if (event.shiftKey || Math.abs(dx) > Math.abs(dy)) {
+    let dx = event.deltaX;
+    let dy = event.deltaY;
+    // line / page modes → roughly pixel-like
+    if (event.deltaMode === 1) {
+      dx *= 16;
+      dy *= 16;
+    } else if (event.deltaMode === 2) {
+      dx *= track.clientWidth;
+      dy *= track.clientHeight;
+    }
+    if (dx === 0 && dy === 0) return;
+
+    // Shift+wheel → always orbit horizontally
+    if (event.shiftKey) {
       event.preventDefault();
-      track.scrollLeft += event.shiftKey ? dy : dx;
+      track.scrollLeft += dy !== 0 ? dy : dx;
       return;
     }
 
+    // Trackpad swipe left/right (allow slight diagonal)
+    if (Math.abs(dx) >= Math.abs(dy) * 0.5) {
+      event.preventDefault();
+      track.scrollLeft += dx;
+      return;
+    }
+
+    // Vertical-dominant gesture
     const bay = event.target.closest(".bay");
-    if (bay && bay.scrollHeight > bay.clientHeight + 4) {
-      const atTop = bay.scrollTop <= 1;
-      const atBottom = bay.scrollTop + bay.clientHeight >= bay.scrollHeight - 2;
-      // native vertical inside bay while there is room
+    // Origin uses overflow:visible for mesh face — never trap wheel there
+    const isOrigin = bay && bay.id === "bay-0";
+    const overflow = bay && !isOrigin ? bay.scrollHeight - bay.clientHeight : 0;
+    // Only treat as vertical page scroll if there's real overflow (> ~1 line)
+    if (bay && !isOrigin && overflow > 56) {
+      const atTop = bay.scrollTop <= 2;
+      const atBottom = bay.scrollTop + bay.clientHeight >= bay.scrollHeight - 4;
       if ((dy < 0 && !atTop) || (dy > 0 && !atBottom)) {
+        // let the bay scroll natively
         return;
       }
     }
 
-    // at bay edge (or short bay) → horizontal orbit
+    // Default Path UX: vertical flick → next/prev bay
     event.preventDefault();
-    track.scrollLeft += dy;
+    track.scrollLeft += dy !== 0 ? dy : dx;
   }
 
-  track.addEventListener("wheel", wheelToPath, { passive: false });
+  // Single window listener avoids double-scroll when both track+window fire
   window.addEventListener("wheel", wheelToPath, { passive: false });
 
   track.addEventListener(

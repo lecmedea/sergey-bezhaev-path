@@ -1947,15 +1947,19 @@ body.is-chaos .bay {
   text-shadow: none;
 }
 
-/* Origin bay: don't clip the floating face */
+/* Origin: keep face unclipped, but still allow wheel→path (see path.js) */
 #bay-0 {
-  overflow: visible;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 #bay-0 .bay__inner--hero {
   overflow: visible;
   align-items: center;
   padding-top: 28px;
   padding-bottom: 56px;
+}
+.track {
+  overscroll-behavior-x: contain;
 }
 
 .profile-visual {
