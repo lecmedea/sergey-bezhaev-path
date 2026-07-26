@@ -1,19 +1,32 @@
 /**
- * PATH OS boot — 100s (matches audio)
- * Matrix rain + center EQ + floating terminals
- * @ 76s green → red “villain birth”
- * then WARNING wall of disclaimers (Bezhaev Industries only)
+ * PATH OS boot — exactly 92s (1:32)
+ * Slow eyelids 10s → matrix rain + center EQ + terminals
+ * Infection: green → red over ~12s (not a hard cut)
+ * then WARNING wall (Bezhaev Industries only)
  * Gate: cookies + enable sound (required)
  */
 (() => {
   'use strict';
 
-  const BOOT_MS = 100000; // 1:40
-  const RED_AT_MS = 76000; // 1:16
+  const BOOT_MS = 92000; // 1:32 exact
+  const WAKE_MS = 10000; // slow eyelids
+  const RED_AT_MS = 68000; // infection starts ~1:08
+  const RED_BLEND_MS = 12000; // ~12s smooth infection
+  const WARN_AT_MS = 82000; // warnings after infection mostly settled
   const COOKIE_KEY = 'sb_path_cookies_v3';
 
-  const GREEN = { rain: 'rgba(0,255,120,0.85)', rainHot: 'rgba(200,255,220,0.95)', eq: '#30d158', term: 'rgba(0,255,140,0.9)' };
-  const RED = { rain: 'rgba(255,40,60,0.88)', rainHot: 'rgba(255,180,180,0.95)', eq: '#ff453a', term: 'rgba(255,90,100,0.92)' };
+  const GREEN = {
+    rain: [0, 255, 120, 0.85],
+    rainHot: [200, 255, 220, 0.95],
+    eq: [48, 209, 88],
+    term: [0, 255, 140]
+  };
+  const RED = {
+    rain: [255, 40, 60, 0.88],
+    rainHot: [255, 180, 180, 0.95],
+    eq: [255, 69, 58],
+    term: [255, 90, 100]
+  };
 
   const TERM_LINES = [
     'BEZHAEV_INDUSTRIES :: core.mount()',
@@ -53,27 +66,67 @@
     'WARNING · BEZHAEV INDUSTRIES · CLASSIFIED'
   ];
 
+  // Timeline fits 92s boot (wake 0–10, red infection 68–80, warnings ~82, materialize 92)
   const LOG_LINES = [
-    { t: 2500, text: 'You pressed play. That was consent.', cls: 'line--break' },
-    { t: 5000, text: 'BEZHAEV INDUSTRIES · PATH OS boot', cls: 'line--sys' },
-    { t: 8000, text: 'Matrix layer synchronized to audio bus', cls: 'line--ok' },
-    { t: 12000, text: 'Equalizer linked · speech energy mapped', cls: 'line--ok' },
-    { t: 18000, text: 'Terminal farm: automated processes live', cls: 'line--sys' },
-    { t: 26000, text: 'This page is not a brochure. It is a workshop.', cls: 'line--break' },
-    { t: 34000, text: 'You are not visiting. You are co-processing.', cls: 'line--break' },
-    { t: 42000, text: 'Modules: AI · digital · build · ship', cls: 'line--ok' },
-    { t: 50000, text: 'Ethics core: human-first (non-negotiable)', cls: 'line--sys' },
-    { t: 58000, text: 'Orbit deck calibrating…', cls: 'line--ok' },
-    { t: 66000, text: 'Signal instability rising…', cls: 'line--warn' },
-    { t: 72000, text: 'Something is waking that is not soft.', cls: 'line--warn' },
-    { t: 76000, text: 'PROTOCOL SHIFT · COLOR VECTOR RED', cls: 'line--danger' },
-    { t: 80000, text: 'WARNING cascade initiated', cls: 'line--danger' },
-    { t: 86000, text: 'Solidifying Path interface…', cls: 'line--sys' },
-    { t: 92000, text: 'BEZHAEV INDUSTRIES · handoff to operator', cls: 'line--ok' },
-    { t: 97000, text: 'Welcome to the Path.', cls: 'line--break' }
+    { t: 1500, text: '… eyelids heavy. Signal weak.', cls: 'line--sys' },
+    { t: 4000, text: 'You pressed play. That was consent.', cls: 'line--break' },
+    { t: 7500, text: 'Vision calibrating… stay with me.', cls: 'line--sys' },
+    { t: 10500, text: 'BEZHAEV INDUSTRIES · PATH OS boot', cls: 'line--ok' },
+    { t: 14000, text: 'Matrix layer synchronized to audio bus', cls: 'line--ok' },
+    { t: 18000, text: 'Equalizer linked · speech energy mapped', cls: 'line--ok' },
+    { t: 24000, text: 'Terminal farm: automated processes live', cls: 'line--sys' },
+    { t: 32000, text: 'This page is not a brochure. It is a workshop.', cls: 'line--break' },
+    { t: 40000, text: 'You are not visiting. You are co-processing.', cls: 'line--break' },
+    { t: 48000, text: 'Modules: AI · digital · build · ship', cls: 'line--ok' },
+    { t: 56000, text: 'Ethics core: human-first (non-negotiable)', cls: 'line--sys' },
+    { t: 62000, text: 'Signal instability rising…', cls: 'line--warn' },
+    { t: 66000, text: 'Something is waking that is not soft.', cls: 'line--warn' },
+    { t: 69000, text: 'INFECTION · color vector drifting red…', cls: 'line--danger' },
+    { t: 74000, text: 'Lattice contamination spreading…', cls: 'line--danger' },
+    { t: 80000, text: 'PROTOCOL RED · full spectrum lock', cls: 'line--danger' },
+    { t: 83000, text: 'WARNING cascade initiated', cls: 'line--danger' },
+    { t: 87000, text: 'Solidifying Path interface…', cls: 'line--sys' },
+    { t: 90000, text: 'Welcome to the Path.', cls: 'line--break' }
   ];
 
   const $ = (s, r = document) => r.querySelector(s);
+
+  function lerp(a, b, t) {
+    return a + (b - a) * t;
+  }
+
+  function smoothstep(t) {
+    const x = Math.max(0, Math.min(1, t));
+    // smootherstep — infection feels organic
+    return x * x * x * (x * (x * 6 - 15) + 10);
+  }
+
+  function mixChan(a, b, t) {
+    return a.map((v, i) => lerp(v, b[i], t));
+  }
+
+  function rgba(ch) {
+    if (ch.length === 4) {
+      return `rgba(${ch[0] | 0},${ch[1] | 0},${ch[2] | 0},${ch[3]})`;
+    }
+    return `rgb(${ch[0] | 0},${ch[1] | 0},${ch[2] | 0})`;
+  }
+
+  function hexFromRgb(ch) {
+    const h = (n) => Math.max(0, Math.min(255, n | 0)).toString(16).padStart(2, '0');
+    return '#' + h(ch[0]) + h(ch[1]) + h(ch[2]);
+  }
+
+  function paletteAt(infect) {
+    const t = smoothstep(infect);
+    return {
+      rain: rgba(mixChan(GREEN.rain, RED.rain, t)),
+      rainHot: rgba(mixChan(GREEN.rainHot, RED.rainHot, t)),
+      eq: hexFromRgb(mixChan(GREEN.eq, RED.eq, t)),
+      term: mixChan(GREEN.term, RED.term, t).map((n) => n | 0),
+      t
+    };
+  }
 
   function createBootDOM() {
     const root = document.createElement('div');
@@ -83,6 +136,7 @@
     root.setAttribute('aria-modal', 'true');
     root.innerHTML = `
       <canvas class="boot__rain" id="bootRain" aria-hidden="true"></canvas>
+      <div class="boot__infect" id="bootInfect" aria-hidden="true"></div>
       <canvas class="boot__eq" id="bootEq" aria-hidden="true"></canvas>
       <div class="boot__terms" id="bootTerms" aria-hidden="true"></div>
       <div class="boot__warnings" id="bootWarnings" aria-hidden="true"></div>
@@ -129,7 +183,7 @@
     document.body.appendChild(shell);
   }
 
-  /* Matrix rain + phase color */
+  /* Matrix rain — palette from infection blend */
   function startRain(canvas, getPalette) {
     const ctx = canvas.getContext('2d');
     let w, h, cols, fontSize, raf;
@@ -153,6 +207,7 @@
         const ch = glyphs[(Math.random() * glyphs.length) | 0];
         const x = i * fontSize;
         const y = cols[i] * fontSize;
+        // staggered infection: columns tip red earlier near center
         ctx.fillStyle = i % 9 === 0 ? pal.rainHot : pal.rain;
         ctx.fillText(ch, x, y);
         if (y > h && Math.random() > 0.975) cols[i] = 0;
@@ -225,7 +280,6 @@
         levels = Array.from({ length: bars }, (_, i) => 0.15 + 0.5 * Math.abs(Math.sin(fakeT + i * 0.35)));
       }
 
-      // mirrored bars
       for (let i = 0; i < bars; i++) {
         const v = levels[i] || 0;
         const bh = Math.max(4 * dpr, v * maxH);
@@ -237,7 +291,6 @@
         ctx.fillRect(x, cy - bh, barW, bh * 2);
       }
 
-      // ring outline (not filled center disc)
       ctx.beginPath();
       ctx.arc(cx, cy, maxH * 1.15, 0, Math.PI * 2);
       ctx.strokeStyle = pal.eq + '55';
@@ -260,8 +313,8 @@
     };
   }
 
-  /* Floating terminals */
-  function startTerminals(host, getPalette, getRed) {
+  /* Floating terminals — term RGB updated as infection spreads */
+  function startTerminals(host, getPalette) {
     host.innerHTML = '';
     const n = Math.min(10, Math.max(5, Math.floor(innerWidth / 160)));
     const terms = [];
@@ -270,18 +323,33 @@
       el.className = 'boot__term';
       el.innerHTML = `<header>term://${i + 1} · bezhaev</header><pre></pre>`;
       host.appendChild(el);
-      const left = 2 + Math.random() * 70;
-      const top = 4 + Math.random() * 62;
-      el.style.left = left + '%';
-      el.style.top = top + '%';
+      el.style.left = (2 + Math.random() * 70) + '%';
+      el.style.top = (4 + Math.random() * 62) + '%';
       el.style.animationDelay = (Math.random() * 2) + 's';
-      terms.push({ el, pre: el.querySelector('pre'), lines: [] });
+      // staggered infection: outer terms tip earlier
+      terms.push({
+        el,
+        pre: el.querySelector('pre'),
+        lines: [],
+        bias: 0.08 + Math.random() * 0.35
+      });
     }
 
     const iv = setInterval(() => {
-      const red = getRed();
-      host.classList.toggle('is-red', red);
+      const pal = getPalette();
+      const baseT = pal.t || 0;
       terms.forEach((t) => {
+        const local = Math.max(0, Math.min(1, (baseT - t.bias * 0.4) / Math.max(0.01, 1 - t.bias * 0.4)));
+        const tr = (lerp(GREEN.term[0], RED.term[0], local)) | 0;
+        const tg = (lerp(GREEN.term[1], RED.term[1], local)) | 0;
+        const tb = (lerp(GREEN.term[2], RED.term[2], local)) | 0;
+        t.el.style.setProperty('--t-r', tr);
+        t.el.style.setProperty('--t-g', tg);
+        t.el.style.setProperty('--t-b', tb);
+        if (local > 0.55) {
+          t.el.style.background = `rgba(18, 0, 4, ${0.7 + local * 0.2})`;
+        }
+
         if (Math.random() > 0.55) {
           const line = TERM_LINES[(Math.random() * TERM_LINES.length) | 0]
             + (Math.random() > 0.6 ? ' 0x' + Math.random().toString(16).slice(2, 8) : '');
@@ -380,20 +448,39 @@
     return () => cancelAnimationFrame(raf);
   }
 
+  function applyInfectVisual(root, infect) {
+    const t = smoothstep(infect);
+    root.style.setProperty('--infect', String(t));
+    root.style.setProperty('--infect-opacity', String(Math.min(0.85, t * 0.95)));
+    root.style.setProperty('--infect-scale', String(0.15 + t * 2.6));
+    // soft background shift
+    const r = (5 + t * 10) | 0;
+    const g = (5 - t * 3) | 0;
+    const b = (6 - t * 2) | 0;
+    if (t > 0.02) {
+      root.style.background = `rgb(${r},${Math.max(0, g)},${Math.max(0, b)})`;
+    }
+  }
+
   function runSequence(root, audio) {
-    let palette = GREEN;
-    let isRed = false;
-    const getPalette = () => palette;
-    const getRed = () => isRed;
+    let infect = 0; // 0 green → 1 full red
+    const getPalette = () => paletteAt(infect);
 
     const t0 = performance.now();
     root.classList.remove('is-gate');
     root.classList.add('is-waking', 'is-running');
     $('#bootPhase', root).textContent = 'AWAKENING';
 
+    // After 10s eyelids, mark awake (hide lids layer softly)
+    setTimeout(() => {
+      root.classList.remove('is-waking');
+      root.classList.add('is-awake');
+      if (infect < 0.05) $('#bootPhase', root).textContent = 'PATH OS';
+    }, WAKE_MS);
+
     const stopRain = startRain($('#bootRain', root), getPalette);
     const stopEq = startEq($('#bootEq', root), audio, getPalette);
-    let stopTerms = startTerminals($('#bootTerms', root), getPalette, getRed);
+    let stopTerms = startTerminals($('#bootTerms', root), getPalette);
 
     LOG_LINES.forEach((item) => {
       setTimeout(() => {
@@ -410,35 +497,51 @@
     const bar = $('#bootBar', root);
     const pctEl = $('#bootPct', root);
     const phaseEl = $('#bootPhase', root);
-    const tick = setInterval(() => {
-      const elapsed = performance.now() - t0;
+
+    // Continuous infection drive + progress bar
+    let infectRaf = 0;
+    function infectTick(now) {
+      const elapsed = now - t0;
       const p = Math.min(1, elapsed / BOOT_MS);
       bar.style.width = Math.round(p * 100) + '%';
       pctEl.textContent = Math.round(p * 100) + '%';
-      if (p >= 1) clearInterval(tick);
-    }, 100);
 
-    // Red villain shift at 1:16
+      if (elapsed >= RED_AT_MS) {
+        const raw = (elapsed - RED_AT_MS) / RED_BLEND_MS;
+        infect = Math.max(0, Math.min(1, raw));
+        if (!root.classList.contains('is-infecting')) {
+          root.classList.add('is-infecting');
+          phaseEl.textContent = 'INFECTION';
+        }
+        applyInfectVisual(root, infect);
+        if (infect >= 0.98 && !root.classList.contains('is-red')) {
+          root.classList.add('is-red');
+          phaseEl.textContent = 'PROTOCOL RED';
+          $('#bootTerms', root)?.classList.add('is-red');
+        }
+      }
+
+      if (elapsed < BOOT_MS + 200) infectRaf = requestAnimationFrame(infectTick);
+    }
+    infectRaf = requestAnimationFrame(infectTick);
+
+    // Warnings after infection mostly done
     setTimeout(() => {
-      isRed = true;
-      palette = RED;
-      root.classList.add('is-red');
-      phaseEl.textContent = 'PROTOCOL RED';
-      const terms = $('#bootTerms', root);
-      terms?.classList.add('is-red');
-      // swap terminals for warnings shortly after
-      setTimeout(() => {
-        if (stopTerms) stopTerms();
+      if (stopTerms) {
+        stopTerms();
         stopTerms = null;
-        startWarnings($('#bootWarnings', root));
-        phaseEl.textContent = 'WARNING CASCADE';
-      }, 4000);
-    }, RED_AT_MS);
+      }
+      startWarnings($('#bootWarnings', root));
+      phaseEl.textContent = 'WARNING CASCADE';
+    }, WARN_AT_MS);
 
-    // End of boot ≈ audio length: materialize
+    // End of boot at exactly 1:32
     setTimeout(() => {
+      cancelAnimationFrame(infectRaf);
+      infect = 1;
+      applyInfectVisual(root, 1);
       phaseEl.textContent = 'MATERIALIZE';
-      root.classList.add('is-materializing');
+      root.classList.add('is-materializing', 'is-red');
       document.documentElement.classList.remove('is-booting');
       document.documentElement.classList.add('boot-materializing', 'boot-revealing');
       materializeDigits($('#bootDigits', root));
@@ -449,7 +552,6 @@
           stopRain && stopRain();
           stopEq && stopEq();
           if (stopTerms) stopTerms();
-          // let audio finish if still playing — do not pause
           root.remove();
           document.documentElement.classList.remove('boot-materializing', 'boot-revealing');
           window.dispatchEvent(new CustomEvent('path-boot-complete'));
@@ -458,7 +560,6 @@
       }, 7000);
     }, BOOT_MS);
 
-    // Ensure audio continues to natural end even after overlay gone
     audio.loop = false;
   }
 
