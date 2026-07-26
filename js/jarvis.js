@@ -286,7 +286,7 @@
         </div>
         <div class="jarvis-hud__key">
           <label for="jarvisKeyInput">Ключ Gemini</label>
-          <input id="jarvisKeyInput" type="password" placeholder="AIza…" autocomplete="off" />
+          <input id="jarvisKeyInput" type="text" inputmode="text" spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-form-type="other" name="gemini_api_token_field" placeholder="AIza… (не пароль)" />
         </div>
         <div class="jarvis-hud__links">
           <a href="${liveHref}" target="_blank" rel="noopener">Gemini Live ↗</a>
