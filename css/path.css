@@ -1550,114 +1550,179 @@ body.is-chaos .bay {
   background: #fff;
 }
 
-/* Dual browser: desktop web + iPhone */
-.case-frame--dual .case-frame__shot {
-  aspect-ratio: auto;
-  min-height: 320px;
-  height: auto;
-}
-.case-dual {
+/* Two separate windows: Web browser + iPhone, side by side */
+.case-pair {
   display: grid;
-  grid-template-columns: 1.35fr 0.65fr;
-  gap: 14px;
-  padding: 12px;
-  align-items: start;
+  grid-template-columns: minmax(0, 1.45fr) auto;
+  gap: 20px;
+  align-items: end;
+  width: 100%;
+  min-width: 0;
 }
-.case-desktop__label,
-.case-phone__label {
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--dim);
-  margin-bottom: 6px;
+.case-window--web {
+  border-radius: var(--radius, 14px);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--bg-elev, #141416);
+  box-shadow: var(--shadow), 0 16px 48px rgba(0, 0, 0, 0.35);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.case-window__body--web {
+  position: relative;
+  background: #0c0c0e;
+  padding: 0;
 }
 .case-desktop__viewport {
   position: relative;
   width: 100%;
-  height: 0;
-  padding-bottom: 56%;
   overflow: hidden;
-  border-radius: 10px;
-  border: 1px solid var(--line);
   background: #0a0a0c;
+  min-height: 220px;
 }
 .case-frame__iframe--desk {
   position: absolute;
   left: 0;
   top: 0;
-  width: 1440px !important;
-  height: 900px !important;
   border: 0;
   transform-origin: top left;
-  /* scale to fit ~ container: approx 0.4–0.55 via container width */
-  transform: scale(calc((100vw * 0.38) / 1440));
   max-width: none;
   background: #fff;
 }
-@media (min-width: 1100px) {
-  .case-frame__iframe--desk {
-    transform: scale(0.42);
-  }
-  .case-desktop__viewport {
-    height: 378px;
-    padding-bottom: 0;
-  }
+.case-window--web .case-frame__fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  z-index: 0;
+  opacity: 0;
+  pointer-events: none;
 }
-@media (max-width: 1099px) {
-  .case-dual { grid-template-columns: 1fr; }
-  .case-desktop__viewport {
-    height: min(42vw, 280px);
-    padding-bottom: 0;
-  }
-  .case-frame__iframe--desk {
-    transform: scale(0.28);
-  }
+.case-window--web.is-blocked .case-frame__fallback {
+  opacity: 1;
+  z-index: 2;
 }
-.case-phone {
+.case-window--web.is-blocked .case-desktop__viewport iframe {
+  opacity: 0;
+}
+
+/* iPhone — separate window (device chrome only, no browser top bar) */
+.case-window--phone {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
 }
-.case-phone__bezel {
-  width: 168px;
-  height: 340px;
-  border-radius: 28px;
-  border: 3px solid #2a2a30;
-  background: #111;
-  box-shadow: 0 12px 40px rgba(0,0,0,.45), inset 0 0 0 2px #0a0a0c;
+.case-phone-shell {
+  width: 188px;
+  height: 386px;
+  border-radius: 36px;
+  background: linear-gradient(160deg, #3a3a40 0%, #1a1a1e 40%, #0e0e10 100%);
+  border: 2px solid #4a4a52;
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 2px #0a0a0c,
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
   position: relative;
-  overflow: hidden;
-  padding: 10px 8px 12px;
+  padding: 12px 10px 16px;
+  box-sizing: border-box;
+}
+.case-phone__speaker {
+  position: absolute;
+  top: 11px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 42px;
+  height: 5px;
+  border-radius: 4px;
+  background: #050505;
+  z-index: 4;
 }
 .case-phone__notch {
   position: absolute;
-  top: 8px;
+  top: 10px;
   left: 50%;
   transform: translateX(-50%);
-  width: 54px;
-  height: 8px;
-  border-radius: 8px;
-  background: #000;
+  width: 72px;
+  height: 18px;
+  border-radius: 0 0 12px 12px;
+  background: #050505;
   z-index: 3;
 }
 .case-phone__screen {
   width: 100%;
   height: 100%;
-  border-radius: 18px;
+  border-radius: 24px;
   overflow: hidden;
-  background: #fff;
+  background: #111;
   position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+.case-phone__home {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 72px;
+  height: 4px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.22);
+  z-index: 4;
 }
 .case-frame__iframe--mob {
   position: absolute;
   left: 0;
   top: 0;
-  width: 390px !important;
-  height: 844px !important;
   border: 0;
   transform-origin: top left;
-  transform: scale(0.38);
+  max-width: none;
   background: #fff;
+}
+.case-frame__fallback--mob {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  z-index: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+.case-window--phone.is-blocked .case-frame__fallback--mob {
+  opacity: 1;
+  z-index: 2;
+}
+.case-window--phone.is-blocked .case-phone__screen iframe {
+  opacity: 0;
+}
+.case-phone__caption {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+/* Case meta + pair layout: text left, dual windows right (or stack) */
+.bay__inner--case {
+  align-items: start;
+}
+.bay__inner--case .case-pair {
+  grid-column: auto;
+}
+
+@media (max-width: 980px) {
+  .case-pair {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+  .case-window--web {
+    width: 100%;
+  }
 }
 
 /* Stars */
