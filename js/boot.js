@@ -1,6 +1,7 @@
 /**
- * PATH OS boot — exactly 92s (1:32)
+ * PATH OS boot — ~91–92s (matches boot-head video + audio)
  * Slow eyelids 10s → matrix rain + center EQ + terminals
+ * Floating head video (audio source): visible only on bright/red frames
  * Infection: green → red over ~12s (not a hard cut)
  * then WARNING wall (Bezhaev Industries only)
  * Gate: cookies + enable sound (required)
@@ -8,12 +9,13 @@
 (() => {
   'use strict';
 
-  const BOOT_MS = 92000; // 1:32 exact
+  const BOOT_MS = 91000; // ~1:31 — matches boot-head.mp4
   const WAKE_MS = 10000; // slow eyelids
   const RED_AT_MS = 68000; // infection starts ~1:08
   const RED_BLEND_MS = 12000; // ~12s smooth infection
   const WARN_AT_MS = 82000; // warnings after infection mostly settled
   const COOKIE_KEY = 'sb_path_cookies_v3';
+  const HEAD_VIDEO = 'assets/video/boot-head.mp4';
 
   const GREEN = {
     rain: [0, 255, 120, 0.85],
@@ -184,6 +186,16 @@
         <div class="boot__lid boot__lid--top"></div>
         <div class="boot__lid boot__lid--bot"></div>
       </div>
+      <div class="boot__head" id="bootHead" aria-hidden="true">
+        <video
+          id="bootVideo"
+          class="boot__head-video"
+          playsinline
+          webkit-playsinline
+          preload="auto"
+          src="${HEAD_VIDEO}"
+        ></video>
+      </div>
       <canvas class="boot__digits" id="bootDigits" aria-hidden="true"></canvas>
 
       <div class="boot__gate" id="bootGate" data-plate="${plate}">
@@ -215,10 +227,122 @@
           <span id="bootPct">0%</span>
         </div>
       </div>
-      <audio id="bootAudio" preload="auto" playsinline src="assets/audio/boot.mp3"></audio>
     `;
     document.body.prepend(root);
     return root;
+  }
+
+  /**
+   * Head ghost: video provides audio; visual only when frame is not black
+   * (red digital head present). Random corner/side + size while visible.
+   */
+  function startHeadGhost(video, host) {
+    if (!video || !host) return () => {};
+
+    const sample = document.createElement('canvas');
+    sample.width = 64;
+    sample.height = 36;
+    sample.className = 'boot__head-sample';
+    sample.setAttribute('aria-hidden', 'true');
+    host.parentElement?.appendChild(sample);
+    const sctx = sample.getContext('2d', { willReadFrequently: true });
+
+    let raf = 0;
+    let visible = false;
+    let nextJump = 0;
+    let stopped = false;
+
+    const POS = [
+      { left: '2%', top: '7%', right: 'auto', bottom: 'auto', transform: 'none' },
+      { right: '2%', top: '7%', left: 'auto', bottom: 'auto', transform: 'none' },
+      { left: '2%', bottom: '16%', right: 'auto', top: 'auto', transform: 'none' },
+      { right: '2%', bottom: '16%', left: 'auto', top: 'auto', transform: 'none' },
+      { left: '4%', top: '38%', right: 'auto', bottom: 'auto', transform: 'none' },
+      { right: '4%', top: '38%', left: 'auto', bottom: 'auto', transform: 'none' },
+      { left: '50%', top: '6%', right: 'auto', bottom: 'auto', transform: 'translateX(-50%)' },
+      { left: '50%', bottom: '14%', right: 'auto', top: 'auto', transform: 'translateX(-50%)' },
+      { left: '12%', top: '18%', right: 'auto', bottom: 'auto', transform: 'none' },
+      { right: '12%', top: '22%', left: 'auto', bottom: 'auto', transform: 'none' }
+    ];
+    const SIZES = [0.2, 0.26, 0.32, 0.38, 0.46, 0.54]; // fraction of min(vw,vh)
+
+    function relayout(force) {
+      const minSide = Math.min(innerWidth, innerHeight);
+      const frac = SIZES[(Math.random() * SIZES.length) | 0];
+      const w = Math.round(Math.max(120, Math.min(420, minSide * frac)));
+      host.style.width = w + 'px';
+      const pos = POS[(Math.random() * POS.length) | 0];
+      host.style.left = pos.left;
+      host.style.right = pos.right;
+      host.style.top = pos.top;
+      host.style.bottom = pos.bottom;
+      host.style.transform = pos.transform;
+      nextJump = performance.now() + (force ? 1800 : 2200 + Math.random() * 4200);
+    }
+
+    // initial off-screen-ish place
+    relayout(true);
+    host.classList.remove('is-on', 'is-dim');
+
+    function sampleFrame() {
+      if (stopped) return;
+      if (video.readyState < 2 || video.paused) {
+        raf = requestAnimationFrame(sampleFrame);
+        return;
+      }
+      try {
+        sctx.drawImage(video, 0, 0, sample.width, sample.height);
+        const { data } = sctx.getImageData(0, 0, sample.width, sample.height);
+        let lum = 0;
+        let red = 0;
+        let bright = 0;
+        const n = sample.width * sample.height;
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+          const L = 0.299 * r + 0.587 * g + 0.114 * b;
+          lum += L;
+          red += r;
+          if (L > 28) bright++;
+        }
+        lum /= n;
+        red /= n;
+        const brightRatio = bright / n;
+        // Head present: not near-black; often red-tinted digital face
+        const show = lum > 14 && (brightRatio > 0.06 || red > 22);
+        const now = performance.now();
+
+        if (show) {
+          if (!visible) {
+            visible = true;
+            relayout(true);
+            host.classList.add('is-on');
+            host.classList.remove('is-dim');
+          } else if (now >= nextJump) {
+            relayout(false);
+          }
+          // slight dim when barely visible
+          if (lum < 22) host.classList.add('is-dim');
+          else host.classList.remove('is-dim');
+        } else if (visible) {
+          visible = false;
+          host.classList.remove('is-on', 'is-dim');
+        }
+      } catch (e) {
+        /* drawImage can fail before first frame */
+      }
+      raf = requestAnimationFrame(sampleFrame);
+    }
+
+    raf = requestAnimationFrame(sampleFrame);
+
+    return () => {
+      stopped = true;
+      cancelAnimationFrame(raf);
+      sample.remove();
+      host.classList.remove('is-on', 'is-dim');
+    };
   }
 
   function wrapSiteShell() {
@@ -270,8 +394,8 @@
     return () => { cancelAnimationFrame(raf); removeEventListener('resize', resize); };
   }
 
-  /* Center equalizer from audio */
-  function startEq(canvas, audio, getPalette) {
+  /* Center equalizer from media element (video audio bus) */
+  function startEq(canvas, media, getPalette) {
     const ctx = canvas.getContext('2d');
     let analyser = null;
     let data = null;
@@ -280,9 +404,9 @@
 
     try {
       const AC = window.AudioContext || window.webkitAudioContext;
-      if (AC && audio) {
+      if (AC && media) {
         const ac = new AC();
-        const src = ac.createMediaElementSource(audio);
+        const src = ac.createMediaElementSource(media);
         analyser = ac.createAnalyser();
         analyser.fftSize = 128;
         data = new Uint8Array(analyser.frequencyBinCount);
@@ -511,9 +635,10 @@
     }
   }
 
-  function runSequence(root, audio) {
+  function runSequence(root, media) {
     let infect = 0; // 0 green → 1 full red
     const getPalette = () => paletteAt(infect);
+    const video = media;
 
     const t0 = performance.now();
     root.classList.remove('is-gate');
@@ -528,7 +653,8 @@
     }, WAKE_MS);
 
     const stopRain = startRain($('#bootRain', root), getPalette);
-    const stopEq = startEq($('#bootEq', root), audio, getPalette);
+    const stopEq = startEq($('#bootEq', root), video, getPalette);
+    const stopHead = startHeadGhost(video, $('#bootHead', root));
     let stopTerms = startTerminals($('#bootTerms', root), getPalette);
 
     LOG_LINES.forEach((item) => {
@@ -584,7 +710,7 @@
       phaseEl.textContent = 'WARNING CASCADE';
     }, WARN_AT_MS);
 
-    // End of boot at exactly 1:32
+    // End of boot ≈ video length
     setTimeout(() => {
       cancelAnimationFrame(infectRaf);
       infect = 1;
@@ -600,7 +726,9 @@
         setTimeout(() => {
           stopRain && stopRain();
           stopEq && stopEq();
+          stopHead && stopHead();
           if (stopTerms) stopTerms();
+          try { video.pause(); } catch { /* */ }
           root.remove();
           document.documentElement.classList.remove('boot-materializing', 'boot-revealing');
           window.dispatchEvent(new CustomEvent('path-boot-complete'));
@@ -609,7 +737,7 @@
       }, 7000);
     }, BOOT_MS);
 
-    audio.loop = false;
+    if (video) video.loop = false;
   }
 
   function boot() {
@@ -623,7 +751,7 @@
       wrapSiteShell();
       const gate = $('#bootGate', root);
       const btns = [...root.querySelectorAll('[data-boot-go]')];
-      const audio = $('#bootAudio', root);
+      const video = $('#bootVideo', root);
       if (!btns.length || !gate) {
         document.documentElement.classList.remove('is-booting');
         return;
@@ -640,14 +768,17 @@
         });
         try { localStorage.setItem(COOKIE_KEY, '1'); } catch { /* */ }
         try {
-          audio.volume = 0.92;
-          audio.currentTime = 0;
-          await audio.play();
+          if (video) {
+            video.muted = false;
+            video.volume = 0.92;
+            video.currentTime = 0;
+            await video.play();
+          }
         } catch (e) {
           console.warn(e);
         }
         gate.classList.add('is-hidden');
-        runSequence(root, audio);
+        runSequence(root, video);
       };
 
       btns.forEach((b) => b.addEventListener('click', () => startBoot(b)));

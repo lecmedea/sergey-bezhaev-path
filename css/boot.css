@@ -180,6 +180,63 @@ html.boot-revealing .site-shell {
 .boot__digits { z-index: 9; opacity: 0; pointer-events: none; }
 .boot.is-materializing .boot__digits { opacity: 1; }
 
+/* Floating character head from boot video — only when frame is bright (not black) */
+.boot__head {
+  position: absolute;
+  z-index: 6;
+  width: min(34vw, 280px);
+  opacity: 0;
+  pointer-events: none;
+  border-radius: 14px;
+  overflow: hidden;
+  transform: translateZ(0);
+  transition:
+    opacity 0.4s ease,
+    width 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    left 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+    right 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+    top 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+    bottom 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow:
+    0 0 0 1px rgba(255, 60, 70, 0.25),
+    0 12px 48px rgba(0, 0, 0, 0.55),
+    0 0 40px rgba(255, 40, 60, 0.22);
+  /* black video bg soft-disappears over matrix */
+  mix-blend-mode: screen;
+  will-change: opacity, left, top, width;
+}
+.boot__head.is-on {
+  opacity: 0.95;
+}
+.boot__head.is-dim {
+  opacity: 0.35;
+}
+.boot__head video {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #000;
+}
+/* sample canvas never shown */
+.boot__head-sample {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.boot.is-materializing .boot__head {
+  opacity: 0 !important;
+  transition: opacity 0.5s ease;
+}
+
+@media (max-width: 640px) {
+  .boot__head {
+    width: min(48vw, 200px);
+  }
+}
+
 .boot__scan {
   position: absolute;
   inset: 0;
