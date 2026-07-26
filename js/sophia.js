@@ -162,24 +162,30 @@
     panel.id = 'sophiaPanel';
     panel.innerHTML = `
       <div class="holo-scan holo-scan--pink" aria-hidden="true"></div>
-      <h3>S.O.P.H.I.A. · Pink Channel</h3>
-      <div class="sophia-hud__log" id="sophiaLog">Second mind. Ready to debate JARVIS later.</div>
-      <div class="sophia-hud__cmds">
-        <button type="button" data-scmd="listen">🎤 Listen</button>
-        <button type="button" data-scmd="home">Home</button>
-        <button type="button" data-scmd="next">Next</button>
-        <button type="button" data-scmd="prev">Prev</button>
-        <button type="button" data-scmd="speak">Speak</button>
+      <div class="assist-panel__head">
+        <h3>S.O.P.H.I.A. · Розовый канал</h3>
+        <button type="button" class="assist-panel__close assist-panel__close--pink" id="sophiaClose" aria-label="Свернуть">✕</button>
       </div>
-      <div class="sophia-hud__chat">
-        <div class="sophia-hud__chat-log" id="sophiaChatLog"></div>
-        <form id="sophiaChatForm">
-          <input id="sophiaChatInput" type="text" maxlength="800" placeholder="Talk to Sophia…" />
-          <button type="submit">→</button>
-        </form>
+      <div class="assist-panel__scroll">
+        <div class="sophia-hud__log" id="sophiaLog">Второй разум. Потом поспорим с JARVIS.</div>
+        <div class="sophia-hud__cmds">
+          <button type="button" data-scmd="listen">🎤 Слушать</button>
+          <button type="button" data-scmd="home">Домой</button>
+          <button type="button" data-scmd="next">Дальше</button>
+          <button type="button" data-scmd="prev">Назад</button>
+          <button type="button" data-scmd="speak">Сказать</button>
+        </div>
+        <div class="sophia-hud__chat">
+          <div class="sophia-hud__chat-log" id="sophiaChatLog"></div>
+          <form id="sophiaChatForm">
+            <input id="sophiaChatInput" type="text" maxlength="800" placeholder="Сказать Софии…" />
+            <button type="submit">→</button>
+          </form>
+        </div>
       </div>
     `;
     document.body.appendChild(panel);
+    document.getElementById('sophiaClose')?.addEventListener('click', () => panel.classList.remove('is-open'));
 
     const log = (m) => {
       const el = $('#sophiaLog');
@@ -193,14 +199,15 @@
       chatLog.appendChild(d);
       chatLog.scrollTop = chatLog.scrollHeight;
     };
-    append('bot', 'Pink channel online. Drag me anywhere.');
+    append('bot', 'Розовый канал онлайн. Перетащите иконку куда угодно.');
 
     function cmd(c) {
       if (c === 'home') window.PathAPI?.goHome?.();
       if (c === 'next') window.PathAPI?.goNext?.();
       if (c === 'prev') window.PathAPI?.goPrev?.();
-      if (c === 'speak') speak('Sophia online. Bezhaev Industries.');
+      if (c === 'speak') speak('София на связи. Bezhaev Industries.');
       if (c === 'listen') listen();
+      if (c === 'close') panel.classList.remove('is-open');
     }
     panel.querySelectorAll('[data-scmd]').forEach((b) => b.addEventListener('click', () => cmd(b.dataset.scmd)));
 
@@ -209,8 +216,8 @@
       const off = offline(text);
       if (off.startsWith('__CMD__:')) {
         cmd(off.slice(8));
-        append('bot', 'On it.');
-        speak('OK');
+        append('bot', 'Сделано.');
+        speak('Готово.');
         return;
       }
       const key = getApiKey();

@@ -48,7 +48,7 @@
       hero_credit: 'Sergey Bezhaev 2026',
       hero_sub: 'AI · Digital · Build',
       hero_lead:
-        'Собираю системы из модулей: стратегия, код, контент, автоматизация. Не вертикальная лента — путь. Каждый кейс — блок, который щёлкает на место.',
+        'Собираю системы из модулей: стратегия, код, контент, автоматизация. Не вертикальная лента — путь. Создаю у вас на глазах новое представление о web-дизайне: интерфейс как лаборатория, путь как продукт. Работаю жёстко, красиво и по делу.',
       settings: 'Настройки',
       language: 'Язык',
       language_hint: 'Интерфейс Path · 30 языков · СНГ включены',
@@ -68,7 +68,7 @@
       hero_credit: 'Sergey Bezhaev 2026',
       hero_sub: 'AI · Digital · Build',
       hero_lead:
-        'I build systems from modules: strategy, code, content, automation. Not a vertical feed — a path. Each case is a block that clicks into place.',
+        'I build systems from modules: strategy, code, content, automation. Not a vertical feed — a path. Before your eyes I create a new vision of web design: interface as a lab, path as product. Hard, beautiful, on purpose.',
       settings: 'Settings',
       language: 'Language',
       language_hint: 'Path UI · 30 languages · CIS included',

@@ -260,35 +260,41 @@
     panel.id = 'jarvisPanel';
     panel.innerHTML = `
       <div class="holo-scan" aria-hidden="true"></div>
-      <h3>J.A.R.V.I.S. · Holo Console</h3>
-      <div class="jarvis-hud__log" id="jarvisLog">Male voice core · offline + Gemini · drag FAB freely.</div>
-      <div class="jarvis-hud__cmds">
-        <button type="button" data-jcmd="listen">🎤 Listen</button>
-        <button type="button" data-jcmd="home">Home</button>
-        <button type="button" data-jcmd="next">Next</button>
-        <button type="button" data-jcmd="prev">Prev</button>
-        <button type="button" data-jcmd="cases">Cases</button>
-        <button type="button" data-jcmd="status">Status</button>
-        <button type="button" data-jcmd="gestures">Gestures</button>
-        <button type="button" data-jcmd="live">Live</button>
-        <button type="button" data-jcmd="speak-hello">Speak</button>
+      <div class="assist-panel__head">
+        <h3>J.A.R.V.I.S. · Голограмма</h3>
+        <button type="button" class="assist-panel__close" id="jarvisClose" aria-label="Свернуть">✕</button>
       </div>
-      <div class="jarvis-hud__chat">
-        <div class="jarvis-hud__chat-log" id="jarvisChatLog"></div>
-        <form id="jarvisChatForm" autocomplete="off">
-          <input id="jarvisChatInput" type="text" maxlength="800" placeholder="Command or question…" />
-          <button type="submit">→</button>
-        </form>
-      </div>
-      <div class="jarvis-hud__key">
-        <label for="jarvisKeyInput">Gemini key</label>
-        <input id="jarvisKeyInput" type="password" placeholder="AIza…" autocomplete="off" />
-      </div>
-      <div class="jarvis-hud__links">
-        <a href="${liveHref}" target="_blank" rel="noopener">Gemini Live ↗</a>
+      <div class="assist-panel__scroll">
+        <div class="jarvis-hud__log" id="jarvisLog">Голосовое ядро · offline + Gemini · перетащите иконку.</div>
+        <div class="jarvis-hud__cmds">
+          <button type="button" data-jcmd="listen">🎤 Слушать</button>
+          <button type="button" data-jcmd="home">Домой</button>
+          <button type="button" data-jcmd="next">Дальше</button>
+          <button type="button" data-jcmd="prev">Назад</button>
+          <button type="button" data-jcmd="cases">Кейсы</button>
+          <button type="button" data-jcmd="status">Статус</button>
+          <button type="button" data-jcmd="gestures">Жесты</button>
+          <button type="button" data-jcmd="live">Live</button>
+          <button type="button" data-jcmd="speak-hello">Сказать</button>
+        </div>
+        <div class="jarvis-hud__chat">
+          <div class="jarvis-hud__chat-log" id="jarvisChatLog"></div>
+          <form id="jarvisChatForm" autocomplete="off">
+            <input id="jarvisChatInput" type="text" maxlength="800" placeholder="Команда или вопрос…" />
+            <button type="submit">→</button>
+          </form>
+        </div>
+        <div class="jarvis-hud__key">
+          <label for="jarvisKeyInput">Ключ Gemini</label>
+          <input id="jarvisKeyInput" type="password" placeholder="AIza…" autocomplete="off" />
+        </div>
+        <div class="jarvis-hud__links">
+          <a href="${liveHref}" target="_blank" rel="noopener">Gemini Live ↗</a>
+        </div>
       </div>
     `;
     document.body.appendChild(panel);
+    $('#jarvisClose')?.addEventListener('click', () => panel.classList.remove('is-open'));
 
     const log = (m) => {
       const el = $('#jarvisLog');
@@ -303,7 +309,7 @@
       chatLog.appendChild(d);
       chatLog.scrollTop = chatLog.scrollHeight;
     };
-    append('bot', 'Holo link online. Male voice preferred when OS provides one.');
+    append('bot', 'Голографический канал онлайн. Мужской голос, если ОС его даёт.');
 
     setInterval(() => {
       const c = $('#jarvisClock');
@@ -319,11 +325,12 @@
         case 'next': window.PathAPI?.goNext?.(); break;
         case 'prev': window.PathAPI?.goPrev?.(); break;
         case 'cases': window.PathAPI?.goToIndex?.(2); break;
-        case 'status': log('Path ' + ($('#progressPct')?.textContent || '0%')); speak('Path systems nominal.'); break;
+        case 'status': log('Path ' + ($('#progressPct')?.textContent || '0%')); speak('Системы Path в норме.'); break;
         case 'gestures': window.PathGestures?.toggle?.(); break;
         case 'live': window.open(liveHref, '_blank', 'noopener'); break;
         case 'listen': listen(); break;
-        case 'speak-hello': speak('Bezhaev Industries. JARVIS online.'); break;
+        case 'speak-hello': speak('Bezhaev Industries. Джарвис на связи.'); break;
+        case 'close': panel.classList.remove('is-open'); break;
         default: break;
       }
     }
@@ -341,8 +348,8 @@
       const off = offlineReply(text);
       if (off.startsWith('__CMD__:')) {
         cmd(off.slice(8));
-        append('bot', 'Executed.');
-        speak('Done.');
+        append('bot', 'Выполнено.');
+        speak('Готово.');
         return;
       }
       const key = getApiKey() || keyInput?.value?.trim();

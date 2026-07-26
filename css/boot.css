@@ -1136,3 +1136,93 @@ html.boot-revealing .site-shell {
 .case-frame--mini .case-frame__shot { min-height: 180px; aspect-ratio: 16/9; }
 
 .jarvis-hud__fab { cursor: grab; }
+
+/* Assistant panel chrome: scroll + close + dock */
+.assist-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: -4px 0 8px;
+  padding-bottom: 6px;
+  background: inherit;
+}
+.assist-panel__head h3 { margin: 0; flex: 1; }
+.assist-panel__close {
+  appearance: none;
+  border: 1px solid rgba(90, 210, 255, 0.45);
+  background: rgba(0, 40, 80, 0.45);
+  color: #9de8ff;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.assist-panel__close--pink {
+  border-color: rgba(255, 120, 220, 0.45);
+  background: rgba(80, 10, 60, 0.45);
+  color: #ffb0ec;
+}
+.assist-panel__close:hover { filter: brightness(1.15); }
+.assist-panel__scroll {
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-height: min(46vh, 400px);
+  overscroll-behavior: contain;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(90, 210, 255, 0.35) transparent;
+}
+.sophia-hud__panel .assist-panel__scroll {
+  scrollbar-color: rgba(255, 120, 220, 0.35) transparent;
+}
+.assist-panel__scroll::-webkit-scrollbar { width: 8px; }
+.assist-panel__scroll::-webkit-scrollbar-thumb {
+  background: rgba(90, 210, 255, 0.3);
+  border-radius: 8px;
+}
+.sophia-hud__panel .assist-panel__scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 120, 220, 0.3);
+}
+
+.jarvis-hud__panel,
+.sophia-hud__panel {
+  max-height: min(52vh, 480px) !important;
+  display: none;
+  flex-direction: column;
+  overflow: hidden !important;
+}
+.jarvis-hud__panel.is-open,
+.sophia-hud__panel.is-open {
+  display: flex !important;
+}
+
+/* Connector lines FAB ↔ panel */
+.assist-link {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 2px;
+  width: 0;
+  transform-origin: 0 50%;
+  pointer-events: none;
+  z-index: 95;
+  opacity: 0;
+  border-radius: 2px;
+  transition: opacity 0.15s ease;
+}
+.assist-link.is-on { opacity: 0.95; }
+.assist-link--cyan {
+  background: linear-gradient(90deg, #5ad4ff, #0a84ff);
+  box-shadow: 0 0 8px rgba(90, 210, 255, 0.85), 0 0 2px #5ad4ff;
+}
+.assist-link--pink {
+  background: linear-gradient(90deg, #ff8ae8, #c44dff);
+  box-shadow: 0 0 8px rgba(255, 100, 220, 0.85), 0 0 2px #ff8ae8;
+}

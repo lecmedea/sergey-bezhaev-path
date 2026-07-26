@@ -13,8 +13,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/path.css?v=20260726-lab">
-  <link rel="stylesheet" href="css/boot.css?v=20260726-head2">
+  <link rel="stylesheet" href="css/path.css?v=20260726-ui2">
+  <link rel="stylesheet" href="css/boot.css?v=20260726-ui2">
 </head>
 <body class="path-body">
   <!-- Top chrome — без traffic lights, аккордеоны -->
@@ -26,7 +26,7 @@
           <div class="acc__panel" id="acc-profile" hidden>
             <button type="button" data-go="1">Кто я · полный срез</button>
             <button type="button" data-go="1">Компетенции</button>
-            <button type="button" data-go="6">Bad Balance</button>
+            <button type="button" data-go="7">Bad Balance</button>
             <a href="mailto:lecmedea@gmail.com">Письмо в лоб</a>
           </div>
         </div>
@@ -42,7 +42,7 @@
         <div class="acc">
           <button type="button" class="acc__btn" aria-expanded="false" data-acc="gallery">Галерея</button>
           <div class="acc__panel" id="acc-gallery" hidden>
-            <button type="button" data-go="7">Дом · прогулка</button>
+            <button type="button" data-go="8">Дом · прогулка</button>
             <button type="button" data-go="2">Скриншоты кейсов</button>
             <button type="button" data-go="3">El Bezhano grillz</button>
           </div>
@@ -97,7 +97,8 @@
         <div class="acc">
           <button type="button" class="acc__btn" aria-expanded="false" data-acc="soft">ПО</button>
           <div class="acc__panel" id="acc-soft" hidden>
-            <button type="button" data-go="5">Стек и софт</button>
+            <button type="button" data-go="5">Grantek Cable</button>
+            <button type="button" data-go="6">Стек и софт</button>
             <a href="jarvis/" target="_blank" rel="noopener">JARVIS · Gemini Live ↗</a>
             <a href="jarvis/chat.html" target="_blank" rel="noopener">JARVIS · лёгкий chatbot ↗</a>
             <button type="button" id="btnOpenJarvis">JARVIS · HUD / чат (J)</button>
@@ -128,9 +129,11 @@
             <span class="h1-line" data-i18n="hero_title">Bezhaev Industries</span>
             <span class="h1-sub">AI · Digital · Build</span>
           </h1>
-          <p class="lead">
+          <p class="lead" data-i18n="hero_lead">
             Собираю системы из модулей: стратегия, код, контент, автоматизация.
             Не вертикальная лента — <em>путь</em>. Каждый кейс — блок, который щёлкает на место.
+            Создаю у вас на глазах <strong>новое представление о web-дизайне</strong>: интерфейс как лаборатория,
+            путь как продукт, ассистенты, жесты, живые кейсы — не шаблонная «лендинг-лента».
             Работаю жёстко, красиво и по делу. Если «сделай красиво за 20к и забудь» — мимо.
           </p>
           <div class="trend-row" aria-label="Теги">
@@ -142,7 +145,7 @@
           </div>
           <div class="hero-cta">
             <button type="button" class="btn btn--primary" data-go="2">Кейсы →</button>
-            <button type="button" class="btn btn--ghost" data-go="8">Право · дисклеймер</button>
+            <button type="button" class="btn btn--ghost" data-go="9">Право · дисклеймер</button>
             <a class="btn btn--ghost" href="mailto:lecmedea@gmail.com">Написать</a>
           </div>
           <p class="hint-scroll" data-i18n="hero_credit">Sergey Bezhaev 2026</p>
@@ -244,15 +247,15 @@
           </ul>
           <a class="btn btn--primary" href="https://azimutclinic.ru/" target="_blank" rel="noopener">Открыть сайт</a>
         </div>
-        <div class="case-frame" data-live-src="https://azimutclinic.ru/">
+        <div class="case-frame" data-live-src="https://azimutclinic.ru/" data-embed-src="https://azimut-medline-site.vercel.app/">
           <div class="case-frame__chrome">
             <span class="case-dots" aria-hidden="true"><i></i><i></i><i></i></span>
             <em>azimutclinic.ru</em>
-            <span class="case-lock">locked</span>
+            <span class="case-lock">live</span>
           </div>
           <div class="case-frame__shot">
             <img class="case-frame__fallback" src="assets/shot-azimut.jpg" alt="Azimut Clinic" loading="lazy" decoding="async">
-            <iframe class="case-frame__iframe" title="Azimut Clinic live" src="https://azimutclinic.ru/" loading="lazy" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+            <iframe class="case-frame__iframe" title="Azimut Clinic live" src="https://azimut-medline-site.vercel.app/" loading="lazy" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
           </div>
         </div>
       </div>
@@ -321,40 +324,58 @@
           </ul>
           <a class="btn btn--primary" href="https://xn--80aalc7a.shop" target="_blank" rel="noopener">Открыть сайт</a>
         </div>
-        <div class="case-frame" data-live-src="https://xn--80aalc7a.shop/">
+        <div class="case-frame" data-live-src="https://xn--80ajaxl.shop/" data-embed-src="https://xn--80ajaxl.shop/">
           <div class="case-frame__chrome">
             <span class="case-dots" aria-hidden="true"><i></i><i></i><i></i></span>
             <em>elena.shop</em>
-            <span class="case-lock">locked</span>
+            <span class="case-lock">live</span>
           </div>
           <div class="case-frame__shot">
             <img class="case-frame__fallback" src="assets/shot-elena.jpg" alt="Elena Shop" loading="lazy" decoding="async">
-            <iframe class="case-frame__iframe" title="Elena Shop live" src="https://xn--80aalc7a.shop/" loading="lazy" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+            <iframe class="case-frame__iframe" title="Elena Shop live" src="https://xn--80ajaxl.shop/" loading="lazy" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- 5 Soft / Grantek · Jupiter -->
-    <section class="bay" data-label="06 · ПО" data-name="ПО" id="bay-5">
+    <!-- 5 Grantek · between Elena and Soft -->
+    <section class="bay bay--case" data-label="06 · Grantek" data-name="Grantek" id="bay-5">
+      <div class="bay__inner bay__inner--case">
+        <div class="case-meta">
+          <p class="eyebrow">Кейс · B2B · дилер</p>
+          <h2>Grantek Cable</h2>
+          <p class="case-url"><a href="https://lecmedea.github.io/Grantek-cabel/" target="_blank" rel="noopener">lecmedea.github.io/Grantek-cabel</a></p>
+          <p class="body">
+            B2B-сайт дилера кабельно-проводниковой продукции: каталог, доверие, коммерческие предложения,
+            мобильная навигация, структура под реальные сделки — не «витрина ради витрины».
+          </p>
+          <ul class="tags">
+            <li>B2B</li>
+            <li>Каталог</li>
+            <li>КП / лиды</li>
+            <li>GitHub Pages</li>
+          </ul>
+          <a class="btn btn--primary" href="https://lecmedea.github.io/Grantek-cabel/" target="_blank" rel="noopener">Открыть сайт</a>
+        </div>
+        <div class="case-frame" data-live-src="https://lecmedea.github.io/Grantek-cabel/" data-embed-src="https://lecmedea.github.io/Grantek-cabel/">
+          <div class="case-frame__chrome">
+            <span class="case-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <em>Grantek Cable</em>
+            <span class="case-lock">live</span>
+          </div>
+          <div class="case-frame__shot">
+            <iframe class="case-frame__iframe" title="Grantek Cable live" src="https://lecmedea.github.io/Grantek-cabel/" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 Soft · Jupiter -->
+    <section class="bay" data-label="07 · ПО" data-name="ПО" id="bay-6">
       <div class="bay__inner">
         <p class="eyebrow">ПО · стек · B2B</p>
         <h2>Софт, который работает, пока ты спишь</h2>
         <div class="soft-grid">
-          <article class="rail-card">
-            <h3>Grantek Cable</h3>
-            <p>B2B-сайт дилера КПП: каталог, доверие, КП, мобильная навигация. <a href="https://lecmedea.github.io/Grantek-cabel/" target="_blank" rel="noopener">Открыть</a></p>
-            <div class="case-frame case-frame--mini" data-live-src="https://lecmedea.github.io/Grantek-cabel/">
-              <div class="case-frame__chrome">
-                <span class="case-dots" aria-hidden="true"><i></i><i></i><i></i></span>
-                <em>Grantek Cable</em>
-                <span class="case-lock">locked</span>
-              </div>
-              <div class="case-frame__shot">
-                <iframe class="case-frame__iframe" title="Grantek live" src="https://lecmedea.github.io/Grantek-cabel/" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
-              </div>
-            </div>
-          </article>
           <article class="rail-card">
             <h3>2ГИС → e-mail</h3>
             <p>Парсер контактов для маркетинговых баз. Без ручного ада copy-paste.</p>
@@ -380,7 +401,7 @@
     </section>
 
     <!-- 6 TikTok AI + Bad Balance · Saturn -->
-    <section class="bay" data-label="07 · AI / BB" data-name="AI · BB" id="bay-6">
+    <section class="bay" data-label="08 · AI / BB" data-name="AI · BB" id="bay-7">
       <div class="bay__inner bay__inner--stack">
         <div class="split-block">
           <div>
@@ -478,7 +499,7 @@
     </section>
 
     <!-- 7 Gallery House · Uranus -->
-    <section class="bay bay--house" data-label="08 · Галерея" data-name="Галерея" id="bay-7">
+    <section class="bay bay--house" data-label="09 · Галерея" data-name="Галерея" id="bay-8">
       <div class="bay__inner bay__inner--house">
         <div class="house-head">
           <p class="eyebrow">Галерея · интерактив</p>
@@ -569,7 +590,7 @@
     </section>
 
     <!-- 8 Legal · Neptune -->
-    <section class="bay bay--legal" data-label="09 · Право" data-name="Право" id="bay-8">
+    <section class="bay bay--legal" data-label="10 · Право" data-name="Право" id="bay-9">
       <div class="bay__inner bay__inner--legal">
         <p class="eyebrow">Публичное уведомление · 2025–2026</p>
         <h2>Авторство, ИС и правила игры</h2>
@@ -580,6 +601,23 @@
           и предметом <strong>интеллектуальной собственности</strong> автора, если иное прямо и письменно
           не оформлено отдельным договором об отчуждении исключительного права или лицензионным договором.
         </p>
+
+        <article class="legal-card legal-card--edu" style="margin-bottom: 20px;">
+          <h3>Образование · нейросети</h3>
+          <p>
+            Сергей Бежаев имеет профильное образование в области <strong>нейронных сетей / AI</strong>
+            (диплом с печатью). Компетенции применяются в продуктах: AI-консультанты, контент-системы,
+            голосовые ассистенты, автоматизация и digital-контуры на этом Path.
+          </p>
+          <p>
+            <a class="btn btn--primary" href="assets/docs/diplom-bezhaev-neuro.pdf" target="_blank" rel="noopener">
+              Открыть диплом (PDF)
+            </a>
+          </p>
+          <div class="legal-doc-frame">
+            <iframe title="Диплом — нейросети, Бежаев С.В." src="assets/docs/diplom-bezhaev-neuro.pdf#view=FitH" loading="lazy"></iframe>
+          </div>
+        </article>
 
         <div class="legal-grid">
           <article class="legal-card">
@@ -675,7 +713,7 @@
     </section>
 
     <!-- 9 Contact · Pluto -->
-    <section class="bay bay--end" data-label="10 · Контакт" data-name="Контакт" id="bay-9">
+    <section class="bay bay--end" data-label="11 · Контакт" data-name="Контакт" id="bay-10">
       <div class="bay__inner bay__inner--end">
         <p class="eyebrow">Дальше</p>
         <h2>Соберём следующий блок — по-взрослому</h2>
@@ -723,13 +761,14 @@
 
   <audio id="doorClick" preload="auto" src="assets/ui/click.wav"></audio>
 
-  <script src="js/path.js?v=20260726-lab"></script>
-  <script src="js/i18n.js?v=20260726-lab"></script>
-  <script src="js/gestures.js?v=20260726-lab"></script>
-  <script src="js/case-frames.js?v=20260726-lab"></script>
-  <script src="js/jarvis.js?v=20260726-lab"></script>
-  <script src="js/sophia.js?v=20260726-lab"></script>
-  <script src="js/boot.js?v=20260726-head2"></script>
+  <script src="js/path.js?v=20260726-ui2"></script>
+  <script src="js/i18n.js?v=20260726-ui2"></script>
+  <script src="js/gestures.js?v=20260726-ui2"></script>
+  <script src="js/case-frames.js?v=20260726-ui2"></script>
+  <script src="js/jarvis.js?v=20260726-ui2"></script>
+  <script src="js/sophia.js?v=20260726-ui2"></script>
+  <script src="js/assist-dock.js?v=20260726-ui2"></script>
+  <script src="js/boot.js?v=20260726-ui2"></script>
   <script>
     document.getElementById('btnOpenJarvis')?.addEventListener('click', () => {
       window.PathJarvis?.mount?.();
@@ -739,4 +778,4 @@
   </script>
 </body>
 </html>
-<!-- rebuild 20260726-lab -->
+<!-- rebuild 20260726-ui2 -->
