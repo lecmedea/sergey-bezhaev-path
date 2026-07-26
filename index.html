@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/path.css">
-  <link rel="stylesheet" href="css/boot.css?v=20260726-gate2">
+  <link rel="stylesheet" href="css/boot.css?v=20260726-boot3">
 </head>
 <body class="path-body">
   <!-- Top chrome — без traffic lights, аккордеоны -->
@@ -98,7 +98,10 @@
           <button type="button" class="acc__btn" aria-expanded="false" data-acc="soft">ПО</button>
           <div class="acc__panel" id="acc-soft" hidden>
             <button type="button" data-go="5">Стек и софт</button>
-            <p class="acc__hint">2ГИС e-mail parser · TG chat → Excel · AI coding · static sites · bots</p>
+            <a href="jarvis/" target="_blank" rel="noopener">JARVIS · Gemini Live ↗</a>
+            <a href="jarvis/chat.html" target="_blank" rel="noopener">JARVIS · лёгкий chatbot ↗</a>
+            <button type="button" id="btnOpenJarvis">JARVIS · HUD / чат (J)</button>
+            <p class="acc__hint">2ГИС e-mail parser · TG chat → Excel · AI coding · static sites · bots · Jarvis Live</p>
           </div>
         </div>
       </nav>
@@ -703,9 +706,16 @@
 
   <audio id="doorClick" preload="auto" src="assets/ui/click.wav"></audio>
 
-  <script src="js/jarvis.js"></script>
-  <script src="js/boot.js?v=20260726-gate2"></script>
+  <script src="js/jarvis.js?v=20260726-boot3"></script>
+  <script src="js/boot.js?v=20260726-boot3"></script>
   <script src="js/path.js"></script>
+  <script>
+    document.getElementById('btnOpenJarvis')?.addEventListener('click', () => {
+      window.PathJarvis?.mount?.();
+      document.getElementById('jarvisPanel')?.classList.add('is-open');
+      document.getElementById('jarvisFab')?.focus();
+    });
+  </script>
 </body>
 </html>
-<!-- rebuild 20260722003937 -->
+<!-- rebuild 20260726-boot3 -->

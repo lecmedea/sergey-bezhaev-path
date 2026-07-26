@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JARVIS Chat · Bezhaev Industries</title>
+  <meta name="description" content="Лёгкий JARVIS AI chatbot для Path — базовый веб-стек, offline-база + optional Gemini.">
+  <style>
+    :root {
+      --bg: #0a0a0b;
+      --panel: #1a1a1e;
+      --text: #f5f5f7;
+      --muted: #a1a1a6;
+      --line: rgba(255,255,255,.12);
+      --accent: #0a84ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+    .shell {
+      width: min(520px, 100%);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--panel);
+      box-shadow: 0 24px 80px rgba(0,0,0,.45);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: min(70vh, 640px);
+    }
+    header {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+    header h1 {
+      margin: 0;
+      font-size: 14px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    header p { margin: 6px 0 0; font-size: 13px; color: var(--muted); }
+    #log {
+      flex: 1;
+      overflow: auto;
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .msg { font-size: 14px; line-height: 1.45; max-width: 92%; }
+    .msg.bot { color: var(--text); }
+    .msg.me { color: var(--accent); align-self: flex-end; text-align: right; }
+    form {
+      display: flex;
+      gap: 8px;
+      padding: 12px;
+      border-top: 1px solid var(--line);
+    }
+    input[type="text"], input[type="password"] {
+      flex: 1;
+      min-width: 0;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.35);
+      color: var(--text);
+      padding: 10px 12px;
+      font: inherit;
+      font-size: 14px;
+    }
+    button {
+      border: 0;
+      border-radius: 10px;
+      background: var(--text);
+      color: var(--bg);
+      font-weight: 700;
+      padding: 10px 14px;
+      cursor: pointer;
+      font: inherit;
+    }
+    .keybar {
+      padding: 0 12px 12px;
+      display: flex;
+      gap: 8px;
+    }
+    footer {
+      padding: 0 18px 14px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    footer a { color: #64d2ff; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <h1>JARVIS · Chatbot</h1>
+      <p>Bezhaev Industries · лёгкий чат на базовом веб-стеке</p>
+    </header>
+    <div id="log" aria-live="polite"></div>
+    <form id="f" autocomplete="off">
+      <input id="q" type="text" maxlength="500" placeholder="Спросить…" aria-label="Сообщение" required>
+      <button type="submit">→</button>
+    </form>
+    <div class="keybar">
+      <input id="k" type="password" placeholder="Gemini API key (optional, localStorage)" autocomplete="off">
+    </div>
+    <footer>
+      Offline-база Path всегда. С ключом — Gemini 2.0 Flash.
+      <a href="../">← Path</a> ·
+      <a href="./">Live multimodal ↗</a>
+    </footer>
+  </div>
+  <script>
+    const KEY = 'GEMINI_API_KEY';
+    const log = document.getElementById('log');
+    const k = document.getElementById('k');
+    try { k.value = localStorage.getItem(KEY) || ''; } catch {}
+
+    const KB = [
+      [/кто ты|jarvis|джарвис/i, 'Я лёгкий JARVIS chatbot сайта Sergey Bezhaev / Bezhaev Industries.'],
+      [/бежаев|bezhaev|сергей/i, 'Sergey Bezhaev — AI · digital · build. lecmedea@gmail.com · TG @notoruis.'],
+      [/азимут|azimut/i, 'Azimut Clinic — digital product кейс на Path.'],
+      [/grillz|гриллз/i, 'Grillz Customs — конструктор и product-site.'],
+      [/live|голос|gemini/i, 'Мультимодал Live: откройте /jarvis/ (корень этой папки).'],
+      [/привет|hello|hi/i, 'На связи. Спросите про кейсы, контакт или Live.']
+    ];
+
+    function add(who, text) {
+      const d = document.createElement('div');
+      d.className = 'msg ' + who;
+      d.textContent = (who === 'me' ? 'Вы: ' : 'J: ') + text;
+      log.appendChild(d);
+      log.scrollTop = log.scrollHeight;
+    }
+    add('bot', 'Лёгкий чат. Без Stark — только Bezhaev Industries.');
+
+    function offline(t) {
+      for (const [re, a] of KB) if (re.test(t)) return a;
+      return 'Offline-база: кейсы Azimut / Grillz / Elena, контакт lecmedea@gmail.com. Для умного ответа вставьте Gemini key.';
+    }
+
+    async function gemini(text, key) {
+      const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + encodeURIComponent(key);
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text:
+            'Ты JARVIS на сайте Sergey Bezhaev (Bezhaev Industries). Кратко по-русски. Никогда не говори Stark. Вопрос: ' + text
+          }]}],
+          generationConfig: { maxOutputTokens: 280, temperature: 0.6 }
+        })
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      return (data?.candidates?.[0]?.content?.parts || []).map(p => p.text).join('').trim() || 'Пустой ответ.';
+    }
+
+    document.getElementById('f').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const q = document.getElementById('q');
+      const text = q.value.trim();
+      if (!text) return;
+      q.value = '';
+      add('me', text);
+      const key = (k.value || '').trim();
+      try { if (key) localStorage.setItem(KEY, key); } catch {}
+      if (key) {
+        add('bot', '…');
+        const last = log.lastElementChild;
+        try {
+          last.textContent = 'J: ' + await gemini(text, key);
+        } catch (err) {
+          last.textContent = 'J: ' + offline(text) + ' (' + err.message + ')';
+        }
+      } else {
+        add('bot', offline(text));
+      }
+    });
+  </script>
+</body>
+</html>

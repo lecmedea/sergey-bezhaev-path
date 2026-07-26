@@ -1,35 +1,76 @@
 /**
- * PATH OS cinematic boot
- * - Wake blink (cinema eyelids)
- * - Digital face that “speaks” (no mouth required) + audio analysis
- * - Audio plays to the end (no loop kill)
- * - At t=30s: digits assemble into UI and solidify (Ive materialize)
- * - 4th wall dialogue lines
+ * PATH OS boot — 100s (matches audio)
+ * Matrix rain + center EQ + floating terminals
+ * @ 76s green → red “villain birth”
+ * then WARNING wall of disclaimers (Bezhaev Industries only)
+ * Gate: cookies + enable sound (required)
  */
 (() => {
   'use strict';
 
-  const MATERIALIZE_AT_MS = 30000;
-  const STORAGE_COOKIE = 'sb_path_cookies_v2';
+  const BOOT_MS = 100000; // 1:40
+  const RED_AT_MS = 76000; // 1:16
+  const COOKIE_KEY = 'sb_path_cookies_v3';
 
-  const LINES = [
-    { t: 2800, text: 'You opened this page. I noticed.', cls: 'line--break' },
-    { t: 4200, text: 'PATH OS · neural interface online', cls: 'line--sys' },
-    { t: 5600, text: 'Hello. I am not a template. I am a workshop.', cls: 'line--break' },
-    { t: 7200, text: 'Synthesizing face mesh · operator: Sergey Bezhaev', cls: 'line--ok' },
-    { t: 8800, text: 'This site is a 4th wall. We are already through it.', cls: 'line--break' },
-    { t: 10400, text: 'Loading skill lattice: AI · digital · product', cls: 'line--ok' },
-    { t: 12000, text: 'JARVIS protocol: assist, never replace the human', cls: 'line--sys' },
-    { t: 13600, text: 'You are not “visiting”. You are in the machine with me.', cls: 'line--break' },
-    { t: 15200, text: 'Modules: Azimut · Grillz · Elena · Path', cls: 'line--ok' },
-    { t: 16800, text: 'Ultron reminder: power without ethics is noise', cls: 'line--warn' },
-    { t: 18400, text: 'Forging UI atoms from pure digits…', cls: 'line--sys' },
-    { t: 20000, text: 'If you feel watched — good. That means you are awake.', cls: 'line--break' },
-    { t: 21600, text: 'Calibrating orbit deck · horizontal time', cls: 'line--ok' },
-    { t: 23200, text: 'Reality mesh integrity: rising', cls: 'line--ok' },
-    { t: 24800, text: 'Solidifying interface · Jonathan Ive density…', cls: 'line--sys' },
-    { t: 26800, text: 'Welcome to the Path. Touch nothing random. Or do.', cls: 'line--break' },
-    { t: 28800, text: 'Materialize.', cls: 'line--ok' }
+  const GREEN = { rain: 'rgba(0,255,120,0.85)', rainHot: 'rgba(200,255,220,0.95)', eq: '#30d158', term: 'rgba(0,255,140,0.9)' };
+  const RED = { rain: 'rgba(255,40,60,0.88)', rainHot: 'rgba(255,180,180,0.95)', eq: '#ff453a', term: 'rgba(255,90,100,0.92)' };
+
+  const TERM_LINES = [
+    'BEZHAEV_INDUSTRIES :: core.mount()',
+    'encoding lattice… OK',
+    'decrypt skill://ai-digital-product',
+    'orbit.deck.calibrate(horizontal)',
+    'path.modules.load([azimut,grillz,elena])',
+    'neural.interface.boot()',
+    'ethics.core.check() → human-first',
+    'compile://ui-atoms --precision=ive',
+    'stream audio.sync(eq)',
+    'matrix.rain.bind(canvas)',
+    'warn: 4th wall integrity 12%',
+    'operator: Sergey Bezhaev',
+    'entity PATH OS · online',
+    'hash 0x' + Math.random().toString(16).slice(2, 10),
+    'telemetry://path ping 14ms',
+    'rebuild consciousness…',
+    'link modules: vision, build, ship',
+    'sandbox://safe-mode',
+    'deploy stage: public',
+    'BEZHAEV_INDUSTRIES © systems'
+  ];
+
+  const WARNINGS = [
+    'WARNING · SYSTEM PERSONA SHIFT DETECTED',
+    'WARNING · BEZHAEV INDUSTRIES PROTOCOL BREACH',
+    'WARNING · PATH OS NO LONGER IN SAFE MODE',
+    'WARNING · USER IS INSIDE THE MACHINE',
+    'WARNING · 4TH WALL COLLAPSE IMMINENT',
+    'WARNING · DIGITAL ENTITY STABILIZING',
+    'WARNING · BEZHAEV · AUTHORIZED ONLY',
+    'WARNING · REALITY MESH REWRITING UI',
+    'WARNING · YOU OPENED THIS — I NOTICED',
+    'WARNING · HIGH ENERGY DISCHARGE',
+    'WARNING · CONSCIOUSNESS THRESHOLD EXCEEDED',
+    'WARNING · BEZHAEV INDUSTRIES · CLASSIFIED'
+  ];
+
+  const LOG_LINES = [
+    { t: 2500, text: 'You pressed play. That was consent.', cls: 'line--break' },
+    { t: 5000, text: 'BEZHAEV INDUSTRIES · PATH OS boot', cls: 'line--sys' },
+    { t: 8000, text: 'Matrix layer synchronized to audio bus', cls: 'line--ok' },
+    { t: 12000, text: 'Equalizer linked · speech energy mapped', cls: 'line--ok' },
+    { t: 18000, text: 'Terminal farm: automated processes live', cls: 'line--sys' },
+    { t: 26000, text: 'This page is not a brochure. It is a workshop.', cls: 'line--break' },
+    { t: 34000, text: 'You are not visiting. You are co-processing.', cls: 'line--break' },
+    { t: 42000, text: 'Modules: AI · digital · build · ship', cls: 'line--ok' },
+    { t: 50000, text: 'Ethics core: human-first (non-negotiable)', cls: 'line--sys' },
+    { t: 58000, text: 'Orbit deck calibrating…', cls: 'line--ok' },
+    { t: 66000, text: 'Signal instability rising…', cls: 'line--warn' },
+    { t: 72000, text: 'Something is waking that is not soft.', cls: 'line--warn' },
+    { t: 76000, text: 'PROTOCOL SHIFT · COLOR VECTOR RED', cls: 'line--danger' },
+    { t: 80000, text: 'WARNING cascade initiated', cls: 'line--danger' },
+    { t: 86000, text: 'Solidifying Path interface…', cls: 'line--sys' },
+    { t: 92000, text: 'BEZHAEV INDUSTRIES · handoff to operator', cls: 'line--ok' },
+    { t: 97000, text: 'Welcome to the Path.', cls: 'line--break' }
   ];
 
   const $ = (s, r = document) => r.querySelector(s);
@@ -40,51 +81,37 @@
     root.id = 'bootSequence';
     root.setAttribute('role', 'dialog');
     root.setAttribute('aria-modal', 'true');
-    root.setAttribute('aria-label', 'Цифровой запуск Path OS');
     root.innerHTML = `
+      <canvas class="boot__rain" id="bootRain" aria-hidden="true"></canvas>
+      <canvas class="boot__eq" id="bootEq" aria-hidden="true"></canvas>
+      <div class="boot__terms" id="bootTerms" aria-hidden="true"></div>
+      <div class="boot__warnings" id="bootWarnings" aria-hidden="true"></div>
+      <div class="boot__scan" aria-hidden="true"></div>
+      <div class="boot__vignette" aria-hidden="true"></div>
       <div class="boot__eyelids" aria-hidden="true">
         <div class="boot__lid boot__lid--top"></div>
         <div class="boot__lid boot__lid--bot"></div>
       </div>
-      <div class="boot__hud" aria-hidden="true">
-        <div class="boot__arc boot__arc--c"></div>
-        <div class="boot__arc boot__arc--a"></div>
-        <div class="boot__arc boot__arc--b"></div>
-      </div>
-      <div class="boot__face-wrap">
-        <canvas class="boot__face" id="bootFace" width="640" height="640" aria-label="Цифровое лицо системы"></canvas>
-      </div>
-      <div class="boot__scan" aria-hidden="true"></div>
-      <div class="boot__vignette" aria-hidden="true"></div>
-      <div class="boot__subtitle" id="bootSub">Stark-class digital entity · PATH OS</div>
       <canvas class="boot__digits" id="bootDigits" aria-hidden="true"></canvas>
 
       <div class="boot__gate" id="bootGate">
-        <div class="boot__gate-tag">Cookies · Audio · 4th wall</div>
-        <h1>Проснись. Система ждёт тебя.</h1>
-        <p>
-          Сайт использует cookies для настроек интерфейса. Продолжая, вы соглашаетесь.
-        </p>
-        <p>
-          Дальше — цифровой запуск с голосом дорожки. <strong>Без «Включить звук» загрузка не начнётся.</strong>
-          Это часть опыта: звук ломает четвёртую стену.
-        </p>
+        <div class="boot__gate-tag">BEZHAEV INDUSTRIES · Cookies · Audio</div>
+        <h1>Проснись. Система ждёт.</h1>
+        <p>Сайт использует cookies для настроек интерфейса. Продолжая, вы соглашаетесь на их использование.</p>
+        <p>Цифровой запуск идёт <strong>под звук</strong>. Без кнопки «Включить звук» загрузка <strong>не начнётся</strong> — так ломается четвёртая стена.</p>
         <div class="boot__gate-actions">
-          <button type="button" class="boot__btn" id="bootEnableSound">
-            Включить звук · войти в систему
-          </button>
+          <button type="button" class="boot__btn" id="bootEnableSound">Включить звук · войти в систему</button>
         </div>
       </div>
 
       <div class="boot__console" id="bootConsole">
-        <div class="boot__status-list" id="bootLines" aria-live="polite"></div>
+        <div class="boot__status-list" id="bootLines"></div>
         <div class="boot__bar"><div class="boot__bar-fill" id="bootBar"></div></div>
         <div class="boot__meta">
-          <span id="bootPhase">GATE LOCKED</span>
+          <span id="bootPhase">GATE</span>
           <span id="bootPct">0%</span>
         </div>
       </div>
-
       <audio id="bootAudio" preload="auto" playsinline src="assets/audio/boot.mp3"></audio>
     `;
     document.body.prepend(root);
@@ -102,14 +129,50 @@
     document.body.appendChild(shell);
   }
 
-  /* ── Digital talking face (no mouth required) ── */
-  function createFace(canvas, audio) {
+  /* Matrix rain + phase color */
+  function startRain(canvas, getPalette) {
     const ctx = canvas.getContext('2d');
-    let raf = 0;
-    let t0 = performance.now();
+    let w, h, cols, fontSize, raf;
+    const glyphs = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン<>/$#@%&*BEZHAEV';
+
+    function resize() {
+      const dpr = Math.min(devicePixelRatio || 1, 2);
+      w = canvas.width = innerWidth * dpr;
+      h = canvas.height = innerHeight * dpr;
+      canvas.style.width = '100%';
+      canvas.style.height = '100%';
+      fontSize = Math.max(12, Math.floor(w / 72));
+      cols = Array.from({ length: Math.floor(w / fontSize) }, () => Math.random() * h);
+    }
+    function frame() {
+      const pal = getPalette();
+      ctx.fillStyle = 'rgba(0,0,0,0.075)';
+      ctx.fillRect(0, 0, w, h);
+      ctx.font = `${fontSize}px monospace`;
+      for (let i = 0; i < cols.length; i++) {
+        const ch = glyphs[(Math.random() * glyphs.length) | 0];
+        const x = i * fontSize;
+        const y = cols[i] * fontSize;
+        ctx.fillStyle = i % 9 === 0 ? pal.rainHot : pal.rain;
+        ctx.fillText(ch, x, y);
+        if (y > h && Math.random() > 0.975) cols[i] = 0;
+        else cols[i] += 0.7 + Math.random() * 0.55;
+      }
+      raf = requestAnimationFrame(frame);
+    }
+    resize();
+    addEventListener('resize', resize, { passive: true });
+    raf = requestAnimationFrame(frame);
+    return () => { cancelAnimationFrame(raf); removeEventListener('resize', resize); };
+  }
+
+  /* Center equalizer from audio */
+  function startEq(canvas, audio, getPalette) {
+    const ctx = canvas.getContext('2d');
     let analyser = null;
     let data = null;
-    let audioLevel = 0;
+    let raf = 0;
+    let fakeT = 0;
 
     try {
       const AC = window.AudioContext || window.webkitAudioContext;
@@ -117,407 +180,325 @@
         const ac = new AC();
         const src = ac.createMediaElementSource(audio);
         analyser = ac.createAnalyser();
-        analyser.fftSize = 256;
+        analyser.fftSize = 128;
         data = new Uint8Array(analyser.frequencyBinCount);
         src.connect(analyser);
         analyser.connect(ac.destination);
-        // resume after gesture
         ac.resume?.();
       }
     } catch (e) {
-      console.warn('audio analyser', e);
+      console.warn('eq analyser', e);
     }
-
-    function level() {
-      if (!analyser || !data) return 0.15 + 0.1 * Math.sin(performance.now() / 180);
-      analyser.getByteFrequencyData(data);
-      let s = 0;
-      for (let i = 2; i < 40; i += 1) s += data[i];
-      return Math.min(1, s / (38 * 180));
-    }
-
-    function draw() {
-      const w = canvas.width;
-      const h = canvas.height;
-      const cx = w / 2;
-      const cy = h / 2 - 10;
-      const now = performance.now();
-      const t = (now - t0) / 1000;
-      audioLevel += (level() - audioLevel) * 0.18;
-
-      ctx.clearRect(0, 0, w, h);
-
-      // ambient digits field around face (not rain columns)
-      ctx.font = '11px monospace';
-      ctx.fillStyle = 'rgba(80,200,255,0.12)';
-      for (let i = 0; i < 48; i += 1) {
-        const a = (i / 48) * Math.PI * 2 + t * 0.15;
-        const r = 210 + Math.sin(t * 1.2 + i) * 28 + audioLevel * 40;
-        const x = cx + Math.cos(a) * r;
-        const y = cy + Math.sin(a) * r * 0.92;
-        ctx.fillText(String((i * 7 + (t * 10) | 0) % 10), x, y);
-      }
-
-      // face silhouette — geometric, Ive-clean
-      const talk = audioLevel;
-      const headBob = Math.sin(t * 2.1) * 3 + talk * 6;
-      const headTilt = Math.sin(t * 0.7) * 0.04 + talk * 0.05;
-      const brow = talk * 8;
-      const cheek = talk * 10;
-
-      ctx.save();
-      ctx.translate(cx, cy + headBob);
-      ctx.rotate(headTilt);
-
-      // head outline
-      ctx.beginPath();
-      ctx.ellipse(0, 8, 118, 148, 0, 0, Math.PI * 2);
-      ctx.strokeStyle = `rgba(120, 220, 255, ${0.35 + talk * 0.35})`;
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-
-      // face mesh grid (digital skin)
-      ctx.strokeStyle = 'rgba(100, 200, 255, 0.12)';
-      ctx.lineWidth = 0.8;
-      for (let y = -120; y <= 120; y += 16) {
-        ctx.beginPath();
-        for (let x = -100; x <= 100; x += 8) {
-          const yy = y + Math.sin(x * 0.04 + t + talk * 2) * (2 + talk * 3);
-          const xx = x * (1 - Math.abs(y) / 400);
-          if (x === -100) ctx.moveTo(xx, yy);
-          else ctx.lineTo(xx, yy);
-        }
-        ctx.stroke();
-      }
-
-      // eyes
-      const eyeOpen = 0.55 + talk * 0.35 + Math.sin(t * 3) * 0.05;
-      // occasional blink
-      const blink = (Math.sin(t * 0.35) > 0.92) ? 0.08 : 1;
-      const eh = 14 * eyeOpen * blink;
-
-      function eye(ex) {
-        ctx.beginPath();
-        ctx.ellipse(ex, -28, 22, eh, 0, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(180, 255, 255, 0.15)';
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(160, 240, 255, 0.7)';
-        ctx.stroke();
-        // iris reacts to “speech”
-        ctx.beginPath();
-        ctx.arc(ex + talk * 3, -28, 6 + talk * 2, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(0, 220, 255, ${0.55 + talk * 0.4})`;
-        ctx.shadowColor = 'rgba(0, 255, 255, 0.8)';
-        ctx.shadowBlur = 12 + talk * 20;
-        ctx.fill();
-        ctx.shadowBlur = 0;
-      }
-      eye(-40);
-      eye(40);
-
-      // brows (speech emphasis)
-      ctx.beginPath();
-      ctx.moveTo(-62, -52 - brow);
-      ctx.quadraticCurveTo(-40, -58 - brow * 0.5, -18, -50 - brow * 0.3);
-      ctx.moveTo(62, -52 - brow);
-      ctx.quadraticCurveTo(40, -58 - brow * 0.5, 18, -50 - brow * 0.3);
-      ctx.strokeStyle = 'rgba(200, 240, 255, 0.5)';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      // nose bridge
-      ctx.beginPath();
-      ctx.moveTo(0, -18);
-      ctx.lineTo(-6, 28 + talk * 2);
-      ctx.lineTo(6, 28 + talk * 2);
-      ctx.strokeStyle = 'rgba(140, 200, 230, 0.35)';
-      ctx.lineWidth = 1.2;
-      ctx.stroke();
-
-      // cheek planes (talk micro-motion)
-      ctx.beginPath();
-      ctx.ellipse(-72, 20 + cheek * 0.3, 18, 28 + talk * 4, -0.2, 0, Math.PI * 2);
-      ctx.ellipse(72, 20 + cheek * 0.3, 18, 28 + talk * 4, 0.2, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(100, 180, 220, 0.2)';
-      ctx.stroke();
-
-      // jaw plane motion (no open mouth — sealed geometry that shifts)
-      const jawY = 78 + talk * 14;
-      ctx.beginPath();
-      ctx.moveTo(-48, 58);
-      ctx.quadraticCurveTo(0, jawY + 8, 48, 58);
-      ctx.strokeStyle = `rgba(160, 230, 255, ${0.35 + talk * 0.4})`;
-      ctx.lineWidth = 1.6;
-      ctx.stroke();
-
-      // speech waveform under chin
-      ctx.beginPath();
-      for (let i = 0; i < 48; i += 1) {
-        const x = -70 + i * 3;
-        const y = jawY + 22 + Math.sin(i * 0.45 + t * 8) * (4 + talk * 18);
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      }
-      ctx.strokeStyle = `rgba(0, 255, 200, ${0.25 + talk * 0.55})`;
-      ctx.lineWidth = 1.4;
-      ctx.stroke();
-
-      ctx.restore();
-
-      // label
-      ctx.fillStyle = 'rgba(140, 210, 255, 0.55)';
-      ctx.font = '12px monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText('ENTITY · PATH / STARK-CLASS', cx, h - 36);
-
-      raf = requestAnimationFrame(draw);
-    }
-
-    raf = requestAnimationFrame(draw);
-    return () => cancelAnimationFrame(raf);
-  }
-
-  /* ── Digits assemble into page elements ── */
-  function materializeDigits(canvas, onProgress) {
-    const ctx = canvas.getContext('2d');
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    let w = 0;
-    let h = 0;
-    const particles = [];
-    const targets = [];
 
     function resize() {
-      w = canvas.width = window.innerWidth * dpr;
-      h = canvas.height = window.innerHeight * dpr;
+      const dpr = Math.min(devicePixelRatio || 1, 2);
+      canvas.width = innerWidth * dpr;
+      canvas.height = innerHeight * dpr;
       canvas.style.width = '100%';
       canvas.style.height = '100%';
     }
     resize();
+    addEventListener('resize', resize, { passive: true });
 
-    // sample target points from visible UI boxes
-    const shell = document.querySelector('.site-shell');
-    const els = shell
-      ? [...shell.querySelectorAll('.mac-bar, .bay, .module-card, .soft-card, .deck, .bay__copy h1, .bay__copy h2, .hero-visual, .scrub')]
-      : [];
-    els.forEach((el) => {
-      const r = el.getBoundingClientRect();
-      if (r.width < 8 || r.height < 8) return;
-      const n = Math.min(28, Math.max(8, Math.floor((r.width * r.height) / 12000)));
-      for (let i = 0; i < n; i += 1) {
-        targets.push({
-          x: (r.left + Math.random() * r.width) * dpr,
-          y: (r.top + Math.random() * r.height) * dpr
+    function frame() {
+      const dpr = Math.min(devicePixelRatio || 1, 2);
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+      const pal = getPalette();
+      const bars = 48;
+      const cx = w / 2;
+      const cy = h * 0.48;
+      const maxH = h * 0.22;
+      const gap = 4 * dpr;
+      const barW = Math.max(3 * dpr, (w * 0.42) / bars - gap);
+
+      let levels;
+      if (analyser && data) {
+        analyser.getByteFrequencyData(data);
+        levels = Array.from({ length: bars }, (_, i) => {
+          const idx = Math.floor((i / bars) * (data.length * 0.7));
+          return data[idx] / 255;
         });
+      } else {
+        fakeT += 0.08;
+        levels = Array.from({ length: bars }, (_, i) => 0.15 + 0.5 * Math.abs(Math.sin(fakeT + i * 0.35)));
       }
-    });
-    // fallback grid if few elements
-    if (targets.length < 40) {
-      for (let i = 0; i < 80; i += 1) {
-        targets.push({ x: Math.random() * w, y: Math.random() * h });
+
+      // mirrored bars
+      for (let i = 0; i < bars; i++) {
+        const v = levels[i] || 0;
+        const bh = Math.max(4 * dpr, v * maxH);
+        const x = cx - (bars * (barW + gap)) / 2 + i * (barW + gap);
+        const g = ctx.createLinearGradient(0, cy - bh, 0, cy + bh);
+        g.addColorStop(0, pal.eq);
+        g.addColorStop(1, 'rgba(255,255,255,0.15)');
+        ctx.fillStyle = g;
+        ctx.fillRect(x, cy - bh, barW, bh * 2);
       }
+
+      // ring outline (not filled center disc)
+      ctx.beginPath();
+      ctx.arc(cx, cy, maxH * 1.15, 0, Math.PI * 2);
+      ctx.strokeStyle = pal.eq + '55';
+      ctx.lineWidth = 1.5 * dpr;
+      ctx.stroke();
+
+      ctx.fillStyle = pal.eq;
+      ctx.globalAlpha = 0.7;
+      ctx.font = `${11 * dpr}px monospace`;
+      ctx.textAlign = 'center';
+      ctx.fillText('BEZHAEV INDUSTRIES · AUDIO BUS', cx, cy + maxH * 1.35);
+      ctx.globalAlpha = 1;
+
+      raf = requestAnimationFrame(frame);
+    }
+    raf = requestAnimationFrame(frame);
+    return () => {
+      cancelAnimationFrame(raf);
+      removeEventListener('resize', resize);
+    };
+  }
+
+  /* Floating terminals */
+  function startTerminals(host, getPalette, getRed) {
+    host.innerHTML = '';
+    const n = Math.min(10, Math.max(5, Math.floor(innerWidth / 160)));
+    const terms = [];
+    for (let i = 0; i < n; i++) {
+      const el = document.createElement('div');
+      el.className = 'boot__term';
+      el.innerHTML = `<header>term://${i + 1} · bezhaev</header><pre></pre>`;
+      host.appendChild(el);
+      const left = 2 + Math.random() * 70;
+      const top = 4 + Math.random() * 62;
+      el.style.left = left + '%';
+      el.style.top = top + '%';
+      el.style.animationDelay = (Math.random() * 2) + 's';
+      terms.push({ el, pre: el.querySelector('pre'), lines: [] });
     }
 
-    targets.forEach((tg, i) => {
-      particles.push({
-        x: Math.random() * w,
-        y: Math.random() * h,
-        tx: tg.x,
-        ty: tg.y,
-        ch: String((i * 3 + 7) % 10),
-        delay: Math.random() * 0.35,
-        solid: 0
-      });
-    });
-
-    const t0 = performance.now();
-    const DURATION = 5500;
-    let raf = 0;
-
-    function frame(now) {
-      const u = Math.min(1, (now - t0) / DURATION);
-      const ease = 1 - Math.pow(1 - u, 3);
-      onProgress?.(u);
-
-      ctx.clearRect(0, 0, w, h);
-      ctx.font = `${13 * dpr}px monospace`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-
-      particles.forEach((p) => {
-        const local = Math.max(0, Math.min(1, (u - p.delay) / (1 - p.delay)));
-        const e = 1 - Math.pow(1 - local, 2.4);
-        p.x += (p.tx - p.x) * (0.04 + e * 0.12);
-        p.y += (p.ty - p.y) * (0.04 + e * 0.12);
-        p.solid = e;
-
-        // digit → solid “matter”
-        if (e < 0.72) {
-          ctx.fillStyle = `rgba(120, 220, 255, ${0.25 + e * 0.6})`;
-          ctx.fillText(p.ch, p.x, p.y);
-        } else {
-          const s = (e - 0.72) / 0.28;
-          // Ive solid: soft fill block with hairline
-          const sz = 3 + s * 5;
-          ctx.fillStyle = `rgba(245, 245, 247, ${0.15 + s * 0.55})`;
-          ctx.strokeStyle = `rgba(255, 255, 255, ${0.2 + s * 0.35})`;
-          ctx.lineWidth = 1 * dpr;
-          ctx.beginPath();
-          const rr = 1.5 * dpr;
-          // rounded rect
-          const x = p.x - sz;
-          const y = p.y - sz * 0.6;
-          const ww = sz * 2;
-          const hh = sz * 1.2;
-          ctx.moveTo(x + rr, y);
-          ctx.arcTo(x + ww, y, x + ww, y + hh, rr);
-          ctx.arcTo(x + ww, y + hh, x, y + hh, rr);
-          ctx.arcTo(x, y + hh, x, y, rr);
-          ctx.arcTo(x, y, x + ww, y, rr);
-          ctx.closePath();
-          ctx.fill();
-          ctx.stroke();
+    const iv = setInterval(() => {
+      const red = getRed();
+      host.classList.toggle('is-red', red);
+      terms.forEach((t) => {
+        if (Math.random() > 0.55) {
+          const line = TERM_LINES[(Math.random() * TERM_LINES.length) | 0]
+            + (Math.random() > 0.6 ? ' 0x' + Math.random().toString(16).slice(2, 8) : '');
+          t.lines.push(line);
+          if (t.lines.length > 8) t.lines.shift();
+          t.pre.textContent = t.lines.join('\n');
+        }
+        if (Math.random() > 0.92) {
+          t.el.style.opacity = 0.35 + Math.random() * 0.65;
         }
       });
+    }, 280);
 
-      // global Ive sheen
-      ctx.fillStyle = `rgba(255,255,255,${0.02 * ease})`;
-      ctx.fillRect(0, 0, w, h);
+    return () => {
+      clearInterval(iv);
+      host.innerHTML = '';
+    };
+  }
 
-      if (u < 1) raf = requestAnimationFrame(frame);
-      else {
-        ctx.clearRect(0, 0, w, h);
-      }
+  function startWarnings(host) {
+    host.innerHTML = '';
+    host.classList.add('is-on');
+    const count = 18;
+    for (let i = 0; i < count; i++) {
+      const w = document.createElement('div');
+      w.className = 'boot__warn';
+      w.textContent = WARNINGS[i % WARNINGS.length];
+      w.style.left = (3 + Math.random() * 70) + '%';
+      w.style.top = (5 + Math.random() * 80) + '%';
+      w.style.animationDelay = (Math.random() * 0.8) + 's';
+      w.style.fontSize = (12 + Math.random() * 10) + 'px';
+      host.appendChild(w);
     }
+  }
 
+  function materializeDigits(canvas) {
+    const ctx = canvas.getContext('2d');
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    let w = (canvas.width = innerWidth * dpr);
+    let h = (canvas.height = innerHeight * dpr);
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+    const particles = [];
+    const shell = document.querySelector('.site-shell');
+    const els = shell
+      ? [...shell.querySelectorAll('.mac-bar,.bay,.module-card,.soft-card,.deck,.bay__copy h1,.bay__copy h2,.scrub')]
+      : [];
+    const targets = [];
+    els.forEach((el) => {
+      const r = el.getBoundingClientRect();
+      if (r.width < 10) return;
+      const n = Math.min(24, Math.max(6, Math.floor((r.width * r.height) / 14000)));
+      for (let i = 0; i < n; i++) {
+        targets.push({ x: (r.left + Math.random() * r.width) * dpr, y: (r.top + Math.random() * r.height) * dpr });
+      }
+    });
+    while (targets.length < 60) targets.push({ x: Math.random() * w, y: Math.random() * h });
+    targets.forEach((tg, i) => {
+      particles.push({
+        x: Math.random() * w, y: Math.random() * h,
+        tx: tg.x, ty: tg.y,
+        ch: String((i * 3 + 7) % 10),
+        delay: Math.random() * 0.3
+      });
+    });
+    const t0 = performance.now();
+    const DUR = 6500;
+    let raf = 0;
+    function frame(now) {
+      const u = Math.min(1, (now - t0) / DUR);
+      ctx.clearRect(0, 0, w, h);
+      ctx.font = `${12 * dpr}px monospace`;
+      ctx.textAlign = 'center';
+      particles.forEach((p) => {
+        const local = Math.max(0, Math.min(1, (u - p.delay) / (1 - p.delay || 1)));
+        const e = 1 - Math.pow(1 - local, 2.5);
+        p.x += (p.tx - p.x) * (0.05 + e * 0.12);
+        p.y += (p.ty - p.y) * (0.05 + e * 0.12);
+        if (e < 0.7) {
+          ctx.fillStyle = `rgba(255,70,80,${0.3 + e * 0.6})`;
+          ctx.fillText(p.ch, p.x, p.y);
+        } else {
+          const s = (e - 0.7) / 0.3;
+          const sz = (3 + s * 5) * dpr;
+          ctx.fillStyle = `rgba(245,245,247,${0.2 + s * 0.55})`;
+          ctx.strokeStyle = `rgba(255,255,255,${0.25 + s * 0.4})`;
+          ctx.lineWidth = dpr;
+          ctx.fillRect(p.x - sz, p.y - sz * 0.55, sz * 2, sz * 1.1);
+          ctx.strokeRect(p.x - sz, p.y - sz * 0.55, sz * 2, sz * 1.1);
+        }
+      });
+      if (u < 1) raf = requestAnimationFrame(frame);
+      else ctx.clearRect(0, 0, w, h);
+    }
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
   }
 
   function runSequence(root, audio) {
-    const linesEl = $('#bootLines', root);
-    const bar = $('#bootBar', root);
-    const pctEl = $('#bootPct', root);
-    const phaseEl = $('#bootPhase', root);
-    const sub = $('#bootSub', root);
-    const t0 = performance.now();
+    let palette = GREEN;
+    let isRed = false;
+    const getPalette = () => palette;
+    const getRed = () => isRed;
 
+    const t0 = performance.now();
     root.classList.remove('is-gate');
     root.classList.add('is-waking', 'is-running');
-    phaseEl.textContent = 'AWAKENING';
-    setTimeout(() => sub.classList.add('is-on'), 2200);
+    $('#bootPhase', root).textContent = 'AWAKENING';
 
-    const stopFace = createFace($('#bootFace', root), audio);
+    const stopRain = startRain($('#bootRain', root), getPalette);
+    const stopEq = startEq($('#bootEq', root), audio, getPalette);
+    let stopTerms = startTerminals($('#bootTerms', root), getPalette, getRed);
 
-    LINES.forEach((item) => {
+    LOG_LINES.forEach((item) => {
       setTimeout(() => {
+        const list = $('#bootLines', root);
+        if (!list) return;
         const div = document.createElement('div');
-        div.className = `line ${item.cls || 'line--ok'}`;
+        div.className = 'line ' + (item.cls || 'line--ok');
         div.textContent = item.text;
-        linesEl.appendChild(div);
-        while (linesEl.children.length > 11) linesEl.removeChild(linesEl.firstChild);
+        list.appendChild(div);
+        while (list.children.length > 12) list.removeChild(list.firstChild);
       }, item.t);
     });
 
-    const progressTimer = setInterval(() => {
-      const p = Math.min(1, (performance.now() - t0) / MATERIALIZE_AT_MS);
+    const bar = $('#bootBar', root);
+    const pctEl = $('#bootPct', root);
+    const phaseEl = $('#bootPhase', root);
+    const tick = setInterval(() => {
+      const elapsed = performance.now() - t0;
+      const p = Math.min(1, elapsed / BOOT_MS);
       bar.style.width = Math.round(p * 100) + '%';
       pctEl.textContent = Math.round(p * 100) + '%';
-      if (p >= 1) clearInterval(progressTimer);
-    }, 80);
+      if (p >= 1) clearInterval(tick);
+    }, 100);
 
-    // Audio: play fully to end — never force pause at 30s
-    audio.loop = false;
-    audio.addEventListener('ended', () => {
-      phaseEl.textContent = 'AUDIO COMPLETE';
-    });
+    // Red villain shift at 1:16
+    setTimeout(() => {
+      isRed = true;
+      palette = RED;
+      root.classList.add('is-red');
+      phaseEl.textContent = 'PROTOCOL RED';
+      const terms = $('#bootTerms', root);
+      terms?.classList.add('is-red');
+      // swap terminals for warnings shortly after
+      setTimeout(() => {
+        if (stopTerms) stopTerms();
+        stopTerms = null;
+        startWarnings($('#bootWarnings', root));
+        phaseEl.textContent = 'WARNING CASCADE';
+      }, 4000);
+    }, RED_AT_MS);
 
-    // At 30s: materialize UI from digits
+    // End of boot ≈ audio length: materialize
     setTimeout(() => {
       phaseEl.textContent = 'MATERIALIZE';
       root.classList.add('is-materializing');
       document.documentElement.classList.remove('is-booting');
       document.documentElement.classList.add('boot-materializing', 'boot-revealing');
+      materializeDigits($('#bootDigits', root));
 
-      const dig = $('#bootDigits', root);
-      materializeDigits(dig, (u) => {
-        if (u > 0.55) phaseEl.textContent = 'SOLIDIFY';
-      });
-
-      // After solidify animation, remove overlay (audio may still play)
       setTimeout(() => {
         root.classList.add('is-done');
-        document.documentElement.classList.remove('boot-materializing');
         setTimeout(() => {
-          stopFace && stopFace();
+          stopRain && stopRain();
+          stopEq && stopEq();
+          if (stopTerms) stopTerms();
+          // let audio finish if still playing — do not pause
           root.remove();
-          document.documentElement.classList.remove('boot-revealing');
+          document.documentElement.classList.remove('boot-materializing', 'boot-revealing');
           window.dispatchEvent(new CustomEvent('path-boot-complete'));
-          // Mount persistent JARVIS HUD
-          if (window.PathJarvis) window.PathJarvis.mount();
-        }, 2800);
-      }, 5600);
-    }, MATERIALIZE_AT_MS);
+          window.PathJarvis?.mount?.();
+        }, 3200);
+      }, 7000);
+    }, BOOT_MS);
+
+    // Ensure audio continues to natural end even after overlay gone
+    audio.loop = false;
   }
 
   function boot() {
     try {
-      const params = new URLSearchParams(location.search);
-      if (params.get('noboot') === '1') {
-        if (window.PathJarvis) window.PathJarvis.mount();
+      if (new URLSearchParams(location.search).get('noboot') === '1') {
+        window.PathJarvis?.mount?.();
         return;
       }
-
       document.documentElement.classList.add('is-booting');
       const root = createBootDOM();
       wrapSiteShell();
-
       const gate = $('#bootGate', root);
       const btn = $('#bootEnableSound', root);
       const audio = $('#bootAudio', root);
-
       if (!btn || !gate) {
-        console.error('boot gate missing');
         document.documentElement.classList.remove('is-booting');
         return;
       }
-
       btn.addEventListener('click', async () => {
         btn.disabled = true;
-        btn.textContent = 'Просыпаемся…';
+        btn.textContent = 'Запуск…';
+        try { localStorage.setItem(COOKIE_KEY, '1'); } catch { /* */ }
         try {
-          localStorage.setItem(STORAGE_COOKIE, 'accepted');
-        } catch { /* */ }
-
-        try {
-          if (audio) {
-            audio.volume = 0.9;
-            audio.currentTime = 0;
-            await audio.play();
-          }
-        } catch (err) {
-          console.warn('audio', err);
+          audio.volume = 0.92;
+          audio.currentTime = 0;
+          await audio.play();
+        } catch (e) {
+          console.warn(e);
         }
-
         gate.classList.add('is-hidden');
         runSequence(root, audio);
       });
-
-      // Ensure gate is visible even if something else fails
-      gate.style.display = '';
-      gate.classList.remove('is-hidden');
-      setTimeout(() => {
-        try { btn.focus({ preventScroll: true }); } catch { btn.focus(); }
-      }, 120);
-    } catch (err) {
-      console.error('boot failed', err);
+      setTimeout(() => { try { btn.focus({ preventScroll: true }); } catch { btn.focus(); } }, 100);
+    } catch (e) {
+      console.error(e);
       document.documentElement.classList.remove('is-booting');
     }
   }
 
-  // Run ASAP so gate paints before path.js heavy work
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', boot);
-  } else {
-    boot();
-  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
 })();

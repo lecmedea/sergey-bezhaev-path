@@ -1,10 +1,10 @@
-/* PATH OS boot — cinema wake · digital face · digit solidification · JARVIS */
+/* PATH OS boot — matrix · EQ · terminals · red shift · warnings · Path palette */
 
 html.is-booting,
 html.is-booting body {
   overflow: hidden !important;
   height: 100%;
-  background: #000;
+  background: #0a0a0b;
 }
 
 html.is-booting .site-shell {
@@ -13,7 +13,6 @@ html.is-booting .site-shell {
   pointer-events: none;
 }
 
-/* During materialize: shell visible under digit field */
 html.boot-materializing .site-shell {
   visibility: visible;
   pointer-events: none;
@@ -23,59 +22,51 @@ html.boot-materializing .site-shell {
 html.boot-revealing .site-shell {
   visibility: visible;
   pointer-events: auto;
-  animation: iveSolidify 5.5s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+  animation: iveSolidify 6.5s cubic-bezier(0.19, 1, 0.22, 1) forwards;
 }
 
 @keyframes iveSolidify {
-  0% {
-    opacity: 0.15;
-    filter: blur(14px) brightness(1.6) contrast(1.2);
-    transform: scale(1.03);
-  }
-  35% {
-    opacity: 0.55;
-    filter: blur(6px) brightness(1.15);
-  }
-  70% {
-    opacity: 0.92;
-    filter: blur(1.5px) brightness(1.02);
-    transform: scale(1.005);
-  }
-  100% {
-    opacity: 1;
-    filter: none;
-    transform: none;
-  }
+  0% { opacity: 0.12; filter: blur(16px) brightness(1.5); transform: scale(1.04); }
+  40% { opacity: 0.55; filter: blur(7px) brightness(1.12); }
+  75% { opacity: 0.92; filter: blur(1.2px); transform: scale(1.005); }
+  100% { opacity: 1; filter: none; transform: none; }
 }
 
-/* ── Boot root ── */
 .boot {
   position: fixed;
   inset: 0;
   z-index: 99999;
-  background: #000;
-  color: #b8f0ff;
+  background: #050506;
+  color: #c8ffe8;
   font-family: "SF Mono", Menlo, Consolas, monospace;
   overflow: hidden;
 }
 
+.boot.is-gate {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 42%, rgba(26, 26, 30, 0.95), transparent 62%),
+    #0a0a0b;
+}
+
+.boot.is-red {
+  background: #0a0204;
+}
+
 .boot.is-done {
   pointer-events: none;
-  animation: bootDissolve 2.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: bootDissolve 3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 @keyframes bootDissolve {
-  0% { opacity: 1; filter: none; }
-  40% { opacity: 0.7; filter: blur(2px); }
-  100% {
+  to {
     opacity: 0;
     visibility: hidden;
-    filter: blur(28px) brightness(1.4);
-    transform: scale(1.04);
+    filter: blur(24px);
+    transform: scale(1.05);
   }
 }
 
-/* Cinema eye-open / blink — HIDDEN until after sound gate (was covering disclaimer) */
+/* eyelids — only after start */
 .boot__eyelids {
   position: absolute;
   inset: 0;
@@ -84,163 +75,159 @@ html.boot-revealing .site-shell {
   opacity: 0;
   visibility: hidden;
 }
-
 .boot.is-waking .boot__eyelids,
 .boot.is-running .boot__eyelids {
   opacity: 1;
   visibility: visible;
 }
-
 .boot__lid {
   position: absolute;
   left: 0;
   right: 0;
   height: 52%;
   background: #0a0a0b;
-  transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
 }
-
-.boot__lid--top {
-  top: 0;
-  transform-origin: top;
-}
-
-.boot__lid--bot {
-  bottom: 0;
-  transform-origin: bottom;
-}
-
-/* start closed only when waking */
+.boot__lid--top { top: 0; }
+.boot__lid--bot { bottom: 0; }
 .boot.is-waking .boot__lid--top {
-  animation: lidTop 2.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: lidTop 2.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 .boot.is-waking .boot__lid--bot {
-  animation: lidBot 2.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: lidBot 2.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
-
 @keyframes lidTop {
   0% { transform: none; }
-  18% { transform: translateY(-8%); }
-  28% { transform: none; }
-  42% { transform: translateY(-35%); }
-  52% { transform: translateY(-12%); }
+  20% { transform: translateY(-10%); }
+  30% { transform: none; }
+  50% { transform: translateY(-40%); }
   100% { transform: translateY(-105%); }
 }
 @keyframes lidBot {
   0% { transform: none; }
-  18% { transform: translateY(8%); }
-  28% { transform: none; }
-  42% { transform: translateY(35%); }
-  52% { transform: translateY(12%); }
+  20% { transform: translateY(10%); }
+  30% { transform: none; }
+  50% { transform: translateY(40%); }
   100% { transform: translateY(105%); }
 }
 
-/* Face canvas */
-.boot__face-wrap {
+.boot__rain,
+.boot__eq,
+.boot__digits {
   position: absolute;
   inset: 0;
-  z-index: 3;
-  display: grid;
-  place-items: center;
-  opacity: 0;
-  transition: opacity 1.4s ease;
-  pointer-events: none;
+  width: 100%;
+  height: 100%;
+  display: block;
 }
-
-.boot.is-running .boot__face-wrap {
-  opacity: 1;
-}
-
-.boot__face {
-  width: min(72vw, 420px);
-  height: min(72vw, 420px);
-  max-height: 55vh;
-}
-
-/* Soft HUD arcs — NO center disc */
-.boot__hud {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  pointer-events: none;
-  display: grid;
-  place-items: center;
-  opacity: 0;
-  transition: opacity 1.5s ease;
-}
-
-.boot.is-running .boot__hud { opacity: 1; }
-
-.boot__arc {
-  position: absolute;
-  border-radius: 50%;
-  border: 1px solid transparent;
-  border-top-color: rgba(120, 220, 255, 0.45);
-  border-right-color: rgba(80, 255, 200, 0.12);
-  animation: arcSpin linear infinite;
-  box-shadow: 0 0 20px rgba(0, 180, 255, 0.08);
-}
-
-.boot__arc--a {
-  width: min(78vw, 460px);
-  height: min(78vw, 460px);
-  animation-duration: 22s;
-}
-.boot__arc--b {
-  width: min(92vw, 560px);
-  height: min(92vw, 560px);
-  animation-duration: 36s;
-  animation-direction: reverse;
-  border-top-color: rgba(255, 100, 100, 0.2);
-  opacity: 0.65;
-}
-.boot__arc--c {
-  width: min(62vw, 360px);
-  height: min(62vw, 360px);
-  animation-duration: 14s;
-  border-style: dashed;
-  border-top-color: rgba(180, 255, 240, 0.35);
-}
-
-@keyframes arcSpin { to { transform: rotate(360deg); } }
+.boot__rain { z-index: 1; opacity: 0.45; }
+.boot__eq { z-index: 3; }
+.boot__digits { z-index: 9; opacity: 0; pointer-events: none; }
+.boot.is-materializing .boot__digits { opacity: 1; }
 
 .boot__scan {
   position: absolute;
   inset: 0;
   z-index: 4;
   pointer-events: none;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent 0 2px,
-    rgba(0, 0, 0, 0.1) 2px 3px
-  );
-  opacity: 0.4;
+  background: repeating-linear-gradient(0deg, transparent 0 2px, rgba(0,0,0,.1) 2px 3px);
+  opacity: 0.35;
 }
-
 .boot__vignette {
   position: absolute;
   inset: 0;
   z-index: 4;
   pointer-events: none;
-  background: radial-gradient(ellipse at 50% 45%, transparent 25%, rgba(0, 0, 0, 0.72) 100%);
+  background: radial-gradient(ellipse at 50% 48%, transparent 28%, rgba(0,0,0,.7) 100%);
 }
 
-/* Digit materialize canvas over UI */
-.boot__digits {
+/* Terminals */
+.boot__terms {
   position: absolute;
   inset: 0;
-  z-index: 8;
-  width: 100%;
-  height: 100%;
+  z-index: 5;
   pointer-events: none;
   opacity: 0;
+  transition: opacity 0.8s ease;
+}
+.boot.is-running .boot__terms { opacity: 1; }
+.boot.is-materializing .boot__terms,
+.boot__terms.is-fade { opacity: 0 !important; }
+
+.boot__term {
+  position: absolute;
+  width: min(240px, 42vw);
+  min-height: 110px;
+  padding: 8px 10px;
+  border: 1px solid rgba(0, 255, 140, 0.28);
+  background: rgba(0, 12, 8, 0.82);
+  box-shadow: 0 0 20px rgba(0, 255, 120, 0.08), inset 0 0 20px rgba(0, 40, 20, 0.3);
+  font-size: 10px;
+  line-height: 1.4;
+  color: rgba(0, 255, 140, 0.9);
+  animation: termFlicker 2.4s ease-in-out infinite;
+  backdrop-filter: blur(4px);
+}
+.boot.is-red .boot__term,
+.boot__terms.is-red .boot__term {
+  border-color: rgba(255, 70, 80, 0.4);
+  background: rgba(18, 0, 4, 0.88);
+  color: rgba(255, 100, 110, 0.95);
+  box-shadow: 0 0 22px rgba(255, 40, 60, 0.15);
+}
+.boot__term header {
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  opacity: 0.7;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 4px;
+}
+.boot__term pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+  font-family: inherit;
+  font-size: 9px;
+  opacity: 0.9;
+}
+@keyframes termFlicker {
+  0%, 100% { opacity: 0.55; }
+  40% { opacity: 0.95; }
+  70% { opacity: 0.7; }
+  85% { opacity: 1; }
 }
 
-.boot.is-materializing .boot__digits {
-  opacity: 1;
+/* WARNING cascade */
+.boot__warnings {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  pointer-events: none;
+  display: none;
+}
+.boot__warnings.is-on { display: block; }
+
+.boot__warn {
+  position: absolute;
+  padding: 8px 12px;
+  border: 2px solid #ff453a;
+  background: rgba(40, 0, 6, 0.88);
+  color: #ff6b7a;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow: 0 0 24px rgba(255, 40, 60, 0.35);
+  animation: warnBlink 0.55s steps(2, end) infinite;
+  max-width: min(90vw, 360px);
+  font-family: Inter, system-ui, sans-serif;
+}
+@keyframes warnBlink {
+  0%, 100% { opacity: 1; filter: brightness(1.1); }
+  50% { opacity: 0.25; filter: brightness(0.7); }
 }
 
-/* Gate — ABOVE everything; Path void palette (not cyan sci-fi) */
+/* Gate — Path void palette */
 .boot__gate {
   position: absolute;
   left: 50%;
@@ -251,131 +238,87 @@ html.boot-revealing .site-shell {
   padding: 28px 26px 24px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 18px;
-  background:
-    linear-gradient(165deg, rgba(26, 26, 30, 0.98), rgba(12, 12, 14, 0.98));
-  box-shadow:
-    0 24px 80px rgba(0, 0, 0, 0.55),
-    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
-  font-family: Inter, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  background: linear-gradient(165deg, rgba(26, 26, 30, 0.98), rgba(12, 12, 14, 0.98));
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
   color: #f5f5f7;
   pointer-events: auto;
 }
-
 .boot__gate-tag {
   font-size: 10px;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: #6e6e73;
   margin-bottom: 14px;
   font-weight: 600;
 }
-
 .boot__gate h1 {
   margin: 0 0 14px;
   font-size: clamp(1.25rem, 4.2vw, 1.55rem);
   font-weight: 600;
   color: #f5f5f7;
   letter-spacing: -0.02em;
-  line-height: 1.25;
 }
-
 .boot__gate p {
   margin: 0 0 12px;
   font-size: 14px;
   line-height: 1.55;
   color: #a1a1a6;
-  font-weight: 400;
 }
-
-.boot__gate p strong {
-  color: #f5f5f7;
-  font-weight: 600;
-}
-
-.boot__gate-actions {
-  display: grid;
-  gap: 10px;
-  margin-top: 20px;
-}
-
+.boot__gate p strong { color: #f5f5f7; font-weight: 600; }
+.boot__gate-actions { margin-top: 20px; }
 .boot__btn {
   appearance: none;
+  width: 100%;
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: #f5f5f7;
   color: #0a0a0b;
   font-weight: 600;
   font-size: 14px;
-  letter-spacing: -0.01em;
-  text-transform: none;
   min-height: 48px;
   padding: 12px 18px;
   border-radius: 980px;
   cursor: pointer;
   font-family: inherit;
-  transition: opacity 0.2s, transform 0.12s, background 0.2s;
 }
-
-.boot__btn:hover,
-.boot__btn:focus-visible {
+.boot__btn:hover, .boot__btn:focus-visible {
   background: #fff;
   outline: 2px solid rgba(10, 132, 255, 0.45);
   outline-offset: 2px;
 }
-
-.boot__btn:active { transform: scale(0.98); }
 .boot__btn:disabled { opacity: 0.5; cursor: wait; }
+.boot__gate.is-hidden { display: none !important; }
 
-.boot__gate.is-hidden {
-  display: none !important;
-}
-
-/* Soft ambient while on gate (not pure void black only) */
-.boot.is-gate {
-  background:
-    radial-gradient(ellipse 80% 50% at 50% 40%, rgba(26, 26, 30, 0.9), transparent 60%),
-    #0a0a0b;
-}
-
-/* Console + progress */
 .boot__console {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 6;
+  left: 0; right: 0; bottom: 0;
+  z-index: 8;
   display: none;
   flex-direction: column;
   justify-content: flex-end;
   padding: clamp(14px, 3vw, 36px);
   pointer-events: none;
 }
-
 .boot.is-running .boot__console { display: flex; }
-
 .boot__status-list {
-  max-width: min(540px, 100%);
-  max-height: 32vh;
+  max-width: min(520px, 100%);
+  max-height: 28vh;
   overflow: hidden;
-  font-size: clamp(11px, 2.5vw, 13px);
-  line-height: 1.6;
-  color: rgba(160, 240, 255, 0.9);
-  text-shadow: 0 0 14px rgba(0, 200, 255, 0.35);
-  margin-bottom: 16px;
+  font-size: clamp(11px, 2.4vw, 13px);
+  line-height: 1.55;
+  color: rgba(160, 255, 200, 0.9);
+  text-shadow: 0 0 12px rgba(0, 255, 140, 0.3);
+  margin-bottom: 14px;
 }
-
-.boot__status-list .line {
-  opacity: 0;
-  transform: translateY(8px);
-  animation: lineIn 0.5s ease forwards;
-}
-.boot__status-list .line--ok::before { content: "▸ "; color: #6ef; }
-.boot__status-list .line--warn { color: #ffc070; }
-.boot__status-list .line--sys { color: #9cf; }
+.boot.is-red .boot__status-list { color: rgba(255, 160, 170, 0.92); text-shadow: 0 0 12px rgba(255, 40, 60, 0.35); }
+.boot__status-list .line { opacity: 0; transform: translateY(6px); animation: lineIn 0.45s ease forwards; }
+.boot__status-list .line--ok::before { content: "▸ "; color: #5f8; }
+.boot.is-red .boot__status-list .line--ok::before { color: #f66; }
+.boot__status-list .line--warn { color: #ffb86b; }
+.boot__status-list .line--sys { color: #8cf; }
+.boot__status-list .line--danger { color: #ff6b7a; font-weight: 700; }
 .boot__status-list .line--break { color: #fff; font-weight: 600; }
-
-@keyframes lineIn {
-  to { opacity: 1; transform: none; }
-}
+@keyframes lineIn { to { opacity: 1; transform: none; } }
 
 .boot__bar {
   width: min(420px, 100%);
@@ -383,86 +326,60 @@ html.boot-revealing .site-shell {
   background: rgba(255, 255, 255, 0.08);
   overflow: hidden;
 }
-
 .boot__bar-fill {
   height: 100%;
   width: 0%;
-  background: linear-gradient(90deg, #0af, #5fe, #fff);
-  box-shadow: 0 0 12px rgba(0, 220, 255, 0.55);
-  transition: width 0.25s linear;
+  background: linear-gradient(90deg, #30d158, #fff);
+  box-shadow: 0 0 12px rgba(48, 209, 88, 0.5);
+  transition: width 0.25s linear, background 0.6s ease;
 }
-
+.boot.is-red .boot__bar-fill {
+  background: linear-gradient(90deg, #ff453a, #ffb3b0);
+  box-shadow: 0 0 12px rgba(255, 69, 58, 0.55);
+}
 .boot__meta {
   margin-top: 10px;
   width: min(420px, 100%);
   display: flex;
   justify-content: space-between;
-  gap: 10px;
   font-size: 10px;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(140, 200, 255, 0.7);
+  color: rgba(160, 200, 255, 0.65);
 }
+.boot.is-red .boot__meta { color: rgba(255, 140, 150, 0.75); }
 
-.boot__subtitle {
-  position: absolute;
-  left: 50%;
-  top: 14%;
-  transform: translateX(-50%);
-  z-index: 6;
-  text-align: center;
-  opacity: 0;
-  pointer-events: none;
-  font-family: Inter, system-ui, sans-serif;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  font-size: 11px;
-  color: rgba(180, 240, 255, 0.65);
-  transition: opacity 1s ease;
-}
-
-.boot.is-running .boot__subtitle.is-on {
-  opacity: 1;
-}
-
-/* ── Persistent JARVIS HUD (after boot) ── */
+/* JARVIS HUD after boot */
 .jarvis-hud {
   position: fixed;
   inset: 0;
   z-index: 95;
   pointer-events: none;
-  font-family: "SF Mono", Menlo, Consolas, monospace;
+  font-family: "SF Mono", Menlo, monospace;
   opacity: 0;
-  transition: opacity 1.2s ease;
+  transition: opacity 1s ease;
 }
-
 .jarvis-hud.is-on { opacity: 1; }
-
 .jarvis-hud__corner {
   position: absolute;
-  width: 48px;
-  height: 48px;
-  border: 1px solid rgba(100, 200, 255, 0.25);
-  pointer-events: none;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
 }
 .jarvis-hud__corner--tl { top: 8px; left: 8px; border-right: 0; border-bottom: 0; }
 .jarvis-hud__corner--tr { top: 8px; right: 8px; border-left: 0; border-bottom: 0; }
 .jarvis-hud__corner--bl { bottom: 120px; left: 8px; border-right: 0; border-top: 0; }
 .jarvis-hud__corner--br { bottom: 120px; right: 8px; border-left: 0; border-top: 0; }
-
 .jarvis-hud__status {
   position: absolute;
   top: 52px;
   right: 14px;
-  pointer-events: none;
   text-align: right;
   font-size: 10px;
   line-height: 1.5;
-  letter-spacing: 0.08em;
-  color: rgba(140, 220, 255, 0.75);
-  text-shadow: 0 0 10px rgba(0, 180, 255, 0.35);
+  letter-spacing: 0.06em;
+  color: rgba(200, 200, 210, 0.7);
 }
-
 .jarvis-hud__fab {
   position: fixed;
   right: 16px;
@@ -471,109 +388,151 @@ html.boot-revealing .site-shell {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  border: 1px solid rgba(100, 220, 255, 0.55);
-  background:
-    radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.35), transparent 40%),
-    radial-gradient(circle at 50% 55%, rgba(0, 180, 255, 0.45), rgba(0, 40, 60, 0.9));
-  box-shadow:
-    0 0 0 4px rgba(0, 0, 0, 0.45),
-    0 0 28px rgba(0, 200, 255, 0.45),
-    inset 0 0 16px rgba(0, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.35), transparent 42%),
+    radial-gradient(circle at 50% 55%, rgba(10,132,255,.5), rgba(10,10,12,.95));
+  box-shadow: 0 0 0 4px rgba(0,0,0,.4), 0 0 28px rgba(10,132,255,.35);
   pointer-events: auto;
   cursor: pointer;
-  color: #e8fcff;
+  color: #f5f5f7;
   font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.06em;
   display: grid;
   place-items: center;
-  transition: transform 0.2s, box-shadow 0.2s;
   animation: reactorPulse 2.4s ease-in-out infinite;
 }
-
-.jarvis-hud__fab:hover {
-  transform: scale(1.06);
-  box-shadow: 0 0 40px rgba(0, 220, 255, 0.6);
-}
-
+.jarvis-hud__fab:hover { transform: scale(1.05); }
 .jarvis-hud__fab.is-listening {
-  border-color: #5f8;
-  box-shadow: 0 0 40px rgba(80, 255, 160, 0.55);
+  border-color: #30d158;
+  box-shadow: 0 0 36px rgba(48, 209, 88, 0.5);
 }
-
 @keyframes reactorPulse {
-  0%, 100% { box-shadow: 0 0 0 4px rgba(0,0,0,.45), 0 0 22px rgba(0,200,255,.4); }
-  50% { box-shadow: 0 0 0 4px rgba(0,0,0,.45), 0 0 36px rgba(0,220,255,.65); }
+  0%, 100% { box-shadow: 0 0 0 4px rgba(0,0,0,.4), 0 0 20px rgba(10,132,255,.3); }
+  50% { box-shadow: 0 0 0 4px rgba(0,0,0,.4), 0 0 34px rgba(10,132,255,.55); }
 }
-
 .jarvis-hud__panel {
   position: fixed;
   right: 16px;
   bottom: calc(var(--deck-h, 108px) + 84px);
   z-index: 96;
-  width: min(320px, calc(100vw - 24px));
-  max-height: min(42vh, 360px);
+  width: min(340px, calc(100vw - 24px));
+  max-height: min(48vh, 420px);
   overflow: auto;
   pointer-events: auto;
-  border: 1px solid rgba(100, 200, 255, 0.3);
-  border-radius: 12px;
-  background: rgba(6, 12, 18, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  background: rgba(18, 18, 22, 0.94);
   backdrop-filter: blur(16px);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45), 0 0 24px rgba(0, 180, 255, 0.1);
-  padding: 12px 14px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  padding: 14px;
   display: none;
   font-family: Inter, system-ui, sans-serif;
 }
-
 .jarvis-hud__panel.is-open { display: block; }
-
 .jarvis-hud__panel h3 {
   margin: 0 0 8px;
   font-size: 12px;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #8df;
-  font-weight: 700;
+  color: #a1a1a6;
 }
-
 .jarvis-hud__log {
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.45;
-  color: rgba(220, 240, 255, 0.85);
+  color: #f5f5f7;
   min-height: 3em;
   margin-bottom: 10px;
 }
-
-.jarvis-hud__cmds {
+.jarvis-hud__cmds { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.jarvis-hud__cmds button,
+.jarvis-hud__links {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  margin-bottom: 10px;
 }
-
-.jarvis-hud__cmds button {
+.jarvis-hud__links a {
   appearance: none;
-  border: 1px solid rgba(100, 200, 255, 0.25);
-  background: rgba(0, 80, 120, 0.2);
-  color: #cfefff;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #f5f5f7;
   font-size: 11px;
-  padding: 6px 10px;
+  padding: 7px 11px;
   border-radius: 999px;
   cursor: pointer;
   font-family: inherit;
+  text-decoration: none;
+  display: inline-flex;
 }
-
-.jarvis-hud__cmds button:hover {
-  border-color: rgba(100, 230, 255, 0.55);
-  background: rgba(0, 120, 160, 0.3);
+.jarvis-hud__cmds button:hover,
+.jarvis-hud__links a:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+.jarvis-hud__chat {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 10px;
+}
+.jarvis-hud__chat-log {
+  max-height: 140px;
+  overflow: auto;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #c8c8cc;
+}
+.jarvis-hud__chat-log .me { color: #0a84ff; margin: 4px 0; }
+.jarvis-hud__chat-log .bot { color: #f5f5f7; margin: 4px 0; }
+.jarvis-hud__chat form {
+  display: flex;
+  gap: 6px;
+}
+.jarvis-hud__chat input {
+  flex: 1;
+  min-width: 0;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.35);
+  color: #f5f5f7;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 12px;
+}
+.jarvis-hud__chat button[type="submit"] {
+  border: 0;
+  border-radius: 10px;
+  background: #f5f5f7;
+  color: #0a0a0b;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+.jarvis-hud__key {
+  margin-top: 8px;
+  font-size: 11px;
+  color: #6e6e73;
+}
+.jarvis-hud__key input {
+  width: 100%;
+  margin-top: 4px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.35);
+  color: #f5f5f7;
+  padding: 8px;
+  font: inherit;
+  font-size: 12px;
 }
 
 @media (max-width: 640px) {
   .jarvis-hud__corner { display: none; }
-  .jarvis-hud__status { top: auto; bottom: calc(var(--deck-h, 100px) + 78px); left: 12px; right: auto; text-align: left; font-size: 9px; }
-  .boot__status-list { max-height: 28vh; }
+  .boot__term { width: min(46vw, 160px); font-size: 8px; }
+  .boot__status-list { max-height: 22vh; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .boot__arc, .jarvis-hud__fab { animation: none; }
+  .boot__term, .boot__warn, .jarvis-hud__fab { animation: none; }
   html.boot-revealing .site-shell { animation: none; opacity: 1; filter: none; }
 }
