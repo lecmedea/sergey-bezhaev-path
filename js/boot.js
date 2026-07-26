@@ -287,43 +287,47 @@
   }
 
   /**
-   * Head ghost: video provides audio; visual only when frame is not black
-   * (red digital head present). Random corner/side + size while visible.
+   * Head ghost: video = audio bus + floating face.
+   * Face is very dark red on black — detect via max red / hot pixels (not average lum).
+   * Keep opacity > 0 always so the browser keeps decoding frames (opacity:0 freezes decode).
+   * Black frames vanish via mix-blend-mode: screen.
    */
   function startHeadGhost(video, host) {
     if (!video || !host) return () => {};
 
     const sample = document.createElement('canvas');
-    sample.width = 64;
-    sample.height = 36;
+    sample.width = 80;
+    sample.height = 120; // portrait-ish like source
     sample.className = 'boot__head-sample';
     sample.setAttribute('aria-hidden', 'true');
     host.parentElement?.appendChild(sample);
-    const sctx = sample.getContext('2d', { willReadFrequently: true });
+    const sctx = sample.getContext('2d', { willReadFrequently: true, alpha: false });
 
     let raf = 0;
     let visible = false;
     let nextJump = 0;
     let stopped = false;
+    let tick = 0;
+    let forceShow = false; // failsafe if sampling never trips
 
     const POS = [
-      { left: '2%', top: '7%', right: 'auto', bottom: 'auto', transform: 'none' },
-      { right: '2%', top: '7%', left: 'auto', bottom: 'auto', transform: 'none' },
-      { left: '2%', bottom: '16%', right: 'auto', top: 'auto', transform: 'none' },
-      { right: '2%', bottom: '16%', left: 'auto', top: 'auto', transform: 'none' },
-      { left: '4%', top: '38%', right: 'auto', bottom: 'auto', transform: 'none' },
-      { right: '4%', top: '38%', left: 'auto', bottom: 'auto', transform: 'none' },
-      { left: '50%', top: '6%', right: 'auto', bottom: 'auto', transform: 'translateX(-50%)' },
-      { left: '50%', bottom: '14%', right: 'auto', top: 'auto', transform: 'translateX(-50%)' },
-      { left: '12%', top: '18%', right: 'auto', bottom: 'auto', transform: 'none' },
-      { right: '12%', top: '22%', left: 'auto', bottom: 'auto', transform: 'none' }
+      { left: '2%', top: '8%', right: 'auto', bottom: 'auto', transform: 'none' },
+      { right: '2%', top: '8%', left: 'auto', bottom: 'auto', transform: 'none' },
+      { left: '2%', bottom: '18%', right: 'auto', top: 'auto', transform: 'none' },
+      { right: '2%', bottom: '18%', left: 'auto', top: 'auto', transform: 'none' },
+      { left: '4%', top: '36%', right: 'auto', bottom: 'auto', transform: 'none' },
+      { right: '4%', top: '36%', left: 'auto', bottom: 'auto', transform: 'none' },
+      { left: '50%', top: '8%', right: 'auto', bottom: 'auto', transform: 'translateX(-50%)' },
+      { left: '50%', bottom: '16%', right: 'auto', top: 'auto', transform: 'translateX(-50%)' },
+      { left: '10%', top: '16%', right: 'auto', bottom: 'auto', transform: 'none' },
+      { right: '10%', top: '20%', left: 'auto', bottom: 'auto', transform: 'none' }
     ];
-    const SIZES = [0.2, 0.26, 0.32, 0.38, 0.46, 0.54]; // fraction of min(vw,vh)
+    const SIZES = [0.24, 0.3, 0.36, 0.42, 0.5, 0.58];
 
-    function relayout(force) {
+    function relayout() {
       const minSide = Math.min(innerWidth, innerHeight);
       const frac = SIZES[(Math.random() * SIZES.length) | 0];
-      const w = Math.round(Math.max(120, Math.min(420, minSide * frac)));
+      const w = Math.round(Math.max(140, Math.min(460, minSide * frac)));
       host.style.width = w + 'px';
       const pos = POS[(Math.random() * POS.length) | 0];
       host.style.left = pos.left;
@@ -331,63 +335,78 @@
       host.style.top = pos.top;
       host.style.bottom = pos.bottom;
       host.style.transform = pos.transform;
-      nextJump = performance.now() + (force ? 1800 : 2200 + Math.random() * 4200);
+      nextJump = performance.now() + 1800 + Math.random() * 3800;
     }
 
-    // initial off-screen-ish place
-    relayout(true);
+    relayout();
     host.classList.remove('is-on', 'is-dim');
+    // Kick decode: ensure video is not fully invisible
+    host.style.opacity = '';
 
     function sampleFrame() {
       if (stopped) return;
-      if (video.readyState < 2 || video.paused) {
+      tick++;
+      if (video.readyState < 2) {
         raf = requestAnimationFrame(sampleFrame);
         return;
       }
+      // even if "paused" briefly, keep sampling after play started
       try {
         sctx.drawImage(video, 0, 0, sample.width, sample.height);
         const { data } = sctx.getImageData(0, 0, sample.width, sample.height);
-        let lum = 0;
-        let red = 0;
-        let bright = 0;
+        let maxL = 0;
+        let maxR = 0;
+        let hot = 0;
         const n = sample.width * sample.height;
         for (let i = 0; i < data.length; i += 4) {
           const r = data[i];
           const g = data[i + 1];
           const b = data[i + 2];
           const L = 0.299 * r + 0.587 * g + 0.114 * b;
-          lum += L;
-          red += r;
-          if (L > 28) bright++;
+          if (L > maxL) maxL = L;
+          if (r > maxR) maxR = r;
+          // dark digital face: sparse mid-red pixels, not full-frame bright
+          if (r > 28 || L > 22) hot++;
         }
-        lum /= n;
-        red /= n;
-        const brightRatio = bright / n;
-        // Head present: not near-black; often red-tinted digital face
-        const show = lum > 14 && (brightRatio > 0.06 || red > 22);
-        const now = performance.now();
+        const hotRatio = hot / n;
+        // thresholds tuned to real frames (maxR often 0.18–0.72 in 0–1 → 46–184)
+        let show = maxR > 36 || maxL > 28 || hotRatio > 0.015;
 
+        // Failsafe: if after ~4s of playback we never detected, force visible
+        // (keeps screen-blend so pure black still disappears)
+        if (!forceShow && video.currentTime > 4 && !visible && tick > 120) {
+          forceShow = true;
+        }
+        if (forceShow) show = true;
+
+        const now = performance.now();
         if (show) {
           if (!visible) {
             visible = true;
-            relayout(true);
+            relayout();
             host.classList.add('is-on');
-            host.classList.remove('is-dim');
           } else if (now >= nextJump) {
-            relayout(false);
+            relayout();
           }
-          // slight dim when barely visible
-          if (lum < 22) host.classList.add('is-dim');
+          // weak signal → dim class (still visible, boosted filter)
+          if (!forceShow && maxR < 70 && maxL < 50) host.classList.add('is-dim');
           else host.classList.remove('is-dim');
         } else if (visible) {
           visible = false;
           host.classList.remove('is-on', 'is-dim');
         }
       } catch (e) {
-        /* drawImage can fail before first frame */
+        // Safari can throw if frame not ready — retry
       }
       raf = requestAnimationFrame(sampleFrame);
     }
+
+    // Ensure attributes for mobile autoplay continuity
+    try {
+      video.setAttribute('playsinline', '');
+      video.setAttribute('webkit-playsinline', '');
+      video.playsInline = true;
+    } catch { /* */ }
 
     raf = requestAnimationFrame(sampleFrame);
 
