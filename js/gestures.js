@@ -256,10 +256,12 @@
   }
 
   function bind() {
-    document.getElementById('btnGestures')?.addEventListener('click', toggle);
-    // re-bind when settings panel mounts later
+    // Single delegated handler (Settings panel mounts async)
     document.addEventListener('click', (e) => {
-      if (e.target && e.target.id === 'btnGestures') toggle();
+      if (e.target && e.target.id === 'btnGestures') {
+        e.preventDefault();
+        toggle();
+      }
     });
   }
 
