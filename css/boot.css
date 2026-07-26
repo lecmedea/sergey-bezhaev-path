@@ -1280,3 +1280,18 @@ html.boot-revealing .site-shell {
   user-select: none;
   letter-spacing: -2px;
 }
+
+/* SVG rope layer — always on top of site chrome, under nothing critical for clicks */
+.assist-ropes {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  pointer-events: none !important;
+  z-index: 9990 !important;
+  overflow: visible !important;
+}
+.assist-rope-line {
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}

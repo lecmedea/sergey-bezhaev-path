@@ -272,5 +272,8 @@
   }
 
   window.PathSophia = { mount, speak };
-  document.addEventListener('path-boot-complete', () => mount());
+  document.addEventListener('path-boot-complete', () => {
+    mount();
+    setTimeout(() => window.PathAssistDock?.rebind?.() || window.PathAssistDock?.init?.(), 80);
+  });
 })();

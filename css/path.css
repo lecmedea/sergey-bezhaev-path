@@ -1978,3 +1978,12 @@ body.is-chaos .bay {
   color: var(--dim, #888);
   border-top: 1px solid var(--line);
 }
+
+/* Partners bay — give marquees room */
+#bay-8 .marquee-4 {
+  height: min(58vh, 480px);
+  margin-top: 8px;
+}
+#bay-8 .bay__inner--stack {
+  max-width: 1100px;
+}

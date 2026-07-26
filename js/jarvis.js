@@ -427,9 +427,9 @@
   document.addEventListener('path-boot-complete', () => {
     mount();
     playWelcomeOnce();
-    ensureVoices(() => {
-      // warm male voice selection
-    });
+    ensureVoices(() => {});
+    // rope + drag after DOM nodes exist
+    setTimeout(() => window.PathAssistDock?.rebind?.() || window.PathAssistDock?.init?.(), 50);
   });
   if (typeof speechSynthesis !== 'undefined') {
     speechSynthesis.onvoiceschanged = () => {
