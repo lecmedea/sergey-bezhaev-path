@@ -36,7 +36,7 @@
 
   function createBootDOM() {
     const root = document.createElement('div');
-    root.className = 'boot is-asleep';
+    root.className = 'boot is-gate';
     root.id = 'bootSequence';
     root.setAttribute('role', 'dialog');
     root.setAttribute('aria-modal', 'true');
@@ -401,7 +401,7 @@
     const sub = $('#bootSub', root);
     const t0 = performance.now();
 
-    root.classList.remove('is-asleep');
+    root.classList.remove('is-gate');
     root.classList.add('is-waking', 'is-running');
     phaseEl.textContent = 'AWAKENING';
     setTimeout(() => sub.classList.add('is-on'), 2200);
@@ -460,42 +460,61 @@
   }
 
   function boot() {
-    const params = new URLSearchParams(location.search);
-    if (params.get('noboot') === '1') {
-      if (window.PathJarvis) window.PathJarvis.mount();
-      return;
-    }
-
-    document.documentElement.classList.add('is-booting');
-    const root = createBootDOM();
-    wrapSiteShell();
-
-    const gate = $('#bootGate', root);
-    const btn = $('#bootEnableSound', root);
-    const audio = $('#bootAudio', root);
-
-    btn.addEventListener('click', async () => {
-      btn.disabled = true;
-      btn.textContent = 'Просыпаемся…';
-      try {
-        localStorage.setItem(STORAGE_COOKIE, 'accepted');
-      } catch { /* */ }
-
-      try {
-        audio.volume = 0.9;
-        audio.currentTime = 0;
-        await audio.play();
-      } catch (err) {
-        console.warn('audio', err);
+    try {
+      const params = new URLSearchParams(location.search);
+      if (params.get('noboot') === '1') {
+        if (window.PathJarvis) window.PathJarvis.mount();
+        return;
       }
 
-      gate.classList.add('is-hidden');
-      runSequence(root, audio);
-    });
+      document.documentElement.classList.add('is-booting');
+      const root = createBootDOM();
+      wrapSiteShell();
 
-    setTimeout(() => btn.focus(), 80);
+      const gate = $('#bootGate', root);
+      const btn = $('#bootEnableSound', root);
+      const audio = $('#bootAudio', root);
+
+      if (!btn || !gate) {
+        console.error('boot gate missing');
+        document.documentElement.classList.remove('is-booting');
+        return;
+      }
+
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        btn.textContent = 'Просыпаемся…';
+        try {
+          localStorage.setItem(STORAGE_COOKIE, 'accepted');
+        } catch { /* */ }
+
+        try {
+          if (audio) {
+            audio.volume = 0.9;
+            audio.currentTime = 0;
+            await audio.play();
+          }
+        } catch (err) {
+          console.warn('audio', err);
+        }
+
+        gate.classList.add('is-hidden');
+        runSequence(root, audio);
+      });
+
+      // Ensure gate is visible even if something else fails
+      gate.style.display = '';
+      gate.classList.remove('is-hidden');
+      setTimeout(() => {
+        try { btn.focus({ preventScroll: true }); } catch { btn.focus(); }
+      }, 120);
+    } catch (err) {
+      console.error('boot failed', err);
+      document.documentElement.classList.remove('is-booting');
+    }
   }
 
+  // Run ASAP so gate paints before path.js heavy work
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', boot);
   } else {

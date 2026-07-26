@@ -75,12 +75,20 @@ html.boot-revealing .site-shell {
   }
 }
 
-/* Cinema eye-open / blink */
+/* Cinema eye-open / blink — HIDDEN until after sound gate (was covering disclaimer) */
 .boot__eyelids {
   position: absolute;
   inset: 0;
-  z-index: 50;
+  z-index: 40;
   pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.boot.is-waking .boot__eyelids,
+.boot.is-running .boot__eyelids {
+  opacity: 1;
+  visibility: visible;
 }
 
 .boot__lid {
@@ -88,7 +96,7 @@ html.boot-revealing .site-shell {
   left: 0;
   right: 0;
   height: 52%;
-  background: #000;
+  background: #0a0a0b;
   transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -102,9 +110,7 @@ html.boot-revealing .site-shell {
   transform-origin: bottom;
 }
 
-.boot.is-asleep .boot__lid--top { transform: none; }
-.boot.is-asleep .boot__lid--bot { transform: none; }
-
+/* start closed only when waking */
 .boot.is-waking .boot__lid--top {
   animation: lidTop 2.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
@@ -234,81 +240,101 @@ html.boot-revealing .site-shell {
   opacity: 1;
 }
 
-/* Gate */
+/* Gate — ABOVE everything; Path void palette (not cyan sci-fi) */
 .boot__gate {
   position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  z-index: 20;
-  width: min(460px, calc(100% - 28px));
-  padding: 28px 24px;
-  border: 1px solid rgba(100, 220, 255, 0.4);
-  border-radius: 6px;
-  background: linear-gradient(160deg, rgba(0, 24, 32, 0.95), rgba(0, 6, 10, 0.98));
+  z-index: 100;
+  width: min(440px, calc(100% - 32px));
+  padding: 28px 26px 24px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  background:
+    linear-gradient(165deg, rgba(26, 26, 30, 0.98), rgba(12, 12, 14, 0.98));
   box-shadow:
-    0 0 80px rgba(0, 200, 255, 0.12),
-    inset 0 0 40px rgba(0, 255, 200, 0.04);
-  font-family: Inter, system-ui, sans-serif;
+    0 24px 80px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  color: #f5f5f7;
+  pointer-events: auto;
 }
 
 .boot__gate-tag {
   font-size: 10px;
-  letter-spacing: 0.24em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: rgba(120, 220, 255, 0.75);
-  margin-bottom: 12px;
-  font-family: monospace;
+  color: #6e6e73;
+  margin-bottom: 14px;
+  font-weight: 600;
 }
 
 .boot__gate h1 {
-  margin: 0 0 12px;
-  font-size: clamp(1.15rem, 4vw, 1.4rem);
+  margin: 0 0 14px;
+  font-size: clamp(1.25rem, 4.2vw, 1.55rem);
   font-weight: 600;
-  color: #eafcff;
-  letter-spacing: 0.03em;
+  color: #f5f5f7;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
 }
 
 .boot__gate p {
-  margin: 0 0 10px;
-  font-size: 13px;
+  margin: 0 0 12px;
+  font-size: 14px;
   line-height: 1.55;
-  color: rgba(190, 230, 240, 0.78);
+  color: #a1a1a6;
+  font-weight: 400;
+}
+
+.boot__gate p strong {
+  color: #f5f5f7;
+  font-weight: 600;
 }
 
 .boot__gate-actions {
   display: grid;
   gap: 10px;
-  margin-top: 18px;
+  margin-top: 20px;
 }
 
 .boot__btn {
   appearance: none;
-  border: 1px solid rgba(100, 230, 255, 0.55);
-  background: linear-gradient(180deg, rgba(0, 200, 255, 0.2), rgba(0, 80, 120, 0.15));
-  color: #e8fcff;
-  font-weight: 700;
-  font-size: 12px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  min-height: 50px;
-  padding: 12px 16px;
-  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: #f5f5f7;
+  color: #0a0a0b;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  min-height: 48px;
+  padding: 12px 18px;
+  border-radius: 980px;
   cursor: pointer;
-  font-family: Inter, system-ui, sans-serif;
-  transition: box-shadow 0.2s, background 0.2s, transform 0.12s;
+  font-family: inherit;
+  transition: opacity 0.2s, transform 0.12s, background 0.2s;
 }
 
 .boot__btn:hover,
 .boot__btn:focus-visible {
-  box-shadow: 0 0 32px rgba(0, 220, 255, 0.3);
-  outline: none;
+  background: #fff;
+  outline: 2px solid rgba(10, 132, 255, 0.45);
+  outline-offset: 2px;
 }
 
 .boot__btn:active { transform: scale(0.98); }
-.boot__btn:disabled { opacity: 0.55; cursor: wait; }
+.boot__btn:disabled { opacity: 0.5; cursor: wait; }
 
-.boot__gate.is-hidden { display: none; }
+.boot__gate.is-hidden {
+  display: none !important;
+}
+
+/* Soft ambient while on gate (not pure void black only) */
+.boot.is-gate {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 40%, rgba(26, 26, 30, 0.9), transparent 60%),
+    #0a0a0b;
+}
 
 /* Console + progress */
 .boot__console {
