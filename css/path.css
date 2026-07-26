@@ -1470,7 +1470,14 @@ body.is-chaos .bay {
   }
   .mac-title { display: none; }
   .acc__btn { padding: 6px 7px; font-size: 11px; }
-  .hero-visual { display: none; }
+  .hero-visual:not(.hero-visual--mesh) { display: none; }
+  .hero-visual--mesh {
+    width: min(88vw, 360px);
+    margin: 8px auto 0;
+  }
+  .hero-visual--mesh .hero-mesh__img {
+    max-height: min(52vh, 420px);
+  }
   .marquee-4 { height: 160px; }
   .scrub__names { display: none; }
   .site-credit { display: none; }
@@ -1866,44 +1873,89 @@ body.is-chaos .bay {
 }
 .doc-note { font-size: 12px; color: var(--dim); max-width: 42ch; }
 
-/* Hero mesh portrait (no background) + particle field */
+/* Hero mesh portrait — no card/frame, full face on main bg */
 .hero-visual--mesh {
   position: relative;
   margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: min(70vh, 640px);
+  align-self: center;
+  min-height: 0;
+  /* kill .hero-visual card chrome */
+  border: 0 !important;
+  border-radius: 0 !important;
+  overflow: visible !important;
+  box-shadow: none !important;
+  background: transparent !important;
 }
-.hero-mesh {
+.hero-visual--mesh .hero-mesh {
   position: relative;
-  width: min(100%, 420px);
-  aspect-ratio: 891 / 1144;
-  max-height: min(72vh, 620px);
+  width: min(100%, 520px);
+  max-width: 100%;
+  /* no fixed max-height that clips chin/hair */
+  max-height: none;
+  aspect-ratio: auto;
+  overflow: visible;
 }
-.hero-mesh__img {
+.hero-visual--mesh .hero-mesh__img {
   position: relative;
   z-index: 2;
   width: 100%;
-  height: 100%;
+  height: auto;
+  max-height: min(78vh, 680px);
   object-fit: contain;
+  object-position: center top;
   display: block;
-  filter: drop-shadow(0 0 28px rgba(255, 40, 60, 0.35));
+  aspect-ratio: auto !important;
+  filter: drop-shadow(0 0 32px rgba(255, 40, 60, 0.4));
   pointer-events: none;
   user-select: none;
+  /* override generic .hero-visual img cover crop */
+  saturate: 1;
+}
+.hero-visual--mesh img {
+  aspect-ratio: auto !important;
+  object-fit: contain !important;
+  height: auto !important;
+  filter: drop-shadow(0 0 32px rgba(255, 40, 60, 0.4)) !important;
 }
 .hero-mesh__fx {
   position: absolute;
-  inset: -12% -18%;
-  width: 136%;
-  height: 124%;
+  inset: -8% -20% -12%;
+  width: 140%;
+  height: 120%;
+  left: -20%;
+  top: -8%;
   z-index: 3;
   pointer-events: none;
+  overflow: visible;
 }
 .hero-visual--mesh figcaption {
-  margin-top: 12px;
+  position: static;
+  margin-top: 14px;
   text-align: center;
+  left: auto;
+  bottom: auto;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dim, #888);
+  background: none;
+  text-shadow: none;
+}
+
+/* Origin bay: don't clip the floating face */
+#bay-0 {
+  overflow: visible;
+}
+#bay-0 .bay__inner--hero {
+  overflow: visible;
+  align-items: center;
+  padding-top: 28px;
+  padding-bottom: 56px;
 }
 
 .profile-visual {
