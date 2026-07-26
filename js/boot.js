@@ -286,6 +286,11 @@
       </div>
       <canvas class="boot__digits" id="bootDigits" aria-hidden="true"></canvas>
 
+      <button type="button" class="boot__skip" id="bootSkip" title="Пропустить запуск" aria-label="Пропустить запуск и открыть главную">
+        <img src="assets/ui/jarvis-fab.gif" alt="" width="64" height="64" decoding="async">
+        <span class="boot__skip-tip">SKIP</span>
+      </button>
+
       <div class="boot__gate" id="bootGate" data-plate="${plate}">
         <div class="boot__plate">
           <img
@@ -1028,10 +1033,88 @@
     }
   }
 
+  const SKIP_AUDIO = 'assets/ui/skip-boot.mp3';
+
+  /** Play skip SFX on body so it keeps going after boot DOM is removed */
+  function playSkipBootSound() {
+    try {
+      if (window.__pathSkipAudio) {
+        try { window.__pathSkipAudio.pause(); } catch { /* */ }
+      }
+      const a = new Audio(SKIP_AUDIO);
+      a.volume = 0.95;
+      a.setAttribute('playsinline', '');
+      // keep global ref so GC doesn't kill mid-play after main page mounts
+      window.__pathSkipAudio = a;
+      document.body.appendChild(a);
+      a.style.display = 'none';
+      a.play().catch((e) => console.warn('skip audio', e));
+      a.addEventListener('ended', () => {
+        try { a.remove(); } catch { /* */ }
+        if (window.__pathSkipAudio === a) window.__pathSkipAudio = null;
+      });
+    } catch (e) {
+      console.warn(e);
+    }
+  }
+
+  function revealSite(root, video, cleanups) {
+    if (!root || root.dataset.finished === '1') return;
+    root.dataset.finished = '1';
+    (cleanups || []).forEach((fn) => {
+      try { fn && fn(); } catch { /* */ }
+    });
+    try { if (video) { video.pause(); video.removeAttribute('src'); video.load(); } } catch { /* */ }
+    document.documentElement.classList.remove('is-booting', 'boot-materializing');
+    document.documentElement.classList.add('boot-revealing');
+    const shell = document.querySelector('.site-shell');
+    if (shell) {
+      shell.style.visibility = 'visible';
+      shell.style.opacity = '1';
+      shell.style.pointerEvents = 'auto';
+    }
+    root.classList.add('is-done');
+    // mark so welcome SFX can be skipped when we already played skip sound
+    try {
+      if (root.dataset.skipped === '1') sessionStorage.setItem('sb_path_welcome_played_v1', '1');
+    } catch { /* */ }
+    setTimeout(() => {
+      try { root.remove(); } catch { /* */ }
+      document.documentElement.classList.remove('boot-revealing');
+      window.dispatchEvent(new CustomEvent('path-boot-complete'));
+      window.PathJarvis?.mount?.();
+      window.PathSophia?.mount?.();
+    }, 280);
+  }
+
   function runSequence(root, media) {
     let infect = 0; // 0 green → 1 full red
     const getPalette = () => paletteAt(infect);
     const video = media;
+    const ctrl = {
+      aborted: false,
+      timers: [],
+      stops: [],
+      timeout(fn, ms) {
+        const id = setTimeout(() => {
+          if (!ctrl.aborted) fn();
+        }, ms);
+        ctrl.timers.push(id);
+        return id;
+      },
+      abort() {
+        ctrl.aborted = true;
+        ctrl.timers.forEach(clearTimeout);
+        ctrl.timers = [];
+        cancelAnimationFrame(infectRaf);
+        ctrl.stops.forEach((fn) => {
+          try { fn && fn(); } catch { /* */ }
+        });
+        ctrl.stops = [];
+      }
+    };
+    // expose for skip button
+    root._bootCtrl = ctrl;
 
     const t0 = performance.now();
     root.classList.remove('is-gate');
@@ -1039,7 +1122,7 @@
     $('#bootPhase', root).textContent = 'AWAKENING';
 
     // After 10s eyelids, mark awake (hide lids layer softly)
-    setTimeout(() => {
+    ctrl.timeout(() => {
       root.classList.remove('is-waking');
       root.classList.add('is-awake');
       if (infect < 0.05) $('#bootPhase', root).textContent = 'PATH OS';
@@ -1051,9 +1134,17 @@
     let stopTerms = startTerminals($('#bootTerms', root), getPalette);
     let stopWarns = null;
     let stopGlitch = null;
+    ctrl.stops.push(
+      () => stopRain && stopRain(),
+      () => stopEq && stopEq(),
+      () => stopHead && stopHead(),
+      () => stopWarns && stopWarns(),
+      () => stopGlitch && stopGlitch(),
+      () => stopTerms && stopTerms()
+    );
 
     LOG_LINES.forEach((item) => {
-      setTimeout(() => {
+      ctrl.timeout(() => {
         const list = $('#bootLines', root);
         if (!list) return;
         const div = document.createElement('div');
@@ -1071,6 +1162,7 @@
     // Continuous infection drive + progress bar (100% at 1:30)
     let infectRaf = 0;
     function infectTick(now) {
+      if (ctrl.aborted) return;
       const elapsed = now - t0;
       const p = Math.min(1, elapsed / BOOT_END_MS);
       bar.style.width = Math.round(p * 100) + '%';
@@ -1096,7 +1188,7 @@
     infectRaf = requestAnimationFrame(infectTick);
 
     // 1:15 — glitches + warnings (one-by-one → flood at 1:20), hit-synced
-    setTimeout(() => {
+    ctrl.timeout(() => {
       if (stopTerms) {
         stopTerms();
         stopTerms = null;
@@ -1107,7 +1199,7 @@
     }, WARN_START_MS);
 
     // Materialize so site is fully visible by exactly 1:30
-    setTimeout(() => {
+    ctrl.timeout(() => {
       cancelAnimationFrame(infectRaf);
       infect = 1;
       applyInfectVisual(root, 1);
@@ -1117,31 +1209,25 @@
       document.documentElement.classList.add('boot-materializing', 'boot-revealing');
       materializeDigits($('#bootDigits', root));
 
-      setTimeout(() => {
+      ctrl.timeout(() => {
         root.classList.add('is-done');
-        setTimeout(() => {
-          stopRain && stopRain();
-          stopEq && stopEq();
-          stopHead && stopHead();
-          stopWarns && stopWarns();
-          stopGlitch && stopGlitch();
-          if (stopTerms) stopTerms();
-          try { video.pause(); } catch { /* */ }
-          root.remove();
-          document.documentElement.classList.remove('boot-materializing', 'boot-revealing');
-          window.dispatchEvent(new CustomEvent('path-boot-complete'));
-          window.PathJarvis?.mount?.();
+        ctrl.timeout(() => {
+          if (ctrl.aborted) return;
+          revealSite(root, video, ctrl.stops);
+          ctrl.stops = [];
         }, DISSOLVE_DUR);
       }, MATERIALIZE_DUR);
     }, MATERIALIZE_AT_MS);
 
     if (video) video.loop = false;
+    return ctrl;
   }
 
   function boot() {
     try {
       if (new URLSearchParams(location.search).get('noboot') === '1') {
         window.PathJarvis?.mount?.();
+        window.PathSophia?.mount?.();
         return;
       }
       document.documentElement.classList.add('is-booting');
@@ -1151,14 +1237,37 @@
       const gate = $('#bootGate', root);
       const btns = [...root.querySelectorAll('[data-boot-go]')];
       const video = $('#bootVideo', root);
+      const skipBtn = $('#bootSkip', root);
       if (!btns.length || !gate) {
         document.documentElement.classList.remove('is-booting');
         return;
       }
 
       let starting = false;
+      let seqCtrl = null;
+
+      const skipBoot = () => {
+        if (root.dataset.finished === '1') return;
+        root.dataset.skipped = '1';
+        // sound first — continues after main is visible
+        playSkipBootSound();
+        try { localStorage.setItem(COOKIE_KEY, '1'); } catch { /* */ }
+        if (seqCtrl) seqCtrl.abort();
+        else {
+          // still on gate — hide gate chrome
+          gate.classList.add('is-hidden');
+        }
+        revealSite(root, video, seqCtrl ? seqCtrl.stops : []);
+      };
+
+      skipBtn?.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        skipBoot();
+      });
+
       const startBoot = async (clicked) => {
-        if (starting) return;
+        if (starting || root.dataset.finished === '1') return;
         starting = true;
         btns.forEach((b) => {
           b.disabled = true;
@@ -1177,7 +1286,7 @@
           console.warn(e);
         }
         gate.classList.add('is-hidden');
-        runSequence(root, video);
+        seqCtrl = runSequence(root, video);
       };
 
       btns.forEach((b) => b.addEventListener('click', () => startBoot(b)));
