@@ -13,8 +13,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/path.css">
-  <link rel="stylesheet" href="css/boot.css?v=20260726-feat7">
+  <link rel="stylesheet" href="css/path.css?v=20260726-lab">
+  <link rel="stylesheet" href="css/boot.css?v=20260726-lab">
 </head>
 <body class="path-body">
   <!-- Top chrome — без traffic lights, аккордеоны -->
@@ -244,12 +244,15 @@
           </ul>
           <a class="btn btn--primary" href="https://azimutclinic.ru/" target="_blank" rel="noopener">Открыть сайт</a>
         </div>
-        <div class="case-frame">
+        <div class="case-frame" data-live-src="https://azimutclinic.ru/">
           <div class="case-frame__chrome">
+            <span class="case-dots" aria-hidden="true"><i></i><i></i><i></i></span>
             <em>azimutclinic.ru</em>
+            <span class="case-lock">locked</span>
           </div>
           <div class="case-frame__shot">
-            <img src="assets/shot-azimut.jpg" alt="Скриншот azimutclinic.ru" loading="lazy" decoding="async">
+            <img class="case-frame__fallback" src="assets/shot-azimut.jpg" alt="Azimut Clinic" loading="lazy" decoding="async">
+            <iframe class="case-frame__iframe" title="Azimut Clinic live" src="https://azimutclinic.ru/" loading="lazy" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
           </div>
         </div>
       </div>
@@ -279,10 +282,15 @@
           <a class="btn btn--primary" href="https://grillzcustoms.ru/" target="_blank" rel="noopener">Открыть сайт</a>
         </div>
         <div class="case-visual-col">
-          <div class="case-frame">
-            <div class="case-frame__chrome"><em>grillzcustoms.ru</em></div>
+          <div class="case-frame" data-live-src="https://grillzcustoms.ru/">
+            <div class="case-frame__chrome">
+              <span class="case-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+              <em>grillzcustoms.ru</em>
+              <span class="case-lock">locked</span>
+            </div>
             <div class="case-frame__shot">
-              <img src="assets/shot-grillz.jpg" alt="Скриншот grillzcustoms.ru" loading="lazy" decoding="async">
+              <img class="case-frame__fallback" src="assets/shot-grillz.jpg" alt="Grillz Customs" loading="lazy" decoding="async">
+              <iframe class="case-frame__iframe" title="Grillz Customs live" src="https://grillzcustoms.ru/" loading="lazy" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
             </div>
           </div>
           <figure class="grillz-shine">
@@ -313,16 +321,15 @@
           </ul>
           <a class="btn btn--primary" href="https://xn--80aalc7a.shop" target="_blank" rel="noopener">Открыть сайт</a>
         </div>
-        <div class="case-frame">
-          <div class="case-frame__chrome"><em>elena.shop</em></div>
+        <div class="case-frame" data-live-src="https://xn--80aalc7a.shop/">
+          <div class="case-frame__chrome">
+            <span class="case-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <em>elena.shop</em>
+            <span class="case-lock">locked</span>
+          </div>
           <div class="case-frame__shot">
-            <img src="assets/shot-elena.jpg" alt="Скриншот elena.shop" loading="lazy" decoding="async"
-                 onerror="this.parentElement.classList.add('is-fallback')">
-            <div class="case-frame__body case-frame__body--elena fallback-only">
-              <div class="orb orb--a"></div>
-              <div class="orb orb--b"></div>
-              <p class="frame-note">Свет · форма · покупка</p>
-            </div>
+            <img class="case-frame__fallback" src="assets/shot-elena.jpg" alt="Elena Shop" loading="lazy" decoding="async">
+            <iframe class="case-frame__iframe" title="Elena Shop live" src="https://xn--80aalc7a.shop/" loading="lazy" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
           </div>
         </div>
       </div>
@@ -337,6 +344,16 @@
           <article class="rail-card">
             <h3>Grantek Cable</h3>
             <p>B2B-сайт дилера КПП: каталог, доверие, КП, мобильная навигация. <a href="https://lecmedea.github.io/Grantek-cabel/" target="_blank" rel="noopener">Открыть</a></p>
+            <div class="case-frame case-frame--mini" data-live-src="https://lecmedea.github.io/Grantek-cabel/">
+              <div class="case-frame__chrome">
+                <span class="case-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+                <em>Grantek Cable</em>
+                <span class="case-lock">locked</span>
+              </div>
+              <div class="case-frame__shot">
+                <iframe class="case-frame__iframe" title="Grantek live" src="https://lecmedea.github.io/Grantek-cabel/" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
+              </div>
+            </div>
           </article>
           <article class="rail-card">
             <h3>2ГИС → e-mail</h3>
@@ -706,11 +723,13 @@
 
   <audio id="doorClick" preload="auto" src="assets/ui/click.wav"></audio>
 
-  <script src="js/path.js?v=20260726-feat7"></script>
-  <script src="js/i18n.js?v=20260726-feat7"></script>
-  <script src="js/gestures.js?v=20260726-feat7"></script>
-  <script src="js/jarvis.js?v=20260726-feat7"></script>
-  <script src="js/boot.js?v=20260726-feat7"></script>
+  <script src="js/path.js?v=20260726-lab"></script>
+  <script src="js/i18n.js?v=20260726-lab"></script>
+  <script src="js/gestures.js?v=20260726-lab"></script>
+  <script src="js/case-frames.js?v=20260726-lab"></script>
+  <script src="js/jarvis.js?v=20260726-lab"></script>
+  <script src="js/sophia.js?v=20260726-lab"></script>
+  <script src="js/boot.js?v=20260726-lab"></script>
   <script>
     document.getElementById('btnOpenJarvis')?.addEventListener('click', () => {
       window.PathJarvis?.mount?.();
@@ -720,4 +739,4 @@
   </script>
 </body>
 </html>
-<!-- rebuild 20260726-feat7 -->
+<!-- rebuild 20260726-lab -->

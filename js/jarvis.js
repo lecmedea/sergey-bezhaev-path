@@ -1,11 +1,13 @@
 /**
- * Path JARVIS — full voice assistant layer (Bezhaev Industries)
- * GIF fab, Web Speech STT+TTS, offline KB + Gemini, gestures/live links
+ * JARVIS — Bezhaev Industries holographic voice lab
+ * Male TTS, draggable FAB (GIF loop), STT + Gemini, cyan hologram panel.
+ * Patterns inspired by open Jarvis projects (voice loop, status, commands).
  */
 (() => {
   'use strict';
 
   const KEY_LS = 'GEMINI_API_KEY';
+  const POS_LS = 'sb_jarvis_fab_pos';
   const WELCOME_KEY = 'sb_path_welcome_played_v1';
   const $ = (s, r = document) => r.querySelector(s);
 
@@ -21,12 +23,11 @@
 
   function getApiKey() {
     try {
-      return localStorage.getItem(KEY_LS) || localStorage.getItem('jarvis_gemini_key') || '';
+      return localStorage.getItem(KEY_LS) || '';
     } catch {
       return '';
     }
   }
-
   function setApiKey(k) {
     try {
       if (k) localStorage.setItem(KEY_LS, k.trim());
@@ -34,81 +35,184 @@
     } catch { /* */ }
   }
 
-  function speak(text, lang) {
+  /** Prefer male voices (RU/EN) */
+  function pickMaleVoice(langHint) {
+    const voices = window.speechSynthesis?.getVoices?.() || [];
+    if (!voices.length) return null;
+    const lang = (langHint || document.documentElement.lang || 'ru').slice(0, 2).toLowerCase();
+    const maleRe =
+      /male|yuri|yury|dmitri|dimitri|pavel|paul|daniel|david|mark|alex|fred|thomas|google uk english male|microsoft david|microsoft mark|microsoft pavel|microsoft dmitry|milena/i;
+    // avoid clearly female
+    const femaleRe = /female|milena|irina|samantha|zira|victoria|karen|moira|fiona|tessa|siri|ellen/i;
+    const scored = voices
+      .map((v) => {
+        let score = 0;
+        const blob = (v.name + ' ' + v.voiceURI + ' ' + v.lang).toLowerCase();
+        if (v.lang.toLowerCase().startsWith(lang)) score += 5;
+        if (maleRe.test(blob)) score += 8;
+        if (femaleRe.test(blob) && !/male/i.test(blob)) score -= 10;
+        if (/ru/.test(lang) && /ru/.test(v.lang)) score += 3;
+        if (/en/.test(lang) && /en/.test(v.lang)) score += 2;
+        // prefer "compact" / local
+        if (/premium|enhanced|neural/i.test(blob)) score += 1;
+        return { v, score };
+      })
+      .filter((x) => x.score > 0)
+      .sort((a, b) => b.score - a.score);
+    // Prefer non-female among lang match
+    const langVoices = voices.filter((v) => v.lang.toLowerCase().startsWith(lang));
+    const maleLang = langVoices.find((v) => maleRe.test(v.name + v.voiceURI) && !femaleRe.test(v.name));
+    if (maleLang) return maleLang;
+    // Russian: often only female defaults — pick lowest pitch via voiceURI hacks, or first non-female EN male
+    if (scored[0]) return scored[0].v;
+    const anyMale = voices.find((v) => maleRe.test(v.name) && !femaleRe.test(v.name));
+    return anyMale || voices.find((v) => /en-us|en_gb|ru/i.test(v.lang)) || voices[0];
+  }
+
+  let cachedVoice = null;
+  function ensureVoices(cb) {
+    const run = () => {
+      cachedVoice = pickMaleVoice();
+      cb && cb();
+    };
+    const v = speechSynthesis.getVoices();
+    if (v && v.length) run();
+    else speechSynthesis.addEventListener('voiceschanged', run, { once: true });
+  }
+
+  function speak(text) {
     try {
       if (!window.speechSynthesis) return;
-      window.speechSynthesis.cancel();
+      speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
-      u.lang = lang || document.documentElement.lang || 'ru-RU';
-      if (u.lang.length === 2) u.lang = u.lang + '-' + u.lang.toUpperCase();
-      if (u.lang.startsWith('ru')) u.lang = 'ru-RU';
-      if (u.lang.startsWith('en')) u.lang = 'en-US';
-      u.rate = 1.02;
-      u.pitch = 0.95;
-      window.speechSynthesis.speak(u);
+      const lang = document.documentElement.lang || 'ru';
+      u.lang = lang.startsWith('ru') ? 'ru-RU' : lang.startsWith('en') ? 'en-US' : lang;
+      u.rate = 1.08;
+      u.pitch = 0.82; // lower = more male
+      u.volume = 1;
+      if (!cachedVoice) cachedVoice = pickMaleVoice(lang);
+      if (cachedVoice) u.voice = cachedVoice;
+      speechSynthesis.speak(u);
     } catch { /* */ }
   }
 
+  function makeDraggable(el, storageKey) {
+    let ox = 0;
+    let oy = 0;
+    let dragging = false;
+    let moved = false;
+
+    try {
+      const saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
+      if (saved && typeof saved.x === 'number' && typeof saved.y === 'number') {
+        el.style.left = saved.x + 'px';
+        el.style.top = saved.y + 'px';
+        el.style.right = 'auto';
+        el.style.bottom = 'auto';
+      }
+    } catch { /* */ }
+
+    const onDown = (e) => {
+      if (e.button != null && e.button !== 0) return;
+      dragging = true;
+      moved = false;
+      el.classList.add('is-dragging');
+      const r = el.getBoundingClientRect();
+      const pt = e.touches ? e.touches[0] : e;
+      ox = pt.clientX - r.left;
+      oy = pt.clientY - r.top;
+      e.preventDefault();
+    };
+    const onMove = (e) => {
+      if (!dragging) return;
+      const pt = e.touches ? e.touches[0] : e;
+      const x = Math.max(4, Math.min(window.innerWidth - el.offsetWidth - 4, pt.clientX - ox));
+      const y = Math.max(4, Math.min(window.innerHeight - el.offsetHeight - 4, pt.clientY - oy));
+      el.style.left = x + 'px';
+      el.style.top = y + 'px';
+      el.style.right = 'auto';
+      el.style.bottom = 'auto';
+      moved = true;
+    };
+    const onUp = () => {
+      if (!dragging) return;
+      dragging = false;
+      el.classList.remove('is-dragging');
+      if (moved) {
+        try {
+          localStorage.setItem(
+            storageKey,
+            JSON.stringify({ x: parseFloat(el.style.left), y: parseFloat(el.style.top) })
+          );
+        } catch { /* */ }
+        el.dataset.dragged = '1';
+        setTimeout(() => {
+          el.dataset.dragged = '0';
+        }, 50);
+      }
+    };
+    el.addEventListener('mousedown', onDown);
+    el.addEventListener('touchstart', onDown, { passive: false });
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('mouseup', onUp);
+    window.addEventListener('touchend', onUp);
+  }
+
   const KB = [
-    { keys: [/кто ты|who are you|jarvis|джарвис|помощник|assistant/i], a: 'I am JARVIS for Bezhaev Industries — voice control, chat, navigation, gestures, Gemini Live.' },
-    { keys: [/бежаев|bezhaev|сергей|sergey/i], a: 'Sergey Bezhaev — AI · digital · build. Cases: Azimut Clinic, Grillz Customs, Elena Shop. lecmedea@gmail.com · @notoruis' },
-    { keys: [/азимут|azimut/i], a: 'Azimut Clinic — digital product case on the Path. Bay Cases.' },
-    { keys: [/grillz|гриллз/i], a: 'Grillz Customs — constructor and product site.' },
-    { keys: [/елена|elena/i], a: 'Elena Shop — brand e-com case.' },
-    { keys: [/жест|gesture|руками|hands|камера/i], a: 'Gesture control: open Settings → enable camera. Wave L/R to move, clap for home. Near range ~2 meters.' },
-    { keys: [/язык|language|english|русский/i], a: 'Language: Settings → Language. 30 languages including CIS.' },
-    { keys: [/контакт|contact|telegram|email|почт/i], a: 'Email lecmedea@gmail.com · Telegram @notoruis · channel t.me/iicnica' },
-    { keys: [/привет|hello|hi|здрав/i], a: 'Online. Say: next, back, home, cases, status — or ask about projects.' },
-    { keys: [/помощь|help|команд/i], a: 'Voice: home, next, back, cases, status, theme void/violet, gestures, live. Chat works with optional Gemini key.' }
+    { keys: [/кто ты|who are you|jarvis|джарвис/i], a: 'JARVIS. Bezhaev Industries voice lab. Navigation, cases, gestures, Gemini.' },
+    { keys: [/бежаев|bezhaev|sergey|сергей/i], a: 'Sergey Bezhaev — AI · digital · build. Azimut, Grillz, Elena. lecmedea@gmail.com' },
+    { keys: [/азимут|azimut/i], a: 'Azimut Clinic — live case bay. Full digital clinic stack.' },
+    { keys: [/grillz|гриллз/i], a: 'Grillz Customs Moscow — product site and constructor.' },
+    { keys: [/елена|elena/i], a: 'Elena Shop — brand commerce flow.' },
+    { keys: [/sophia|софи/i], a: 'Sophia is the second assistant — pink channel. Toggle her FAB.' },
+    { keys: [/жест|gesture|hands/i], a: 'Settings → gestures. Wave L/R, clap home.' },
+    { keys: [/привет|hello|hi/i], a: 'Systems online. Ready for commands.' },
+    { keys: [/помощь|help/i], a: 'Commands: home, next, back, cases, status, gestures, live.' }
   ];
 
   function offlineReply(text) {
     const t = (text || '').trim();
-    if (!t) return 'Empty input.';
-    for (const row of KB) {
-      if (row.keys.some((re) => re.test(t))) return row.a;
-    }
-    if (/солнц|home|домой|начало|origin/i.test(t)) return '__CMD__:home';
-    if (/дальше|вперёд|вперед|next|вправо|right/i.test(t)) return '__CMD__:next';
-    if (/назад|prev|влево|left/i.test(t)) return '__CMD__:prev';
-    if (/кейс|cases|проекты|projects/i.test(t)) return '__CMD__:cases';
-    if (/статус|status/i.test(t)) return '__CMD__:status';
-    if (/жест|gesture/i.test(t)) return '__CMD__:gestures';
-    if (/void/i.test(t)) return '__CMD__:theme-void';
-    if (/violet|фиолет/i.test(t)) return '__CMD__:theme-violet';
-    return 'Offline KB: navigation + cases. Add Gemini API key for full conversational voice.';
+    if (!t) return 'Empty.';
+    for (const row of KB) if (row.keys.some((re) => re.test(t))) return row.a;
+    if (/home|солнц|домой|origin/i.test(t)) return '__CMD__:home';
+    if (/next|дальше|вперёд|вперед|right/i.test(t)) return '__CMD__:next';
+    if (/prev|назад|left/i.test(t)) return '__CMD__:prev';
+    if (/cases|кейс|проект/i.test(t)) return '__CMD__:cases';
+    if (/status|статус/i.test(t)) return '__CMD__:status';
+    if (/gesture|жест/i.test(t)) return '__CMD__:gestures';
+    return 'Offline core. Add Gemini key for full conversation.';
   }
 
-  async function geminiTextReply(text, key) {
+  async function geminiReply(text, key) {
     const lang = document.documentElement.lang || 'ru';
     const url =
       'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' +
       encodeURIComponent(key);
-    const body = {
-      contents: [
-        {
-          role: 'user',
-          parts: [
-            {
-              text:
-                'You are JARVIS voice assistant on Sergey Bezhaev portfolio (Bezhaev Industries only, never Stark). ' +
-                'Reply short in language code: ' + lang + '. ' +
-                'Site has horizontal bays: Origin, Profile, Azimut, Grillz, Elena, Software, AI/BB, Gallery, Legal, Contact. ' +
-                'Can suggest voice cmds: home/next/back. User: ' + text
-            }
-          ]
-        }
-      ],
-      generationConfig: { maxOutputTokens: 400, temperature: 0.55 }
-    };
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
+      body: JSON.stringify({
+        contents: [
+          {
+            role: 'user',
+            parts: [
+              {
+                text:
+                  'You are JARVIS (male British-tech tone, concise) for Bezhaev Industries / Sergey Bezhaev. Never Stark. Language: ' +
+                  lang +
+                  '. User: ' +
+                  text
+              }
+            ]
+          }
+        ],
+        generationConfig: { maxOutputTokens: 360, temperature: 0.5 }
+      })
     });
-    if (!res.ok) throw new Error('Gemini HTTP ' + res.status);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
-    return (data?.candidates?.[0]?.content?.parts || []).map((p) => p.text).join('').trim() || 'Empty model reply.';
+    return (data?.candidates?.[0]?.content?.parts || []).map((p) => p.text).join('').trim() || '…';
   }
 
   function playWelcomeOnce() {
@@ -123,19 +227,19 @@
 
   function mount() {
     if (document.getElementById('jarvisHud')) return;
+    ensureVoices();
 
     const liveHref = jarvisBase();
-
     const hud = document.createElement('div');
     hud.className = 'jarvis-hud is-on';
     hud.id = 'jarvisHud';
     hud.innerHTML = `
-      <div class="jarvis-hud__corner jarvis-hud__corner--tl" aria-hidden="true"></div>
-      <div class="jarvis-hud__corner jarvis-hud__corner--tr" aria-hidden="true"></div>
-      <div class="jarvis-hud__corner jarvis-hud__corner--bl" aria-hidden="true"></div>
-      <div class="jarvis-hud__corner jarvis-hud__corner--br" aria-hidden="true"></div>
-      <div class="jarvis-hud__status" id="jarvisStatus" aria-live="polite">
-        <div>JARVIS · BEZHAEV INDUSTRIES</div>
+      <div class="jarvis-hud__corner jarvis-hud__corner--tl"></div>
+      <div class="jarvis-hud__corner jarvis-hud__corner--tr"></div>
+      <div class="jarvis-hud__corner jarvis-hud__corner--bl"></div>
+      <div class="jarvis-hud__corner jarvis-hud__corner--br"></div>
+      <div class="jarvis-hud__status" id="jarvisStatus">
+        <div>JARVIS · HOLO LINK</div>
         <div id="jarvisClock">--:--:--</div>
         <div id="jarvisBay">BAY —</div>
       </div>
@@ -146,93 +250,85 @@
     fab.type = 'button';
     fab.className = 'jarvis-hud__fab jarvis-hud__fab--gif';
     fab.id = 'jarvisFab';
-    fab.setAttribute('aria-label', 'JARVIS — voice assistant');
-    fab.title = 'JARVIS voice (J)';
-    fab.innerHTML = '<img src="assets/ui/jarvis-fab.gif" alt="" width="72" height="72" decoding="async">';
+    fab.title = 'JARVIS · drag to move · click to open';
+    fab.innerHTML = '<img src="assets/ui/jarvis-fab.gif" width="72" height="72" alt="JARVIS">';
     document.body.appendChild(fab);
+    makeDraggable(fab, POS_LS);
 
     const panel = document.createElement('div');
-    panel.className = 'jarvis-hud__panel';
+    panel.className = 'jarvis-hud__panel jarvis-hud__panel--holo';
     panel.id = 'jarvisPanel';
-    panel.setAttribute('role', 'dialog');
     panel.innerHTML = `
-      <h3>J.A.R.V.I.S. · Voice</h3>
-      <div class="jarvis-hud__log" id="jarvisLog">Voice assistant ready. Mic · chat · gestures · Live.</div>
+      <div class="holo-scan" aria-hidden="true"></div>
+      <h3>J.A.R.V.I.S. · Holo Console</h3>
+      <div class="jarvis-hud__log" id="jarvisLog">Male voice core · offline + Gemini · drag FAB freely.</div>
       <div class="jarvis-hud__cmds">
-        <button type="button" data-jcmd="listen">🎤 Слушать</button>
-        <button type="button" data-jcmd="home">Солнце</button>
-        <button type="button" data-jcmd="next">Дальше</button>
-        <button type="button" data-jcmd="prev">Назад</button>
-        <button type="button" data-jcmd="cases">Кейсы</button>
-        <button type="button" data-jcmd="status">Статус</button>
-        <button type="button" data-jcmd="gestures">Жесты</button>
-        <button type="button" data-jcmd="theme-void">Тема void</button>
-        <button type="button" data-jcmd="theme-violet">Тема violet</button>
-        <button type="button" data-jcmd="live">Live · Gemini</button>
-        <button type="button" data-jcmd="speak-hello">Сказать привет</button>
-      </div>
-      <div class="jarvis-hud__links">
-        <a href="${liveHref}" target="_blank" rel="noopener">Gemini Live ↗</a>
-        <a href="${liveHref}chat.html" target="_blank" rel="noopener">Chatbot ↗</a>
+        <button type="button" data-jcmd="listen">🎤 Listen</button>
+        <button type="button" data-jcmd="home">Home</button>
+        <button type="button" data-jcmd="next">Next</button>
+        <button type="button" data-jcmd="prev">Prev</button>
+        <button type="button" data-jcmd="cases">Cases</button>
+        <button type="button" data-jcmd="status">Status</button>
+        <button type="button" data-jcmd="gestures">Gestures</button>
+        <button type="button" data-jcmd="live">Live</button>
+        <button type="button" data-jcmd="speak-hello">Speak</button>
       </div>
       <div class="jarvis-hud__chat">
-        <div class="jarvis-hud__chat-log" id="jarvisChatLog" aria-live="polite"></div>
+        <div class="jarvis-hud__chat-log" id="jarvisChatLog"></div>
         <form id="jarvisChatForm" autocomplete="off">
-          <input id="jarvisChatInput" type="text" maxlength="800" placeholder="Спросить голосом или текстом…" />
+          <input id="jarvisChatInput" type="text" maxlength="800" placeholder="Command or question…" />
           <button type="submit">→</button>
         </form>
       </div>
       <div class="jarvis-hud__key">
-        <label for="jarvisKeyInput">Gemini API key (localStorage)</label>
-        <input id="jarvisKeyInput" type="password" autocomplete="off" placeholder="AIza… for full voice AI" />
+        <label for="jarvisKeyInput">Gemini key</label>
+        <input id="jarvisKeyInput" type="password" placeholder="AIza…" autocomplete="off" />
+      </div>
+      <div class="jarvis-hud__links">
+        <a href="${liveHref}" target="_blank" rel="noopener">Gemini Live ↗</a>
       </div>
     `;
     document.body.appendChild(panel);
 
-    const log = (msg) => { const el = $('#jarvisLog'); if (el) el.textContent = msg; };
+    const log = (m) => {
+      const el = $('#jarvisLog');
+      if (el) el.textContent = m;
+    };
     const chatLog = $('#jarvisChatLog');
-    const appendChat = (who, text) => {
+    const append = (who, text) => {
       if (!chatLog) return;
       const d = document.createElement('div');
-      d.className = who === 'me' ? 'me' : 'bot';
+      d.className = who;
       d.textContent = (who === 'me' ? 'You: ' : 'J: ') + text;
       chatLog.appendChild(d);
       chatLog.scrollTop = chatLog.scrollHeight;
     };
-    appendChat('bot', 'Full voice layer. Offline KB always; Gemini with key. Try mic.');
+    append('bot', 'Holo link online. Male voice preferred when OS provides one.');
 
-    const clock = () => {
-      const el = $('#jarvisClock');
-      if (el) el.textContent = new Date().toLocaleTimeString(document.documentElement.lang || 'ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    };
-    clock();
-    setInterval(clock, 1000);
     setInterval(() => {
-      const bay = $('#bayIndex');
-      const st = $('#jarvisBay');
-      if (st && bay) st.textContent = 'BAY ' + (bay.textContent || '—');
-    }, 800);
+      const c = $('#jarvisClock');
+      if (c) c.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const b = $('#jarvisBay');
+      const bi = $('#bayIndex');
+      if (b && bi) b.textContent = 'BAY ' + bi.textContent;
+    }, 500);
 
-    function handleCmd(cmd) {
-      switch (cmd) {
-        case 'home': window.PathAPI?.goHome?.() || $('#btnHome')?.click(); log('Origin.'); break;
-        case 'next': window.PathAPI?.goNext?.() || $('#btnNext')?.click(); log('Next bay.'); break;
-        case 'prev': window.PathAPI?.goPrev?.() || $('#btnPrev')?.click(); log('Previous bay.'); break;
-        case 'cases': window.PathAPI?.goToIndex?.(2) || document.querySelector('[data-go="2"]')?.click(); log('Cases.'); break;
-        case 'status': log('Path ' + ($('#progressPct')?.textContent || '0%') + ' · systems nominal.'); speak('Path online. Bezhaev Industries.'); break;
-        case 'theme-void': document.querySelector('.theme-card[data-theme="void"]')?.click(); log('Theme void.'); break;
-        case 'theme-violet': document.querySelector('.theme-card[data-theme="violet"]')?.click(); log('Theme violet.'); break;
-        case 'live': window.open(liveHref, '_blank', 'noopener'); log('Opening Live.'); break;
-        case 'gestures': window.PathGestures?.toggle?.(); log('Gesture control toggled.'); break;
-        case 'listen': startListen(); break;
-        case 'speak-hello': speak('Bezhaev Industries online. I am JARVIS.'); break;
-        default: log('Unknown command.');
+    function cmd(c) {
+      switch (c) {
+        case 'home': window.PathAPI?.goHome?.(); break;
+        case 'next': window.PathAPI?.goNext?.(); break;
+        case 'prev': window.PathAPI?.goPrev?.(); break;
+        case 'cases': window.PathAPI?.goToIndex?.(2); break;
+        case 'status': log('Path ' + ($('#progressPct')?.textContent || '0%')); speak('Path systems nominal.'); break;
+        case 'gestures': window.PathGestures?.toggle?.(); break;
+        case 'live': window.open(liveHref, '_blank', 'noopener'); break;
+        case 'listen': listen(); break;
+        case 'speak-hello': speak('Bezhaev Industries. JARVIS online.'); break;
+        default: break;
       }
     }
 
-    panel.querySelectorAll('[data-jcmd]').forEach((b) => {
-      b.addEventListener('click', () => handleCmd(b.getAttribute('data-jcmd')));
-    });
+    panel.querySelectorAll('[data-jcmd]').forEach((b) => b.addEventListener('click', () => cmd(b.dataset.jcmd)));
 
     const keyInput = $('#jarvisKeyInput');
     if (keyInput) {
@@ -240,93 +336,97 @@
       keyInput.addEventListener('change', () => setApiKey(keyInput.value));
     }
 
-    async function handleUserText(text) {
-      appendChat('me', text);
-      const offline = offlineReply(text);
-      if (offline.startsWith('__CMD__:')) {
-        handleCmd(offline.slice(8));
-        appendChat('bot', 'Done.');
-        speak('OK');
+    async function handleText(text) {
+      append('me', text);
+      const off = offlineReply(text);
+      if (off.startsWith('__CMD__:')) {
+        cmd(off.slice(8));
+        append('bot', 'Executed.');
+        speak('Done.');
         return;
       }
-      const key = getApiKey() || keyInput?.value?.trim() || '';
+      const key = getApiKey() || keyInput?.value?.trim();
       if (key) {
-        appendChat('bot', '…');
+        append('bot', '…');
         try {
-          const ans = await geminiTextReply(text, key);
-          const last = chatLog?.lastElementChild;
-          if (last && last.classList.contains('bot')) last.textContent = 'J: ' + ans;
-          else appendChat('bot', ans);
+          const ans = await geminiReply(text, key);
+          const last = chatLog.lastElementChild;
+          if (last) last.textContent = 'J: ' + ans;
           speak(ans);
-        } catch (err) {
-          const last = chatLog?.lastElementChild;
-          const msg = offline + ' (' + (err.message || err) + ')';
-          if (last && last.classList.contains('bot')) last.textContent = 'J: ' + msg;
-          else appendChat('bot', msg);
-          speak(offline);
+        } catch (e) {
+          const last = chatLog.lastElementChild;
+          if (last) last.textContent = 'J: ' + off;
+          speak(off);
         }
       } else {
-        appendChat('bot', offline);
-        speak(offline);
+        append('bot', off);
+        speak(off);
       }
     }
 
     $('#jarvisChatForm')?.addEventListener('submit', (e) => {
       e.preventDefault();
       const input = $('#jarvisChatInput');
-      const text = (input?.value || '').trim();
-      if (!text) return;
-      if (input) input.value = '';
-      handleUserText(text);
+      const t = (input?.value || '').trim();
+      if (!t) return;
+      input.value = '';
+      handleText(t);
     });
 
     fab.addEventListener('click', () => {
+      if (fab.dataset.dragged === '1') return;
       panel.classList.toggle('is-open');
-      if (panel.classList.contains('is-open')) {
-        log('Mic or type. J to toggle.');
-        startListen();
-      }
+      if (panel.classList.contains('is-open')) listen();
     });
 
     document.addEventListener('keydown', (e) => {
-      if ((e.key === 'j' || e.key === 'J') && !e.target.matches('input, textarea, [contenteditable]')) {
+      if ((e.key === 'j' || e.key === 'J') && !e.target.matches('input,textarea,[contenteditable]')) {
         e.preventDefault();
         panel.classList.toggle('is-open');
       }
-      if (e.key === 'Escape') panel.classList.remove('is-open');
     });
 
     let rec = null;
-    function startListen() {
+    function listen() {
       const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SR) {
-        log('Speech recognition unavailable. Use chat.');
+        log('Speech API unavailable.');
         return;
       }
-      if (rec) { try { rec.stop(); } catch { /* */ } }
+      if (rec) try { rec.stop(); } catch { /* */ }
       rec = new SR();
       const lang = document.documentElement.lang || 'ru';
-      rec.lang = lang.startsWith('en') ? 'en-US' : lang.startsWith('ru') ? 'ru-RU' : lang;
+      rec.lang = lang.startsWith('en') ? 'en-US' : 'ru-RU';
       rec.interimResults = false;
-      rec.continuous = false;
       fab.classList.add('is-listening');
       log('Listening…');
       rec.onresult = (ev) => {
         const text = (ev.results[0][0].transcript || '').trim();
-        log('Heard: «' + text + '»');
-        handleUserText(text);
+        log('Heard: ' + text);
+        handleText(text);
       };
-      rec.onerror = () => { fab.classList.remove('is-listening'); log('Did not catch that.'); };
+      rec.onerror = () => {
+        fab.classList.remove('is-listening');
+        log('Mic error.');
+      };
       rec.onend = () => fab.classList.remove('is-listening');
       try { rec.start(); } catch { log('Mic busy.'); }
     }
 
-    log('JARVIS voice online.');
+    log('JARVIS holo console ready.');
   }
 
-  window.PathJarvis = { mount, getApiKey, setApiKey, speak, playWelcomeOnce };
+  window.PathJarvis = { mount, speak, playWelcomeOnce, getApiKey, setApiKey };
   document.addEventListener('path-boot-complete', () => {
     mount();
     playWelcomeOnce();
+    ensureVoices(() => {
+      // warm male voice selection
+    });
   });
+  if (typeof speechSynthesis !== 'undefined') {
+    speechSynthesis.onvoiceschanged = () => {
+      cachedVoice = pickMaleVoice();
+    };
+  }
 })();

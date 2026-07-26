@@ -125,47 +125,40 @@
     });
   }
 
-  // wheel → horizontal
-  track.addEventListener(
-    "wheel",
-    (event) => {
-      const dy = event.deltaY;
-      const dx = event.deltaX;
-      if (Math.abs(dy) >= Math.abs(dx) && dy !== 0) {
-        // don't steal scroll inside legal / house panels with vertical overflow when shift not held
-        const scrollable = event.target.closest(".bay__inner--legal, .bay__inner--stack, .house-stage");
-        if (scrollable && scrollable.scrollHeight > scrollable.clientHeight + 8) {
-          // allow native vertical inside tall panels unless at edge wanting path travel
-          return;
-        }
-        event.preventDefault();
-        track.scrollLeft += dy;
-      }
-    },
-    { passive: false }
-  );
+  // Dual-axis: vertical scroll inside each bay; horizontal path via track
+  // Shift+wheel or pure deltaX → always horizontal. Else: bay vertical first.
+  function wheelToPath(event) {
+    if (event.target.closest(".deck, .mac-bar, .acc__panel, .jarvis-hud__panel, .sophia-hud__panel, .gesture-hud")) {
+      return;
+    }
+    const dy = event.deltaY;
+    const dx = event.deltaX;
+    if (dy === 0 && dx === 0) return;
 
-  window.addEventListener(
-    "wheel",
-    (event) => {
-      if (event.target.closest(".deck") || event.target.closest(".mac-bar") || event.target.closest(".acc__panel")) {
+    // explicit horizontal intent
+    if (event.shiftKey || Math.abs(dx) > Math.abs(dy)) {
+      event.preventDefault();
+      track.scrollLeft += event.shiftKey ? dy : dx;
+      return;
+    }
+
+    const bay = event.target.closest(".bay");
+    if (bay && bay.scrollHeight > bay.clientHeight + 4) {
+      const atTop = bay.scrollTop <= 1;
+      const atBottom = bay.scrollTop + bay.clientHeight >= bay.scrollHeight - 2;
+      // native vertical inside bay while there is room
+      if ((dy < 0 && !atTop) || (dy > 0 && !atBottom)) {
         return;
       }
-      if (Math.abs(event.deltaY) > Math.abs(event.deltaX) && !event.defaultPrevented) {
-        const inPanel = event.target.closest(".bay__inner--legal, .bay__inner--stack, .house-stage, .acc__panel");
-        if (inPanel) return;
-        const overTrack =
-          event.target.closest(".track") ||
-          event.target === document.body ||
-          event.target === document.documentElement;
-        if (overTrack || !event.target.closest("a, button, input, textarea")) {
-          event.preventDefault();
-          track.scrollLeft += event.deltaY;
-        }
-      }
-    },
-    { passive: false }
-  );
+    }
+
+    // at bay edge (or short bay) → horizontal orbit
+    event.preventDefault();
+    track.scrollLeft += dy;
+  }
+
+  track.addEventListener("wheel", wheelToPath, { passive: false });
+  window.addEventListener("wheel", wheelToPath, { passive: false });
 
   track.addEventListener(
     "scroll",

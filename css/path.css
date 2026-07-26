@@ -202,7 +202,12 @@ a {
   top: calc(100% + 10px);
   left: 0;
   min-width: 220px;
-  max-width: min(360px, 90vw);
+  max-width: min(380px, 92vw);
+  max-height: min(70vh, 560px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding: 10px;
   border-radius: 14px;
   background: rgba(28, 28, 32, 0.94);
@@ -213,6 +218,13 @@ a {
   flex-direction: column;
   gap: 4px;
   z-index: 120;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
+.acc__panel::-webkit-scrollbar { width: 8px; }
+.acc__panel::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 8px;
 }
 
 .acc__panel[hidden] {
@@ -359,11 +371,16 @@ a {
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   outline: none;
-  scrollbar-width: none;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
 }
 
 .track::-webkit-scrollbar {
-  display: none;
+  height: 8px;
+}
+.track::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
 }
 
 .bay {
@@ -373,22 +390,32 @@ a {
   height: 100%;
   scroll-snap-align: start;
   scroll-snap-stop: always;
-  overflow: hidden;
+  overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
   background:
     radial-gradient(1200px 600px at 20% 0%, rgba(255, 255, 255, 0.04), transparent 60%),
     radial-gradient(900px 500px at 90% 80%, rgba(10, 132, 255, 0.06), transparent 55%),
     transparent;
 }
+.bay::-webkit-scrollbar { width: 9px; }
+.bay::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+}
 
 .bay__inner {
-  height: 100%;
+  height: auto;
+  min-height: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 40px 40px 28px;
+  padding: 40px 40px 48px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .bay__inner--hero {
@@ -396,6 +423,7 @@ a {
   grid-template-columns: 1.1fr 0.9fr;
   gap: 40px;
   align-items: center;
+  min-height: 100%;
 }
 
 .bay__inner--split {
@@ -451,7 +479,13 @@ h1, h2 {
 }
 
 h1 { font-size: clamp(40px, 6vw, 72px); }
-.h1-line { display: block; }
+.h1-line {
+  display: inline;
+  white-space: nowrap;
+}
+h1 .h1-sub {
+  display: block;
+}
 .h1-sub {
   display: block;
   margin-top: 8px;
@@ -689,6 +723,9 @@ h3 { margin: 0 0 6px; font-size: 15px; font-weight: 550; }
   border: 1px solid var(--line);
   background: var(--bg-elev);
   box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 .case-frame__chrome {
   display: flex;
@@ -697,23 +734,73 @@ h3 { margin: 0 0 6px; font-size: 15px; font-weight: 550; }
   padding: 10px 14px;
   background: rgba(255, 255, 255, 0.03);
   border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
 }
 .case-frame__chrome em {
   font-style: normal;
   font-size: 11px;
   color: var(--dim);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
+.case-frame__chrome .case-lock {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #30d158;
+  opacity: 0.85;
+}
+.case-frame__chrome .case-dots {
+  display: inline-flex;
+  gap: 4px;
+}
+.case-frame__chrome .case-dots i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  display: block;
+}
+.case-frame__chrome .case-dots i:nth-child(1) { background: #ff5f57; }
+.case-frame__chrome .case-dots i:nth-child(2) { background: #febc2e; }
+.case-frame__chrome .case-dots i:nth-child(3) { background: #28c840; }
 .case-frame__shot {
   position: relative;
   aspect-ratio: 16 / 10;
+  min-height: 280px;
   background: #0e0e10;
+  overflow: hidden;
 }
-.case-frame__shot img {
+.case-frame__shot img,
+.case-frame__fallback {
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: top center;
   display: block;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+.case-frame__iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  z-index: 2;
+  background: #fff;
+  /* block pointer navigation outside via sandbox + no srcdoc address bar */
+}
+.case-frame.is-blocked .case-frame__iframe {
+  display: none;
+}
+.case-frame.is-blocked .case-frame__fallback {
+  position: relative;
+  z-index: 2;
 }
 .case-frame__body {
   min-height: 220px;
