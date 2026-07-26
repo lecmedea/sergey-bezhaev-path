@@ -8,9 +8,8 @@
   'use strict';
 
   const BOOT_END_MS = 90000; // 1:30 total — site must be visible
-  const MATERIALIZE_AT_MS = 82000; // start solidify so dissolve finishes by 1:30
-  const MATERIALIZE_DUR = 5000;
-  const DISSOLVE_DUR = 3000; // 82+5+3 = 90
+  const MATERIALIZE_AT_MS = 84000; // start cosmic exit → site zoom
+  const COSMIC_DUR = 3200; // fly into space + zoom to site
   const WAKE_MS = 10000; // slow eyelids
   const HEAD_CALM_MS = 12000; // head moves gently first 12s
   const RED_AT_MS = 68000; // infection starts ~1:08
@@ -18,6 +17,7 @@
   const WARN_START_MS = 75000; // 1:15 — warnings one-by-one
   const WARN_FLOOD_MS = 80000; // 1:20 — flood
   const COOKIE_KEY = 'sb_path_cookies_v3';
+  const BOOT_DONE_KEY = 'sb_path_boot_done_v1'; // session: don't re-show gate after complete
   const HEAD_VIDEO = 'assets/video/boot-head.mp4';
   const HEAD_VIDEO_2 = 'assets/video/boot-head-2.mp4';
   const HEAD2_AT_MS = 50000; // second character appears at 0:50
@@ -1279,33 +1279,149 @@
     }
   }
 
+  function markBootDone() {
+    try {
+      sessionStorage.setItem(BOOT_DONE_KEY, '1');
+      localStorage.setItem(COOKIE_KEY, '1');
+    } catch { /* */ }
+  }
+
+  function clearBootClasses() {
+    document.documentElement.classList.remove(
+      'is-booting',
+      'boot-materializing',
+      'boot-revealing',
+      'boot-cosmos'
+    );
+  }
+
+  function forceShowShell(shell) {
+    if (!shell) return;
+    shell.style.visibility = 'visible';
+    shell.style.opacity = '1';
+    shell.style.pointerEvents = 'auto';
+    shell.style.filter = 'none';
+    shell.style.transform = 'none';
+    shell.classList.add('is-revealed');
+  }
+
+  function runCosmosStars(canvas, ms) {
+    if (!canvas) return () => {};
+    const ctx = canvas.getContext('2d');
+    let w = 0, h = 0, raf = 0, stopped = false;
+    const stars = [];
+    function resize() {
+      const dpr = Math.min(devicePixelRatio || 1, 2);
+      w = canvas.width = innerWidth * dpr;
+      h = canvas.height = innerHeight * dpr;
+      canvas.style.width = '100%';
+      canvas.style.height = '100%';
+      stars.length = 0;
+      const n = Math.floor((innerWidth * innerHeight) / 9000);
+      for (let i = 0; i < Math.max(40, Math.min(120, n)); i++) {
+        stars.push({
+          x: Math.random() * w,
+          y: Math.random() * h,
+          z: 0.3 + Math.random() * 2.2,
+          a: 0.3 + Math.random() * 0.7
+        });
+      }
+    }
+    resize();
+    function frame() {
+      if (stopped) return;
+      ctx.fillStyle = 'rgba(2,4,12,0.38)';
+      ctx.fillRect(0, 0, w, h);
+      for (const s of stars) {
+        s.x += s.z * 2.1;
+        s.y += s.z * 0.12;
+        if (s.x > w + 20) { s.x = -10; s.y = Math.random() * h; }
+        ctx.beginPath();
+        ctx.fillStyle = 'rgba(200,230,255,' + s.a + ')';
+        ctx.arc(s.x, s.y, s.z * 0.9, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(160,200,255,' + (s.a * 0.35) + ')';
+        ctx.lineWidth = s.z * 0.35;
+        ctx.beginPath();
+        ctx.moveTo(s.x, s.y);
+        ctx.lineTo(s.x - s.z * 10, s.y - s.z * 0.4);
+        ctx.stroke();
+      }
+      raf = requestAnimationFrame(frame);
+    }
+    raf = requestAnimationFrame(frame);
+    const t = setTimeout(() => { stopped = true; cancelAnimationFrame(raf); }, ms + 400);
+    return () => { stopped = true; clearTimeout(t); cancelAnimationFrame(raf); };
+  }
+
+  /**
+   * Cosmic handoff: boot flies away → stars → site zooms in from deep space.
+   * Session flag prevents mobile reloads from re-showing the gate.
+   */
   function revealSite(root, video, cleanups) {
     if (!root || root.dataset.finished === '1') return;
     root.dataset.finished = '1';
+
     (cleanups || []).forEach((fn) => {
-      try { fn && fn(); } catch { /* */ }
+      try { fn && fn(); } catch (e) { /* */ }
     });
-    try { if (video) { video.pause(); video.removeAttribute('src'); video.load(); } } catch { /* */ }
-    document.documentElement.classList.remove('is-booting', 'boot-materializing');
-    document.documentElement.classList.add('boot-revealing');
-    const shell = document.querySelector('.site-shell');
-    if (shell) {
-      shell.style.visibility = 'visible';
-      shell.style.opacity = '1';
-      shell.style.pointerEvents = 'auto';
-    }
-    root.classList.add('is-done');
-    // mark so welcome SFX can be skipped when we already played skip sound
+    try {
+      if (video) {
+        video.pause();
+        video.removeAttribute('src');
+        video.load();
+      }
+    } catch (e) { /* */ }
+
+    markBootDone();
     try {
       if (root.dataset.skipped === '1') sessionStorage.setItem('sb_path_welcome_played_v1', '1');
-    } catch { /* */ }
-    setTimeout(() => {
-      try { root.remove(); } catch { /* */ }
-      document.documentElement.classList.remove('boot-revealing');
+    } catch (e) { /* */ }
+
+    const shell = document.querySelector('.site-shell');
+    const cosmos = document.createElement('div');
+    cosmos.className = 'boot-cosmos';
+    cosmos.innerHTML = '<canvas class="boot-cosmos__stars" id="bootCosmosStars" aria-hidden="true"></canvas>';
+    document.body.appendChild(cosmos);
+
+    document.documentElement.classList.remove('is-booting', 'boot-materializing', 'boot-revealing');
+    document.documentElement.classList.add('boot-cosmos');
+
+    root.classList.add('is-flying-out');
+    if (shell) {
+      shell.classList.add('is-space-zoom');
+      forceShowShell(shell);
+      try {
+        const track = document.getElementById('track');
+        if (track) track.scrollLeft = 0;
+      } catch (e) { /* */ }
+    }
+
+    const stopStars = runCosmosStars(document.getElementById('bootCosmosStars'), COSMIC_DUR);
+
+    let finished = false;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      try { stopStars && stopStars(); } catch (e) { /* */ }
+      try { root.remove(); } catch (e) { /* */ }
+      try { cosmos.remove(); } catch (e) { /* */ }
+      clearBootClasses();
+      if (shell) {
+        shell.classList.remove('is-space-zoom');
+        forceShowShell(shell);
+      }
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
       window.dispatchEvent(new CustomEvent('path-boot-complete'));
       window.PathJarvis?.mount?.();
       window.PathSophia?.mount?.();
-    }, 280);
+      try { window.PathAPI?.goToIndex?.(0, 'auto'); } catch (e) { /* */ }
+    };
+
+    // mobile safety: always land on site
+    setTimeout(finish, COSMIC_DUR + 50);
+    setTimeout(finish, COSMIC_DUR + 1200);
   }
 
   function runSequence(root, media) {
@@ -1431,38 +1547,57 @@
       phaseEl.textContent = 'WARNING CASCADE';
     }, WARN_START_MS);
 
-    // Materialize so site is fully visible by exactly 1:30
+    // Cosmic exit → site zoom (lands by ~1:27–1:30)
     ctrl.timeout(() => {
+      if (ctrl.aborted) return;
       cancelAnimationFrame(infectRaf);
       infect = 1;
       applyInfectVisual(root, 1);
-      phaseEl.textContent = 'MATERIALIZE';
+      phaseEl.textContent = 'EXIT · COSMOS';
       root.classList.add('is-materializing', 'is-red');
-      document.documentElement.classList.remove('is-booting');
-      document.documentElement.classList.add('boot-materializing', 'boot-revealing');
       materializeDigits($('#bootDigits', root));
-
+      // brief digit solidify then fly to space
       ctrl.timeout(() => {
-        root.classList.add('is-done');
-        ctrl.timeout(() => {
-          if (ctrl.aborted) return;
-          revealSite(root, video, ctrl.stops);
-          ctrl.stops = [];
-        }, DISSOLVE_DUR);
-      }, MATERIALIZE_DUR);
+        if (ctrl.aborted) return;
+        revealSite(root, video, ctrl.stops);
+        ctrl.stops = [];
+      }, 900);
     }, MATERIALIZE_AT_MS);
 
     if (video) video.loop = false;
     return ctrl;
   }
 
+  function enterSiteDirect() {
+    clearBootClasses();
+    document.querySelectorAll('.boot, .boot-cosmos').forEach((el) => {
+      try { el.remove(); } catch (e) { /* */ }
+    });
+    const shell = document.querySelector('.site-shell');
+    if (shell) forceShowShell(shell);
+    // if shell was never created, content is already in body
+    document.documentElement.style.overflow = '';
+    document.body.style.overflow = '';
+    window.dispatchEvent(new CustomEvent('path-boot-complete'));
+    window.PathJarvis?.mount?.();
+    window.PathSophia?.mount?.();
+    try { window.PathAPI?.goToIndex?.(0, 'auto'); } catch (e) { /* */ }
+  }
+
   function boot() {
     try {
       if (new URLSearchParams(location.search).get('noboot') === '1') {
-        window.PathJarvis?.mount?.();
-        window.PathSophia?.mount?.();
+        enterSiteDirect();
         return;
       }
+      // Mobile often reloads after long media boot — stay on main, not gate
+      try {
+        if (sessionStorage.getItem(BOOT_DONE_KEY) === '1') {
+          enterSiteDirect();
+          return;
+        }
+      } catch (e) { /* */ }
+
       document.documentElement.classList.add('is-booting');
       loadSpeakerCues(); // warm load for voice-colored EQ
       const root = createBootDOM();
@@ -1532,6 +1667,18 @@
       document.documentElement.classList.remove('is-booting');
     }
   }
+
+  // iOS/Safari bfcache / reload after media: never leave user on dead boot overlay
+  window.addEventListener('pageshow', (ev) => {
+    try {
+      if (sessionStorage.getItem(BOOT_DONE_KEY) === '1') {
+        document.querySelectorAll('.boot').forEach((el) => el.remove());
+        clearBootClasses();
+        const shell = document.querySelector('.site-shell');
+        if (shell) forceShowShell(shell);
+      }
+    } catch (e) { /* */ }
+  });
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
