@@ -128,12 +128,50 @@
     };
   }
 
+  /* Disclaimer plates: macOS → 02–04, Windows/other → 01+05 */
+  const PLATES_MAC = ['02', '03', '04'];
+  const PLATES_WIN = ['01', '05'];
+
+  // Lebedev-grade: short, rude, funny. Both buttons start the boot.
+  const BTN_PAIRS = [
+    ['Жми. Не ной.', 'Я не трус'],
+    ['Включить звук, брат', 'Ломаем 4-ю стену'],
+    ['Тащи меня внутрь', 'Без тормозов'],
+    ['Согласен на всё', 'Пусть болит'],
+    ['Я готов. Жги.', 'Не ссы — входи'],
+    ['Окей, ломаем', 'Цифра зовёт'],
+    ['Поехали, красавчик', 'Дальше без нытья'],
+    ['Жми сюда, герой', 'Хватит пялиться'],
+    ['В систему, живо', 'Cookies? Пофиг'],
+    ['Давай уже', 'Я в деле']
+  ];
+
+  function detectOsPool() {
+    const ua = navigator.userAgent || '';
+    const p = navigator.platform || '';
+    const mac = /Mac|iPhone|iPad|iPod/i.test(p) || /Mac OS X|Macintosh/i.test(ua);
+    // Windows explicit; everyone else (Linux, Android, unknown) → win pool per brief
+    return mac ? PLATES_MAC : PLATES_WIN;
+  }
+
+  function pickPlate() {
+    const pool = detectOsPool();
+    return pool[(Math.random() * pool.length) | 0];
+  }
+
+  function pickBtnPair() {
+    return BTN_PAIRS[(Math.random() * BTN_PAIRS.length) | 0];
+  }
+
   function createBootDOM() {
+    const plate = pickPlate();
+    const [btnA, btnB] = pickBtnPair();
     const root = document.createElement('div');
     root.className = 'boot is-gate';
     root.id = 'bootSequence';
     root.setAttribute('role', 'dialog');
     root.setAttribute('aria-modal', 'true');
+    root.setAttribute('aria-label', 'Cookies · Audio · 4th wall');
     root.innerHTML = `
       <canvas class="boot__rain" id="bootRain" aria-hidden="true"></canvas>
       <div class="boot__infect" id="bootInfect" aria-hidden="true"></div>
@@ -148,13 +186,24 @@
       </div>
       <canvas class="boot__digits" id="bootDigits" aria-hidden="true"></canvas>
 
-      <div class="boot__gate" id="bootGate">
-        <div class="boot__gate-tag">BEZHAEV INDUSTRIES · Cookies · Audio</div>
-        <h1>Проснись. Система ждёт.</h1>
-        <p>Сайт использует cookies для настроек интерфейса. Продолжая, вы соглашаетесь на их использование.</p>
-        <p>Цифровой запуск идёт <strong>под звук</strong>. Без кнопки «Включить звук» загрузка <strong>не начнётся</strong> — так ломается четвёртая стена.</p>
-        <div class="boot__gate-actions">
-          <button type="button" class="boot__btn" id="bootEnableSound">Включить звук · войти в систему</button>
+      <div class="boot__gate" id="bootGate" data-plate="${plate}">
+        <div class="boot__plate">
+          <img
+            class="boot__plate-img"
+            src="assets/gate/plate-${plate}.jpg"
+            alt="Cookies · Audio · 4th wall — дисклеймер Bezhaev Industries"
+            width="1536"
+            height="1024"
+            decoding="async"
+          />
+          <p class="boot__plate-sr">
+            Проснись друг или подруга. Система ждёт тебя.
+            Сайт использует cookies. Запуск только со звуком.
+          </p>
+          <div class="boot__plate-actions">
+            <button type="button" class="boot__plate-btn" id="bootEnableSound" data-boot-go>${btnA}</button>
+            <button type="button" class="boot__plate-btn" id="bootEnableSoundAlt" data-boot-go>${btnB}</button>
+          </div>
         </div>
       </div>
 
@@ -573,15 +622,22 @@
       const root = createBootDOM();
       wrapSiteShell();
       const gate = $('#bootGate', root);
-      const btn = $('#bootEnableSound', root);
+      const btns = [...root.querySelectorAll('[data-boot-go]')];
       const audio = $('#bootAudio', root);
-      if (!btn || !gate) {
+      if (!btns.length || !gate) {
         document.documentElement.classList.remove('is-booting');
         return;
       }
-      btn.addEventListener('click', async () => {
-        btn.disabled = true;
-        btn.textContent = 'Запуск…';
+
+      let starting = false;
+      const startBoot = async (clicked) => {
+        if (starting) return;
+        starting = true;
+        btns.forEach((b) => {
+          b.disabled = true;
+          if (b === clicked) b.textContent = 'Поехали…';
+          else b.textContent = '…';
+        });
         try { localStorage.setItem(COOKIE_KEY, '1'); } catch { /* */ }
         try {
           audio.volume = 0.92;
@@ -592,8 +648,13 @@
         }
         gate.classList.add('is-hidden');
         runSequence(root, audio);
-      });
-      setTimeout(() => { try { btn.focus({ preventScroll: true }); } catch { btn.focus(); } }, 100);
+      };
+
+      btns.forEach((b) => b.addEventListener('click', () => startBoot(b)));
+      setTimeout(() => {
+        const first = btns[0];
+        try { first.focus({ preventScroll: true }); } catch { first.focus(); }
+      }, 100);
     } catch (e) {
       console.error(e);
       document.documentElement.classList.remove('is-booting');
