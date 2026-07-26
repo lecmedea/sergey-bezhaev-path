@@ -16,6 +16,60 @@
   const WARN_AT_MS = 82000; // warnings after infection mostly settled
   const COOKIE_KEY = 'sb_path_cookies_v3';
   const HEAD_VIDEO = 'assets/video/boot-head.mp4';
+  const SPEAKER_CUES_URL = 'assets/video/speaker-cues.json';
+  // spk 1 = first voice → EQ red; spk 2 = second → palette (green→infection)
+  const EQ_VOICE1 = [255, 69, 58]; // #ff453a
+  let SPEAKER_CUES = null; // [{t, spk}, ...] loaded async
+  let speakerLoadPromise = null;
+
+  function loadSpeakerCues() {
+    if (SPEAKER_CUES) return Promise.resolve(SPEAKER_CUES);
+    if (speakerLoadPromise) return speakerLoadPromise;
+    speakerLoadPromise = fetch(SPEAKER_CUES_URL)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        SPEAKER_CUES = (data && data.cues) || [];
+        return SPEAKER_CUES;
+      })
+      .catch(() => {
+        SPEAKER_CUES = [];
+        return SPEAKER_CUES;
+      });
+    return speakerLoadPromise;
+  }
+
+  function speakerAt(timeSec) {
+    const cues = SPEAKER_CUES;
+    if (!cues || !cues.length) return 0;
+    let spk = cues[0].spk;
+    // linear scan is fine (~65 cues)
+    for (let i = 0; i < cues.length; i++) {
+      if (cues[i].t <= timeSec) spk = cues[i].spk;
+      else break;
+    }
+    return spk;
+  }
+
+  function hexToRgb(hex) {
+    const h = String(hex || '#30d158').replace('#', '');
+    if (h.length === 3) {
+      return [parseInt(h[0] + h[0], 16), parseInt(h[1] + h[1], 16), parseInt(h[2] + h[2], 16)];
+    }
+    return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+  }
+
+  function rgbCss(ch, a) {
+    if (a == null) return `rgb(${ch[0] | 0},${ch[1] | 0},${ch[2] | 0})`;
+    return `rgba(${ch[0] | 0},${ch[1] | 0},${ch[2] | 0},${a})`;
+  }
+
+  function mixRgb(a, b, t) {
+    return [
+      a[0] + (b[0] - a[0]) * t,
+      a[1] + (b[1] - a[1]) * t,
+      a[2] + (b[2] - a[2]) * t
+    ];
+  }
 
   const GREEN = {
     rain: [0, 255, 120, 0.85],
@@ -394,13 +448,16 @@
     return () => { cancelAnimationFrame(raf); removeEventListener('resize', resize); };
   }
 
-  /* Center equalizer from media element (video audio bus) */
+  /* Center equalizer from media element (video audio bus)
+   * Bar color: voice 1 (first) → red; voice 2 → current palette (green→infection) */
   function startEq(canvas, media, getPalette) {
     const ctx = canvas.getContext('2d');
     let analyser = null;
     let data = null;
     let raf = 0;
     let fakeT = 0;
+    let voiceMix = 0; // 0 = voice2/palette, 1 = voice1/red
+    let lastVoice = 2;
 
     try {
       const AC = window.AudioContext || window.webkitAudioContext;
@@ -441,6 +498,21 @@
       const gap = 4 * dpr;
       const barW = Math.max(3 * dpr, (w * 0.42) / bars - gap);
 
+      // Speaker-colored EQ (timeline from offline diarization)
+      const tMedia = media && Number.isFinite(media.currentTime) ? media.currentTime : 0;
+      let spk = speakerAt(tMedia);
+      if (spk === 1 || spk === 2) lastVoice = spk;
+      // hold last voice during silence so bars don't flash
+      const active = spk === 0 ? lastVoice : spk;
+      const targetMix = active === 1 ? 1 : 0;
+      voiceMix += (targetMix - voiceMix) * 0.14;
+
+      const baseRgb = hexToRgb(pal.eq);
+      const eqRgb = mixRgb(baseRgb, EQ_VOICE1, voiceMix);
+      const eqCss = rgbCss(eqRgb);
+      const eqSoft = rgbCss(eqRgb, 0.15);
+      const eqRing = rgbCss(eqRgb, 0.35);
+
       let levels;
       if (analyser && data) {
         analyser.getByteFrequencyData(data);
@@ -458,19 +530,19 @@
         const bh = Math.max(4 * dpr, v * maxH);
         const x = cx - (bars * (barW + gap)) / 2 + i * (barW + gap);
         const g = ctx.createLinearGradient(0, cy - bh, 0, cy + bh);
-        g.addColorStop(0, pal.eq);
-        g.addColorStop(1, 'rgba(255,255,255,0.15)');
+        g.addColorStop(0, eqCss);
+        g.addColorStop(1, eqSoft);
         ctx.fillStyle = g;
         ctx.fillRect(x, cy - bh, barW, bh * 2);
       }
 
       ctx.beginPath();
       ctx.arc(cx, cy, maxH * 1.15, 0, Math.PI * 2);
-      ctx.strokeStyle = pal.eq + '55';
+      ctx.strokeStyle = eqRing;
       ctx.lineWidth = 1.5 * dpr;
       ctx.stroke();
 
-      ctx.fillStyle = pal.eq;
+      ctx.fillStyle = eqCss;
       ctx.globalAlpha = 0.7;
       ctx.font = `${11 * dpr}px monospace`;
       ctx.textAlign = 'center';
@@ -747,6 +819,7 @@
         return;
       }
       document.documentElement.classList.add('is-booting');
+      loadSpeakerCues(); // warm load for voice-colored EQ
       const root = createBootDOM();
       wrapSiteShell();
       const gate = $('#bootGate', root);
