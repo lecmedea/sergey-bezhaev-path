@@ -110,7 +110,12 @@ export default function App() {
            <form onSubmit={handleSaveKey} className="text-left space-y-3 mb-4">
              <label className="block text-xs font-mono text-slate-400 uppercase tracking-wider">Gemini API Key</label>
              <input
-               type="password"
+               type="text"
+               autoComplete="off"
+               data-lpignore="true"
+               data-1p-ignore="true"
+               data-form-type="other"
+               spellCheck={false}
                value={keyDraft}
                onChange={(e) => setKeyDraft(e.target.value)}
                placeholder="AIza…"
