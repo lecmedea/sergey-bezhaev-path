@@ -685,20 +685,38 @@
     };
   }
 
-  /* Floating terminals — term RGB updated as infection spreads */
+  /* Floating terminals — spread across full screen; head may overlay them */
   function startTerminals(host, getPalette) {
     host.innerHTML = '';
-    const n = Math.min(10, Math.max(5, Math.floor(innerWidth / 160)));
+    // more terminals, larger — fill the whole viewport
+    const n = Math.min(14, Math.max(8, Math.floor(innerWidth / 140)));
     const terms = [];
+    // grid cells so they don't all clump in the center
+    const cols = Math.ceil(Math.sqrt(n * (innerWidth / Math.max(innerHeight, 1))));
+    const rows = Math.ceil(n / cols);
+    const cells = [];
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) cells.push({ r, c });
+    }
+    // shuffle cells
+    for (let i = cells.length - 1; i > 0; i--) {
+      const j = (Math.random() * (i + 1)) | 0;
+      const tmp = cells[i]; cells[i] = cells[j]; cells[j] = tmp;
+    }
     for (let i = 0; i < n; i++) {
       const el = document.createElement('div');
       el.className = 'boot__term';
       el.innerHTML = `<header>term://${i + 1} · bezhaev</header><pre></pre>`;
       host.appendChild(el);
-      el.style.left = (2 + Math.random() * 70) + '%';
-      el.style.top = (4 + Math.random() * 62) + '%';
+      const cell = cells[i % cells.length];
+      const cellW = 100 / cols;
+      const cellH = 100 / rows;
+      // place inside cell with jitter; use full 0–92% range so corners get coverage
+      const left = Math.min(92, Math.max(0.5, cell.c * cellW + Math.random() * (cellW * 0.72)));
+      const top = Math.min(88, Math.max(0.5, cell.r * cellH + Math.random() * (cellH * 0.72)));
+      el.style.left = left + '%';
+      el.style.top = top + '%';
       el.style.animationDelay = (Math.random() * 2) + 's';
-      // staggered infection: outer terms tip earlier
       terms.push({
         el,
         pre: el.querySelector('pre'),

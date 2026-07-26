@@ -339,16 +339,16 @@ html.boot-revealing .site-shell {
 
 .boot__term {
   position: absolute;
-  width: min(240px, 42vw);
-  min-height: 110px;
-  padding: 8px 10px;
+  width: min(300px, 48vw);
+  min-height: 128px;
+  padding: 10px 12px;
   --t-r: 0;
   --t-g: 255;
   --t-b: 140;
   border: 1px solid rgba(var(--t-r), var(--t-g), var(--t-b), 0.28);
   background: rgba(0, 12, 8, 0.82);
   box-shadow: 0 0 20px rgba(var(--t-r), var(--t-g), var(--t-b), 0.1), inset 0 0 20px rgba(0, 20, 12, 0.3);
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.4;
   color: rgba(var(--t-r), var(--t-g), var(--t-b), 0.92);
   animation: termFlicker 2.4s ease-in-out infinite;
@@ -364,7 +364,7 @@ html.boot-revealing .site-shell {
   box-shadow: 0 0 22px rgba(255, 40, 60, 0.15);
 }
 .boot__term header {
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.08em;
   opacity: 0.7;
   margin-bottom: 6px;
@@ -377,7 +377,7 @@ html.boot-revealing .site-shell {
   white-space: pre-wrap;
   word-break: break-all;
   font-family: inherit;
-  font-size: 9px;
+  font-size: 10px;
   opacity: 0.9;
 }
 @keyframes termFlicker {
@@ -787,7 +787,7 @@ html.boot-revealing .site-shell {
 
 @media (max-width: 640px) {
   .jarvis-hud__corner { display: none; }
-  .boot__term { width: min(46vw, 160px); font-size: 8px; }
+  .boot__term { width: min(52vw, 200px); min-height: 110px; font-size: 9px; }
   .boot__status-list { max-height: 22vh; }
 }
 
