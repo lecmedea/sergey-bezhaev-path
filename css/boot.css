@@ -299,6 +299,35 @@ html.boot-revealing .site-shell {
   transition: opacity 0.5s ease;
 }
 
+/* Second entity @ 0:50 — cyan rim, infects red */
+.boot__head--alt {
+  z-index: 13;
+  filter: brightness(1.9) contrast(1.4) saturate(1.35) hue-rotate(-8deg);
+  box-shadow: none;
+  border-radius: 14px;
+  outline: 1px solid rgba(80, 210, 255, calc(0.55 - var(--h2-infect, 0) * 0.4));
+  outline-offset: 2px;
+}
+.boot.is-running .boot__head--alt.is-on {
+  opacity: 1;
+  box-shadow:
+    0 0 0 1px rgba(80, 210, 255, calc(0.35 * (1 - var(--h2-infect, 0)))),
+    0 0 0 1px rgba(255, 50, 70, calc(0.4 * var(--h2-infect, 0))),
+    0 12px 48px rgba(0, 0, 0, 0.45),
+    0 0 48px rgba(80, 200, 255, calc(0.35 * (1 - var(--h2-infect, 0)))),
+    0 0 48px rgba(255, 40, 60, calc(0.4 * var(--h2-infect, 0)));
+}
+.boot__head--alt.is-infecting {
+  filter: brightness(2.05) contrast(1.5) saturate(1.5) hue-rotate(calc(var(--h2-infect, 0) * -25deg));
+}
+.boot__head--alt.is-fading {
+  opacity: 0 !important;
+  transition: opacity 1.2s ease;
+}
+.boot__head-trail--cyan {
+  z-index: 12;
+}
+
 /* Electric short-circuit sparks */
 .boot__glitches {
   position: absolute;

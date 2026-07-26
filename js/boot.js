@@ -19,7 +19,10 @@
   const WARN_FLOOD_MS = 80000; // 1:20 — flood
   const COOKIE_KEY = 'sb_path_cookies_v3';
   const HEAD_VIDEO = 'assets/video/boot-head.mp4';
+  const HEAD_VIDEO_2 = 'assets/video/boot-head-2.mp4';
+  const HEAD2_AT_MS = 50000; // second character appears at 0:50
   const SPEAKER_CUES_URL = 'assets/video/speaker-cues.json';
+  const DIGIT_GLYPHS = '0123456789';
   // Locked EQ colors (NOT infection palette): voice1 red, voice2 green
   const EQ_VOICE1 = [255, 69, 58];   // first voice
   const EQ_VOICE2 = [48, 209, 88];   // second voice — always this green
@@ -284,6 +287,18 @@
           src="${HEAD_VIDEO}"
         ></video>
       </div>
+      <canvas class="boot__head-trail boot__head-trail--cyan" id="bootHead2Trail" aria-hidden="true"></canvas>
+      <div class="boot__head boot__head--alt" id="bootHead2" aria-hidden="true">
+        <video
+          id="bootVideo2"
+          class="boot__head-video"
+          playsinline
+          webkit-playsinline
+          muted
+          preload="auto"
+          src="${HEAD_VIDEO_2}"
+        ></video>
+      </div>
       <canvas class="boot__digits" id="bootDigits" aria-hidden="true"></canvas>
 
       <button type="button" class="boot__skip" id="bootSkip" title="Пропустить запуск" aria-label="Пропустить запуск и открыть главную">
@@ -523,6 +538,178 @@
       if (trailCanvas) removeEventListener('resize', sizeTrail);
       if (tctx) tctx.clearRect(0, 0, tw, th);
       host.classList.remove('is-on', 'is-dim');
+    };
+  }
+
+  /**
+   * Second head @ 0:50 — cyan digit trail infects red near clip end.
+   */
+  function startSecondaryHead(video, host, trailCanvas) {
+    if (!video || !host) return () => {};
+
+    let tctx = null;
+    let tw = 0;
+    let th = 0;
+    let raf = 0;
+    let stopped = false;
+    let nextJump = 0;
+    let glyphI = 0;
+    const trail = [];
+
+    const POS = [
+      { left: 'auto', right: '4%', top: '12%', bottom: 'auto', transform: 'none' },
+      { left: '6%', right: 'auto', top: '18%', bottom: 'auto', transform: 'none' },
+      { left: 'auto', right: '8%', top: '42%', bottom: 'auto', transform: 'none' },
+      { left: '50%', right: 'auto', top: '10%', bottom: 'auto', transform: 'translateX(-50%)' },
+      { left: 'auto', right: '12%', top: 'auto', bottom: '20%', transform: 'none' },
+      { left: '10%', right: 'auto', top: '48%', bottom: 'auto', transform: 'none' }
+    ];
+    const SIZES = [0.28, 0.34, 0.4, 0.48];
+
+    function sizeTrail() {
+      if (!trailCanvas) return;
+      const dpr = Math.min(devicePixelRatio || 1, 2);
+      tw = trailCanvas.width = innerWidth * dpr;
+      th = trailCanvas.height = innerHeight * dpr;
+      trailCanvas.style.width = '100%';
+      trailCanvas.style.height = '100%';
+      tctx = trailCanvas.getContext('2d');
+    }
+    if (trailCanvas) {
+      sizeTrail();
+      addEventListener('resize', sizeTrail, { passive: true });
+    }
+
+    function relayout() {
+      const minSide = Math.min(innerWidth, innerHeight);
+      const frac = SIZES[(Math.random() * SIZES.length) | 0];
+      host.style.width = Math.round(Math.max(140, Math.min(420, minSide * frac))) + 'px';
+      const pos = POS[(Math.random() * POS.length) | 0];
+      host.style.left = pos.left;
+      host.style.right = pos.right;
+      host.style.top = pos.top;
+      host.style.bottom = pos.bottom;
+      host.style.transform = pos.transform;
+      nextJump = performance.now() + 480 + Math.random() * 720;
+    }
+
+    function infectionT() {
+      const dur = video.duration && isFinite(video.duration) ? video.duration : 8.6;
+      const t = video.currentTime || 0;
+      // cyan early → red infection ramps in last ~45% of clip
+      const u = Math.max(0, Math.min(1, (t / dur - 0.5) / 0.5));
+      return u * u * (3 - 2 * u);
+    }
+
+    function lerpC(a, b, t) {
+      return (a + (b - a) * t) | 0;
+    }
+
+    function pushTrail() {
+      if (!tctx) return;
+      const r = host.getBoundingClientRect();
+      if (r.width < 8) return;
+      const dpr = Math.min(devicePixelRatio || 1, 2);
+      const cx = (r.left + r.width / 2) * dpr;
+      const cy = (r.top + r.height / 2) * dpr;
+      const n = 8;
+      for (let k = 0; k < n; k++) {
+        glyphI = (glyphI + 1) % DIGIT_GLYPHS.length;
+        const ang = Math.random() * Math.PI * 2;
+        const sp = (1.4 + Math.random() * 4) * dpr;
+        trail.push({
+          x: cx + (Math.random() - 0.5) * r.width * dpr * 0.9,
+          y: cy + (Math.random() - 0.5) * r.height * dpr * 0.9,
+          vx: Math.cos(ang) * sp,
+          vy: Math.sin(ang) * sp,
+          ch: DIGIT_GLYPHS[glyphI],
+          life: 1,
+          size: (13 + Math.random() * 22) * dpr,
+          infect: infectionT()
+        });
+      }
+      if (trail.length > 360) trail.splice(0, trail.length - 360);
+    }
+
+    function drawTrail() {
+      if (!tctx) return;
+      tctx.clearRect(0, 0, tw, th);
+      tctx.textAlign = 'center';
+      tctx.textBaseline = 'middle';
+      const liveInfect = infectionT();
+      for (let i = trail.length - 1; i >= 0; i--) {
+        const p = trail[i];
+        p.life -= 0.016;
+        if (p.life <= 0) {
+          trail.splice(i, 1);
+          continue;
+        }
+        p.infect = Math.min(1, p.infect + liveInfect * 0.014 + 0.0035);
+        const t = Math.max(p.infect, liveInfect * 0.9);
+        // cyan (80,210,255) → disease red (255,45,65)
+        const cr = lerpC(80, 255, t);
+        const cg = lerpC(210, 42, t);
+        const cb = lerpC(255, 62, t);
+        tctx.globalAlpha = p.life * 0.92;
+        tctx.fillStyle = `rgba(${cr},${cg},${cb},1)`;
+        tctx.shadowColor = `rgba(${cr},${cg},${cb},0.7)`;
+        tctx.shadowBlur = 12 * (devicePixelRatio || 1);
+        tctx.font = `700 ${p.size}px ui-monospace, SFMono-Regular, Menlo, monospace`;
+        tctx.fillText(p.ch, p.x, p.y);
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vx *= 0.982;
+        p.vy *= 0.982;
+      }
+      tctx.shadowBlur = 0;
+      tctx.globalAlpha = 1;
+    }
+
+    function frame() {
+      if (stopped) return;
+      const now = performance.now();
+      if (now >= nextJump) relayout();
+      const dens = 1 + infectionT() * 2.2;
+      if (Math.random() < 0.6 * dens) pushTrail();
+      if (Math.random() < 0.4 * dens) pushTrail();
+      drawTrail();
+
+      const it = infectionT();
+      host.style.setProperty('--h2-infect', String(it));
+      if (it > 0.5) host.classList.add('is-infecting');
+      else host.classList.remove('is-infecting');
+
+      if (video.ended) {
+        host.classList.add('is-fading');
+        // let trail die out after clip ends
+        if (trail.length < 8) {
+          host.classList.remove('is-on', 'is-fading', 'is-infecting');
+          if (tctx) tctx.clearRect(0, 0, tw, th);
+          stopped = true;
+          return;
+        }
+      }
+
+      raf = requestAnimationFrame(frame);
+    }
+
+    host.classList.add('is-on');
+    relayout();
+    try {
+      video.muted = true;
+      video.playsInline = true;
+      video.currentTime = 0;
+      video.play().catch(() => {});
+    } catch { /* */ }
+    raf = requestAnimationFrame(frame);
+
+    return () => {
+      stopped = true;
+      cancelAnimationFrame(raf);
+      if (trailCanvas) removeEventListener('resize', sizeTrail);
+      if (tctx) tctx.clearRect(0, 0, tw, th);
+      try { video.pause(); } catch { /* */ }
+      host.classList.remove('is-on', 'is-dim', 'is-fading', 'is-infecting');
     };
   }
 
@@ -1134,14 +1321,26 @@
     let stopTerms = startTerminals($('#bootTerms', root), getPalette);
     let stopWarns = null;
     let stopGlitch = null;
+    let stopHead2 = null;
     ctrl.stops.push(
       () => stopRain && stopRain(),
       () => stopEq && stopEq(),
       () => stopHead && stopHead(),
+      () => stopHead2 && stopHead2(),
       () => stopWarns && stopWarns(),
       () => stopGlitch && stopGlitch(),
       () => stopTerms && stopTerms()
     );
+
+    // 0:50 — second character + cyan→red digit infection trail
+    ctrl.timeout(() => {
+      const v2 = $('#bootVideo2', root);
+      const h2 = $('#bootHead2', root);
+      const tr2 = $('#bootHead2Trail', root);
+      if (!v2 || !h2) return;
+      stopHead2 = startSecondaryHead(v2, h2, tr2);
+      phaseEl.textContent = 'ENTITY · B';
+    }, HEAD2_AT_MS);
 
     LOG_LINES.forEach((item) => {
       ctrl.timeout(() => {
