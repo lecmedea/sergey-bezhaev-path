@@ -9,7 +9,7 @@
 
   const BOOT_END_MS = 90000; // 1:30 total — site must be visible
   const MATERIALIZE_AT_MS = 84000; // start cosmic exit → site zoom
-  const COSMIC_DUR = 3200; // fly into space + zoom to site
+  const COSMIC_DUR = 4200; // fly into space + zoom + story stagger
   const WAKE_MS = 10000; // slow eyelids
   const HEAD_CALM_MS = 12000; // head moves gently first 12s
   const RED_AT_MS = 68000; // infection starts ~1:08
@@ -751,10 +751,26 @@
     const boot = document.getElementById('bootSequence');
     const shell = document.createElement('div');
     shell.className = 'site-shell';
-    [...document.body.childNodes].forEach((n) => {
-      if (n === boot) return;
-      shell.appendChild(n);
-    });
+    // Prefer wrapping barba container as a unit (keeps SPA transitions intact)
+    const barbaBox = document.querySelector('[data-barba="container"]');
+    if (barbaBox && barbaBox !== boot) {
+      shell.appendChild(barbaBox);
+      // also move any siblings that are not boot/shell (audio, etc. stay outside optional)
+      [...document.body.childNodes].forEach((n) => {
+        if (n === boot || n === shell || n === barbaBox) return;
+        if (n.nodeType === 1 && (n.matches?.('script, style, link') || n.id === 'assistRopes')) return;
+        // keep scripts in place; move chrome leftovers into shell if any
+        if (n.nodeType === 1 && !n.matches?.('script, style, link, audio')) {
+          try { shell.appendChild(n); } catch (e) { /* */ }
+        }
+      });
+    } else {
+      [...document.body.childNodes].forEach((n) => {
+        if (n === boot) return;
+        if (n.nodeType === 1 && n.matches?.('script, style, link')) return;
+        shell.appendChild(n);
+      });
+    }
     document.body.appendChild(shell);
   }
 
@@ -1388,12 +1404,22 @@
     document.documentElement.classList.add('boot-cosmos');
 
     root.classList.add('is-flying-out');
+
+    // Prepare origin blocks to fade in one-by-one during zoom (GSAP story)
+    let storyNodes = [];
     if (shell) {
+      try {
+        storyNodes = window.PathStoryReveal?.prepareStoryReveal?.(shell) || [];
+      } catch (e) { storyNodes = []; }
       shell.classList.add('is-space-zoom');
       forceShowShell(shell);
       try {
         const track = document.getElementById('track');
         if (track) track.scrollLeft = 0;
+      } catch (e) { /* */ }
+      // Start staggered materialization while still "in space"
+      try {
+        window.PathStoryReveal?.playStoryReveal?.(storyNodes, 1.05);
       } catch (e) { /* */ }
     }
 
@@ -1410,6 +1436,16 @@
       if (shell) {
         shell.classList.remove('is-space-zoom');
         forceShowShell(shell);
+        // ensure story nodes fully visible if GSAP skipped
+        if (window.gsap && storyNodes && storyNodes.length) {
+          try { window.gsap.set(storyNodes, { clearProps: 'all' }); } catch (e) { /* */ }
+        } else if (storyNodes) {
+          storyNodes.forEach((el) => {
+            el.style.opacity = '';
+            el.style.filter = '';
+            el.style.transform = '';
+          });
+        }
       }
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
@@ -1420,8 +1456,8 @@
     };
 
     // mobile safety: always land on site
-    setTimeout(finish, COSMIC_DUR + 50);
-    setTimeout(finish, COSMIC_DUR + 1200);
+    setTimeout(finish, COSMIC_DUR + 80);
+    setTimeout(finish, COSMIC_DUR + 1600);
   }
 
   function runSequence(root, media) {
