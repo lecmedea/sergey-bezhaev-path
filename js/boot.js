@@ -406,11 +406,30 @@
     const SIZES_CALM = [0.26, 0.3, 0.34];
     const SIZES_FAST = [0.22, 0.28, 0.34, 0.4, 0.48, 0.56];
 
+    const HERO_MS = 5000; // first 5s: huge centered face
+
     function isCalmPhase() {
       return performance.now() - headT0 < HEAD_CALM_MS;
     }
 
+    function isHeroPhase() {
+      return performance.now() - headT0 < HERO_MS;
+    }
+
     function relayout() {
+      // 0–5s: locked center, very large
+      if (isHeroPhase()) {
+        host.style.width = Math.min(innerWidth * 0.92, innerHeight * 0.78, 720) + 'px';
+        host.style.left = '50%';
+        host.style.right = 'auto';
+        host.style.top = '50%';
+        host.style.bottom = 'auto';
+        host.style.transform = 'translate(-50%, -50%)';
+        host.classList.add('is-hero');
+        nextJump = headT0 + HERO_MS;
+        return;
+      }
+      host.classList.remove('is-hero');
       const calm = isCalmPhase();
       const pool = calm ? POS_CALM : POS_FAST;
       const sizes = calm ? SIZES_CALM : SIZES_FAST;
@@ -432,6 +451,10 @@
 
     relayout();
     host.classList.remove('is-on', 'is-dim');
+    // keep hero locked until 5s even if sample wants to jump
+    setTimeout(() => {
+      if (!stopped) relayout();
+    }, HERO_MS + 30);
 
     function pushTrail() {
       if (!visible || !tctx) return;
@@ -504,18 +527,29 @@
         if (forceShow) show = true;
 
         const now = performance.now();
+        // first 5s: always show huge center face
+        if (isHeroPhase()) {
+          show = true;
+          forceShow = true;
+          host.classList.add('is-on');
+          host.classList.remove('is-dim');
+          if (!visible) {
+            visible = true;
+            relayout();
+          }
+        }
         if (show) {
           if (!visible) {
             visible = true;
             relayout();
             host.classList.add('is-on');
-          } else if (now >= nextJump) {
+          } else if (now >= nextJump && !isHeroPhase()) {
             relayout();
           }
           if (tick % 2 === 0) pushTrail();
-          if (!forceShow && maxR < 70 && maxL < 50) host.classList.add('is-dim');
+          if (!isHeroPhase() && !forceShow && maxR < 70 && maxL < 50) host.classList.add('is-dim');
           else host.classList.remove('is-dim');
-        } else if (visible) {
+        } else if (visible && !isHeroPhase()) {
           visible = false;
           host.classList.remove('is-on', 'is-dim');
         }

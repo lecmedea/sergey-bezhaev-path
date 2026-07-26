@@ -253,7 +253,7 @@
     fab.title = 'JARVIS · drag to move · click to open';
     fab.innerHTML = '<img src="assets/ui/jarvis-fab.gif" width="72" height="72" alt="JARVIS">';
     document.body.appendChild(fab);
-    makeDraggable(fab, POS_LS);
+    // drag handled by PathAssistDock (rope physics with panel)
 
     const panel = document.createElement('div');
     panel.className = 'jarvis-hud__panel jarvis-hud__panel--holo';

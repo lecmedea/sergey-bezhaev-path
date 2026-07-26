@@ -155,7 +155,7 @@
     fab.style.right = '92px';
     fab.style.bottom = 'calc(var(--deck-h, 108px) + 16px)';
     document.body.appendChild(fab);
-    makeDraggable(fab, POS_LS);
+    // drag handled by PathAssistDock (rope + panel)
 
     const panel = document.createElement('div');
     panel.className = 'sophia-hud__panel';

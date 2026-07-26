@@ -264,6 +264,10 @@ html.boot-revealing .site-shell {
     0 12px 48px rgba(0, 0, 0, 0.45),
     0 0 48px rgba(255, 40, 60, 0.35);
 }
+.boot.is-running .boot__head.is-hero.is-on {
+  opacity: 1 !important;
+  max-width: min(92vw, 760px);
+}
 .boot.is-running .boot__head.is-dim {
   opacity: 0.62;
   filter: brightness(2.5) contrast(1.55) saturate(1.65);
@@ -1225,4 +1229,54 @@ html.boot-revealing .site-shell {
 .assist-link--pink {
   background: linear-gradient(90deg, #ff8ae8, #c44dff);
   box-shadow: 0 0 8px rgba(255, 100, 220, 0.85), 0 0 2px #ff8ae8;
+}
+
+/* Connector lines MUST be visible */
+.assist-link {
+  position: fixed !important;
+  z-index: 180 !important;
+  height: 3px !important;
+  pointer-events: none;
+  opacity: 0;
+  transform-origin: 0 50%;
+  border-radius: 3px;
+}
+.assist-link.is-on { opacity: 1 !important; }
+.assist-link--cyan {
+  background: #5ad4ff !important;
+  box-shadow: 0 0 10px #5ad4ff, 0 0 2px #fff;
+}
+.assist-link--pink {
+  background: #ff8ae8 !important;
+  box-shadow: 0 0 10px #ff8ae8, 0 0 2px #fff;
+}
+.jarvis-hud__panel,
+.sophia-hud__panel,
+.jarvis-hud__fab,
+.sophia-hud__fab {
+  z-index: 190 !important;
+}
+.assist-drag-handle { cursor: grab; }
+.assist-panel--free { cursor: default; }
+
+.boot__head.is-hero {
+  z-index: 20 !important;
+  filter: brightness(2.3) contrast(1.45) saturate(1.4) !important;
+  box-shadow: 0 0 80px rgba(255, 40, 60, 0.45), 0 0 0 1px rgba(255,80,90,.35) !important;
+}
+
+.gesture-hud {
+  cursor: default;
+  z-index: 185 !important;
+}
+.gesture-hud__drag {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  z-index: 5;
+  font-size: 12px;
+  color: #30d158;
+  cursor: grab;
+  user-select: none;
+  letter-spacing: -2px;
 }

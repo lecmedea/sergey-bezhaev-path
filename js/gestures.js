@@ -47,11 +47,59 @@
     hud.id = 'gestureHud';
     hud.className = 'gesture-hud';
     hud.innerHTML = `
+      <div class="gesture-hud__drag" title="Перетащить">⋮⋮</div>
       <video id="gestureCam" playsinline muted></video>
       <canvas id="gestureCanvas"></canvas>
-      <div class="gesture-hud__meta" id="gestureMeta">GESTURE · OFF</div>
+      <div class="gesture-hud__meta" id="gestureMeta">ЖЕСТЫ · ВЫКЛ</div>
     `;
     document.body.appendChild(hud);
+    // free drag
+    let dragging = false;
+    let ox = 0;
+    let oy = 0;
+    const start = (e) => {
+      if (!e.target.closest('.gesture-hud__drag, .gesture-hud__meta')) return;
+      dragging = true;
+      const r = hud.getBoundingClientRect();
+      const pt = e.touches ? e.touches[0] : e;
+      ox = pt.clientX - r.left;
+      oy = pt.clientY - r.top;
+      e.preventDefault();
+    };
+    const move = (e) => {
+      if (!dragging) return;
+      const pt = e.touches ? e.touches[0] : e;
+      const x = Math.max(4, Math.min(innerWidth - hud.offsetWidth - 4, pt.clientX - ox));
+      const y = Math.max(4, Math.min(innerHeight - hud.offsetHeight - 4, pt.clientY - oy));
+      hud.style.left = x + 'px';
+      hud.style.top = y + 'px';
+      hud.style.right = 'auto';
+      hud.style.bottom = 'auto';
+    };
+    const end = () => {
+      if (!dragging) return;
+      dragging = false;
+      try {
+        localStorage.setItem(
+          'sb_gesture_hud_pos',
+          JSON.stringify({ x: parseFloat(hud.style.left), y: parseFloat(hud.style.top) })
+        );
+      } catch { /* */ }
+    };
+    hud.addEventListener('mousedown', start);
+    hud.addEventListener('touchstart', start, { passive: false });
+    window.addEventListener('mousemove', move);
+    window.addEventListener('touchmove', move, { passive: false });
+    window.addEventListener('mouseup', end);
+    window.addEventListener('touchend', end);
+    try {
+      const s = JSON.parse(localStorage.getItem('sb_gesture_hud_pos') || 'null');
+      if (s && typeof s.x === 'number') {
+        hud.style.left = s.x + 'px';
+        hud.style.top = s.y + 'px';
+        hud.style.right = 'auto';
+      }
+    } catch { /* */ }
     return hud;
   }
 
