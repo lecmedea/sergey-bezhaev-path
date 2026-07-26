@@ -1,16 +1,18 @@
 /**
- * PATH OS boot — ~91–92s (matches boot-head video + audio)
- * Slow eyelids 10s → matrix rain + center EQ + terminals
- * Floating head video (audio source): visible only on bright/red frames
- * Infection: green → red over ~12s (not a hard cut)
- * then WARNING wall (Bezhaev Industries only)
+ * PATH OS boot — exactly 90s (1:30) from gate click → site
+ * Slow eyelids 10s → matrix + EQ + terminals
+ * Head calm first 12s, then fast; infection green→red; warnings; packages log
  * Gate: cookies + enable sound (required)
  */
 (() => {
   'use strict';
 
-  const BOOT_MS = 91000; // ~1:31 — matches boot-head.mp4
+  const BOOT_END_MS = 90000; // 1:30 total — site must be visible
+  const MATERIALIZE_AT_MS = 82000; // start solidify so dissolve finishes by 1:30
+  const MATERIALIZE_DUR = 5000;
+  const DISSOLVE_DUR = 3000; // 82+5+3 = 90
   const WAKE_MS = 10000; // slow eyelids
+  const HEAD_CALM_MS = 12000; // head moves gently first 12s
   const RED_AT_MS = 68000; // infection starts ~1:08
   const RED_BLEND_MS = 12000; // ~12s smooth infection
   const WARN_START_MS = 75000; // 1:15 — warnings one-by-one
@@ -22,6 +24,8 @@
   const EQ_VOICE1 = [255, 69, 58];   // first voice
   const EQ_VOICE2 = [48, 209, 88];   // second voice — always this green
   const TRAIL_GLYPHS = 'SergeyBezhaev0123456789';
+  // Bottom-left console zone — no terminals / no warnings here
+  const CONSOLE_SAFE = { leftMax: 48, topMin: 58 };
   let SPEAKER_CUES = null; // [{t, spk}, ...]
   let HIT_TIMES = null;    // impact times (sec) for warning sync
   let speakerLoadPromise = null;
@@ -136,27 +140,41 @@
     'WARNING · BEZHAEV INDUSTRIES · CLASSIFIED'
   ];
 
-  // Timeline fits 92s boot (wake 0–10, red infection 68–80, warnings ~82, materialize 92)
+  // Package-install log of Sergey Bezhaev cases (EN, CLI style + creative)
   const LOG_LINES = [
-    { t: 1500, text: '… eyelids heavy. Signal weak.', cls: 'line--sys' },
-    { t: 4000, text: 'You pressed play. That was consent.', cls: 'line--break' },
-    { t: 7500, text: 'Vision calibrating… stay with me.', cls: 'line--sys' },
-    { t: 10500, text: 'BEZHAEV INDUSTRIES · PATH OS boot', cls: 'line--ok' },
-    { t: 14000, text: 'Matrix layer synchronized to audio bus', cls: 'line--ok' },
-    { t: 18000, text: 'Equalizer linked · speech energy mapped', cls: 'line--ok' },
-    { t: 24000, text: 'Terminal farm: automated processes live', cls: 'line--sys' },
-    { t: 32000, text: 'This page is not a brochure. It is a workshop.', cls: 'line--break' },
-    { t: 40000, text: 'You are not visiting. You are co-processing.', cls: 'line--break' },
-    { t: 48000, text: 'Modules: AI · digital · build · ship', cls: 'line--ok' },
-    { t: 56000, text: 'Ethics core: human-first (non-negotiable)', cls: 'line--sys' },
-    { t: 62000, text: 'Signal instability rising…', cls: 'line--warn' },
-    { t: 66000, text: 'Something is waking that is not soft.', cls: 'line--warn' },
-    { t: 69000, text: 'INFECTION · color vector drifting red…', cls: 'line--danger' },
-    { t: 74000, text: 'Lattice contamination spreading…', cls: 'line--danger' },
-    { t: 80000, text: 'PROTOCOL RED · full spectrum lock', cls: 'line--danger' },
-    { t: 83000, text: 'WARNING cascade initiated', cls: 'line--danger' },
-    { t: 87000, text: 'Solidifying Path interface…', cls: 'line--sys' },
-    { t: 90000, text: 'Welcome to the Path.', cls: 'line--break' }
+    { t: 1200, text: '$ path-os init --operator=Sergey.Bezhaev', cls: 'line--sys' },
+    { t: 2800, text: 'resolving dependencies for portfolio workspace…', cls: 'line--sys' },
+    { t: 4500, text: 'fetch package: origin-hero@1.0.0', cls: 'line--ok' },
+    { t: 6200, text: 'unpacking  dist/origin/path-modules.webp  OK', cls: 'line--ok' },
+    { t: 8000, text: 'fetch package: profile-core@2025.6', cls: 'line--ok' },
+    { t: 9800, text: 'installing  who-i-am-honestly.md  · human-first ethics', cls: 'line--ok' },
+    { t: 12000, text: 'fetch package: azimut-clinic@2.4.1  (azimutclinic.ru)', cls: 'line--ok' },
+    { t: 14500, text: '  → medical digital / UX / content pipeline', cls: 'line--sys' },
+    { t: 16800, text: 'unpacking  cases/azimut/site-build.tgz  ████████░░ 82%', cls: 'line--ok' },
+    { t: 19200, text: 'fetch package: grillz-customs-moscow@1.8.0  (grillzcustoms.ru)', cls: 'line--ok' },
+    { t: 21800, text: '  → constructor · forma · product, not a mockup', cls: 'line--sys' },
+    { t: 24200, text: 'installing  cases/grillz/constructor.wasm  OK', cls: 'line--ok' },
+    { t: 26800, text: 'fetch package: elena-shop@1.3.2  (elena.shop)', cls: 'line--ok' },
+    { t: 29200, text: '  → brand e-com · craft storefront', cls: 'line--sys' },
+    { t: 31800, text: 'unpacking  cases/elena/theme-pack.tgz  OK', cls: 'line--ok' },
+    { t: 34500, text: 'fetch package: soft-automation@0.9.4', cls: 'line--ok' },
+    { t: 37000, text: '  → 2GIS parsers · TG→Excel · bots · static ship', cls: 'line--sys' },
+    { t: 39800, text: 'installing  bin/ai-coder  bin/chat-export  OK', cls: 'line--ok' },
+    { t: 42500, text: 'fetch package: ai-blogger-bb@1.0.0-first-in-rf', cls: 'line--ok' },
+    { t: 45200, text: '  → Bad Balance · AI content system (not a toy demo)', cls: 'line--break' },
+    { t: 48000, text: 'linking  collaborators/*  clients/*  · graph OK', cls: 'line--ok' },
+    { t: 51000, text: 'fetch package: house-gallery@0.7.1', cls: 'line--ok' },
+    { t: 53800, text: '  → walk the rooms · flip the lights · do not break', cls: 'line--sys' },
+    { t: 56500, text: 'fetch package: legal-disclaimer@1.1.0', cls: 'line--ok' },
+    { t: 59000, text: '  → authorship · IP · rules of the game', cls: 'line--sys' },
+    { t: 62000, text: 'fetch package: contact-cta@1.0.0', cls: 'line--ok' },
+    { t: 64500, text: 'warn: signal instability · color vector warming…', cls: 'line--warn' },
+    { t: 68000, text: 'INFECTION · packages still resolving under red load', cls: 'line--danger' },
+    { t: 72000, text: 'npm run path:ship -- --all-cases', cls: 'line--sys' },
+    { t: 76000, text: 'WARNING cascade · keep installing anyway', cls: 'line--danger' },
+    { t: 80000, text: 'solidifying UI atoms from case modules…', cls: 'line--sys' },
+    { t: 84000, text: 'build complete · 10 bays linked · welcome to Path', cls: 'line--break' },
+    { t: 87000, text: '$ open ./sergey.bezhaev/portfolio.workspace', cls: 'line--ok' }
   ];
 
   const $ = (s, r = document) => r.querySelector(s);
@@ -341,37 +359,55 @@
     let tick = 0;
     let forceShow = false;
     let glyphI = 0;
+    const headT0 = performance.now();
     const trail = []; // {x,y,ch,life,size}
 
-    const POS = [
+    // Avoid bottom-left console (package log)
+    const POS_CALM = [
+      { left: '50%', top: '10%', right: 'auto', bottom: 'auto', transform: 'translateX(-50%)' },
+      { right: '6%', top: '12%', left: 'auto', bottom: 'auto', transform: 'none' },
+      { left: '8%', top: '14%', right: 'auto', bottom: 'auto', transform: 'none' },
+      { right: '10%', top: '38%', left: 'auto', bottom: 'auto', transform: 'none' },
+      { left: '55%', top: '42%', right: 'auto', bottom: 'auto', transform: 'none' }
+    ];
+    const POS_FAST = [
       { left: '2%', top: '8%', right: 'auto', bottom: 'auto', transform: 'none' },
       { right: '2%', top: '8%', left: 'auto', bottom: 'auto', transform: 'none' },
-      { left: '2%', bottom: '18%', right: 'auto', top: 'auto', transform: 'none' },
       { right: '2%', bottom: '18%', left: 'auto', top: 'auto', transform: 'none' },
       { left: '4%', top: '36%', right: 'auto', bottom: 'auto', transform: 'none' },
       { right: '4%', top: '36%', left: 'auto', bottom: 'auto', transform: 'none' },
       { left: '50%', top: '8%', right: 'auto', bottom: 'auto', transform: 'translateX(-50%)' },
-      { left: '50%', bottom: '16%', right: 'auto', top: 'auto', transform: 'translateX(-50%)' },
+      { left: '55%', bottom: '16%', right: 'auto', top: 'auto', transform: 'none' },
       { left: '10%', top: '16%', right: 'auto', bottom: 'auto', transform: 'none' },
       { right: '10%', top: '20%', left: 'auto', bottom: 'auto', transform: 'none' },
-      { left: '22%', top: '48%', right: 'auto', bottom: 'auto', transform: 'none' },
+      { left: '52%', top: '48%', right: 'auto', bottom: 'auto', transform: 'none' },
       { right: '18%', top: '52%', left: 'auto', bottom: 'auto', transform: 'none' }
     ];
-    const SIZES = [0.22, 0.28, 0.34, 0.4, 0.48, 0.56];
+    const SIZES_CALM = [0.26, 0.3, 0.34];
+    const SIZES_FAST = [0.22, 0.28, 0.34, 0.4, 0.48, 0.56];
+
+    function isCalmPhase() {
+      return performance.now() - headT0 < HEAD_CALM_MS;
+    }
 
     function relayout() {
+      const calm = isCalmPhase();
+      const pool = calm ? POS_CALM : POS_FAST;
+      const sizes = calm ? SIZES_CALM : SIZES_FAST;
       const minSide = Math.min(innerWidth, innerHeight);
-      const frac = SIZES[(Math.random() * SIZES.length) | 0];
+      const frac = sizes[(Math.random() * sizes.length) | 0];
       const w = Math.round(Math.max(130, Math.min(480, minSide * frac)));
       host.style.width = w + 'px';
-      const pos = POS[(Math.random() * POS.length) | 0];
+      const pos = pool[(Math.random() * pool.length) | 0];
       host.style.left = pos.left;
       host.style.right = pos.right;
       host.style.top = pos.top;
       host.style.bottom = pos.bottom;
       host.style.transform = pos.transform;
-      // snappy: 0.35–0.9s between jumps
-      nextJump = performance.now() + 350 + Math.random() * 550;
+      // first 12s: slow drift; then snappy 0.35–0.9s
+      nextJump = performance.now() + (calm
+        ? 2200 + Math.random() * 2800
+        : 350 + Math.random() * 550);
     }
 
     relayout();
@@ -685,35 +721,57 @@
     };
   }
 
-  /* Floating terminals — spread across full screen; head may overlay them */
+  function inConsoleSafeZone(leftPct, topPct) {
+    return leftPct < CONSOLE_SAFE.leftMax && topPct > CONSOLE_SAFE.topMin;
+  }
+
+  /* Floating terminals — full screen except bottom-left package console */
   function startTerminals(host, getPalette) {
     host.innerHTML = '';
-    // more terminals, larger — fill the whole viewport
     const n = Math.min(14, Math.max(8, Math.floor(innerWidth / 140)));
     const terms = [];
-    // grid cells so they don't all clump in the center
     const cols = Math.ceil(Math.sqrt(n * (innerWidth / Math.max(innerHeight, 1))));
     const rows = Math.ceil(n / cols);
     const cells = [];
     for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) cells.push({ r, c });
+      for (let c = 0; c < cols; c++) {
+        // skip cells that sit in bottom-left console zone
+        const cellLeft = (c / cols) * 100;
+        const cellTop = (r / rows) * 100;
+        if (inConsoleSafeZone(cellLeft + 5, cellTop + 5)) continue;
+        cells.push({ r, c });
+      }
     }
-    // shuffle cells
     for (let i = cells.length - 1; i > 0; i--) {
       const j = (Math.random() * (i + 1)) | 0;
       const tmp = cells[i]; cells[i] = cells[j]; cells[j] = tmp;
+    }
+    // if too few cells, pad with safe random positions
+    while (cells.length < n) {
+      cells.push({ r: -1, c: -1 });
     }
     for (let i = 0; i < n; i++) {
       const el = document.createElement('div');
       el.className = 'boot__term';
       el.innerHTML = `<header>term://${i + 1} · bezhaev</header><pre></pre>`;
       host.appendChild(el);
-      const cell = cells[i % cells.length];
-      const cellW = 100 / cols;
-      const cellH = 100 / rows;
-      // place inside cell with jitter; use full 0–92% range so corners get coverage
-      const left = Math.min(92, Math.max(0.5, cell.c * cellW + Math.random() * (cellW * 0.72)));
-      const top = Math.min(88, Math.max(0.5, cell.r * cellH + Math.random() * (cellH * 0.72)));
+      let left;
+      let top;
+      const cell = cells[i];
+      if (cell.r >= 0) {
+        const cellW = 100 / cols;
+        const cellH = 100 / rows;
+        left = Math.min(92, Math.max(0.5, cell.c * cellW + Math.random() * (cellW * 0.72)));
+        top = Math.min(88, Math.max(0.5, cell.r * cellH + Math.random() * (cellH * 0.72)));
+      } else {
+        left = 50 + Math.random() * 42;
+        top = 4 + Math.random() * 50;
+      }
+      // hard reject console corner
+      if (inConsoleSafeZone(left, top)) {
+        left = 52 + Math.random() * 40;
+        top = 8 + Math.random() * 45;
+      }
       el.style.left = left + '%';
       el.style.top = top + '%';
       el.style.animationDelay = (Math.random() * 2) + 's';
@@ -763,8 +821,15 @@
     const w = document.createElement('div');
     w.className = 'boot__warn boot__warn--in';
     w.textContent = text || WARNINGS[(Math.random() * WARNINGS.length) | 0];
-    w.style.left = (2 + Math.random() * 72) + '%';
-    w.style.top = (4 + Math.random() * 82) + '%';
+    let left = 2 + Math.random() * 72;
+    let top = 4 + Math.random() * 82;
+    // keep package log readable — no warnings over bottom-left console
+    if (inConsoleSafeZone(left, top)) {
+      left = 50 + Math.random() * 42;
+      top = 6 + Math.random() * 50;
+    }
+    w.style.left = left + '%';
+    w.style.top = top + '%';
     w.style.fontSize = (11 + Math.random() * 12) + 'px';
     w.style.setProperty('--rot', ((Math.random() - 0.5) * 8).toFixed(2) + 'deg');
     host.appendChild(w);
@@ -1003,11 +1068,11 @@
     const pctEl = $('#bootPct', root);
     const phaseEl = $('#bootPhase', root);
 
-    // Continuous infection drive + progress bar
+    // Continuous infection drive + progress bar (100% at 1:30)
     let infectRaf = 0;
     function infectTick(now) {
       const elapsed = now - t0;
-      const p = Math.min(1, elapsed / BOOT_MS);
+      const p = Math.min(1, elapsed / BOOT_END_MS);
       bar.style.width = Math.round(p * 100) + '%';
       pctEl.textContent = Math.round(p * 100) + '%';
 
@@ -1026,7 +1091,7 @@
         }
       }
 
-      if (elapsed < BOOT_MS + 200) infectRaf = requestAnimationFrame(infectTick);
+      if (elapsed < BOOT_END_MS + 200) infectRaf = requestAnimationFrame(infectTick);
     }
     infectRaf = requestAnimationFrame(infectTick);
 
@@ -1041,7 +1106,7 @@
       phaseEl.textContent = 'WARNING CASCADE';
     }, WARN_START_MS);
 
-    // End of boot ≈ video length
+    // Materialize so site is fully visible by exactly 1:30
     setTimeout(() => {
       cancelAnimationFrame(infectRaf);
       infect = 1;
@@ -1066,9 +1131,9 @@
           document.documentElement.classList.remove('boot-materializing', 'boot-revealing');
           window.dispatchEvent(new CustomEvent('path-boot-complete'));
           window.PathJarvis?.mount?.();
-        }, 3200);
-      }, 7000);
-    }, BOOT_MS);
+        }, DISSOLVE_DUR);
+      }, MATERIALIZE_DUR);
+    }, MATERIALIZE_AT_MS);
 
     if (video) video.loop = false;
   }

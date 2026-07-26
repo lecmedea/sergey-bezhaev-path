@@ -484,32 +484,32 @@ html.boot-revealing .site-shell {
   padding: 0 10px;
   border: 0;
   border-radius: 12px;
-  /* fully opaque — hides red outlines of empty slots under the buttons */
+  /* green launch CTAs — all plates */
   background:
-    linear-gradient(180deg, #1c1214 0%, #0c0809 55%, #080606 100%);
-  color: #ff4d57;
+    linear-gradient(180deg, #143820 0%, #0a1a10 55%, #06140c 100%);
+  color: #30d158;
   font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-weight: 700;
   font-size: clamp(10px, 1.55vw, 14px);
   letter-spacing: 0.01em;
   line-height: 1.15;
   cursor: pointer;
-  text-shadow: 0 0 12px rgba(255, 40, 50, 0.35);
+  text-shadow: 0 0 12px rgba(48, 209, 88, 0.4);
   box-shadow:
-    inset 0 1px 0 rgba(255, 100, 110, 0.14),
-    inset 0 0 0 1px rgba(255, 50, 60, 0.28),
+    inset 0 1px 0 rgba(120, 255, 160, 0.16),
+    inset 0 0 0 1px rgba(48, 209, 88, 0.35),
     0 2px 8px rgba(0, 0, 0, 0.55);
   transform: scale(1.04);
   transition: background 0.15s ease, color 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease;
 }
 .boot__plate-btn:hover,
 .boot__plate-btn:focus-visible {
-  background: linear-gradient(180deg, #2a1014 0%, #14080a 100%);
-  color: #ff8a90;
+  background: linear-gradient(180deg, #1a4a28 0%, #0c2214 100%);
+  color: #64e888;
   outline: none;
   box-shadow:
-    inset 0 0 0 1px rgba(255, 70, 80, 0.55),
-    0 0 18px rgba(255, 40, 60, 0.35);
+    inset 0 0 0 1px rgba(48, 209, 88, 0.65),
+    0 0 18px rgba(48, 209, 88, 0.35);
   transform: scale(1.05) translateY(-1px);
 }
 .boot__plate-btn:active {
@@ -550,22 +550,27 @@ html.boot-revealing .site-shell {
 
 .boot__console {
   position: absolute;
-  left: 0; right: 0; bottom: 0;
-  z-index: 8;
+  left: 0;
+  bottom: 0;
+  z-index: 15; /* above terminals — package log never covered */
   display: none;
   flex-direction: column;
   justify-content: flex-end;
-  padding: clamp(14px, 3vw, 36px);
+  width: min(540px, 92vw);
+  padding: clamp(14px, 3vw, 28px);
   pointer-events: none;
+  /* soft plate so scrolling text stays readable */
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.35) 70%, transparent 100%);
 }
 .boot.is-running .boot__console { display: flex; }
 .boot__status-list {
-  max-width: min(520px, 100%);
-  max-height: 28vh;
+  max-width: 100%;
+  max-height: 32vh;
   overflow: hidden;
   font-size: clamp(11px, 2.4vw, 13px);
   line-height: 1.55;
-  color: rgba(160, 255, 200, 0.9);
+  font-family: "SF Mono", Menlo, Consolas, ui-monospace, monospace;
+  color: rgba(160, 255, 200, 0.92);
   text-shadow: 0 0 12px rgba(0, 255, 140, 0.3);
   margin-bottom: 14px;
 }
