@@ -18,7 +18,8 @@
     inactivityTimeout: 4200
   };
 
-  document.documentElement.classList.add('has-cursor-trail');
+  // Keep system cursor visible (user requested) — trail is additive only
+  document.documentElement.classList.remove('has-cursor-trail');
 
   const segments = [];
   let lastX = null;

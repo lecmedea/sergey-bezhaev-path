@@ -126,12 +126,25 @@
       speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
       const lang = document.documentElement.lang || 'ru';
-      u.lang = lang.startsWith('ru') ? 'ru-RU' : lang.startsWith('en') ? 'en-US' : lang;
-      u.rate = 1.08;
-      u.pitch = 0.82; // lower = more male
+      // JARVIS-like RU: slightly faster, lower, clipped British-butler cadence via rate/pitch
+      u.lang = lang.startsWith('en') ? 'en-GB' : 'ru-RU';
+      u.rate = 1.12;
+      u.pitch = 0.72;
       u.volume = 1;
-      if (!cachedVoice) cachedVoice = pickMaleVoice(lang);
-      if (cachedVoice) u.voice = cachedVoice;
+      if (!cachedVoice) cachedVoice = pickMaleVoice(u.lang);
+      // Prefer known male RU/EN system voices often used for “butler/AI” demos
+      const voices = speechSynthesis.getVoices() || [];
+      const prefer =
+        voices.find((v) => /dmitry|dmitri|yuri|yury|pavel|google.*русский.*муж|microsoft.*dmitry/i.test(v.name)) ||
+        voices.find((v) => /en-GB|Google UK English Male|Daniel|Arthur/i.test(v.name + v.lang)) ||
+        cachedVoice;
+      if (prefer) {
+        cachedVoice = prefer;
+        u.voice = prefer;
+        if (/en/i.test(prefer.lang) && lang.startsWith('ru')) {
+          // keep Russian text with best available; voice may still be RU
+        }
+      }
       speechSynthesis.speak(u);
     } catch { /* */ }
   }

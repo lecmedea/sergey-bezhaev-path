@@ -1991,3 +1991,54 @@ body.is-chaos .bay {
 #bay-8 .bay__inner--stack {
   max-width: 1100px;
 }
+
+/* Hero brand logo */
+.hero-brand {
+  margin: 0 0 14px;
+}
+.hero-brand__logo {
+  width: min(160px, 36vw);
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 8px 28px rgba(0,0,0,.45));
+}
+
+/* Seam red glyph burst between bays */
+.seam-fx {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  overflow: hidden;
+}
+.seam-fx__ch {
+  position: fixed;
+  color: #ff3b4a;
+  font-family: ui-monospace, Menlo, monospace;
+  font-weight: 700;
+  font-size: clamp(14px, 2.2vw, 22px);
+  text-shadow: 0 0 12px rgba(255, 40, 60, 0.8);
+  animation: seamFly 0.95s ease-out forwards;
+  opacity: 0.95;
+}
+@keyframes seamFly {
+  0% { opacity: 0.95; transform: translate(0,0) scale(1); filter: blur(0); }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.4); filter: blur(4px); }
+}
+
+/* Scrub asteroid animated gif */
+.scrub__asteroid {
+  background: transparent !important;
+  mix-blend-mode: normal;
+  object-fit: contain;
+  width: 36px;
+  height: 36px;
+  pointer-events: none;
+}
+
+/* data-vscroll helpers for long lists */
+.bay__inner--legal,
+.bay__inner--stack .stages-arch,
+.yt-grid {
+  /* mark for optional vertical if needed later */
+}

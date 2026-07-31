@@ -126,21 +126,69 @@
     });
   }
 
-  // Trackpad / wheel → horizontal path (primary). Vertical bay scroll only when
-  // the bay really overflows and the gesture is mid-content (not stuck).
+  // Trackpad / wheel → horizontal path (primary UX of this site).
+  // Vertical content scroll only inside explicit [data-vscroll] regions mid-page.
+  let seamCooldown = 0;
+  function spawnSeamBurst(direction) {
+    const now = performance.now();
+    if (now - seamBurst < 180) return;
+    seamBurst = now;
+    const layer = document.getElementById("seamFx") || (() => {
+      const el = document.createElement("div");
+      el.id = "seamFx";
+      el.className = "seam-fx";
+      el.setAttribute("aria-hidden", "true");
+      document.body.appendChild(el);
+      return el;
+    })();
+    const glyphs = "SergeyBezhaev0123456789";
+    const x = direction > 0 ? window.innerWidth * 0.72 : window.innerWidth * 0.28;
+    for (let i = 0; i < 18; i++) {
+      const s = document.createElement("span");
+      s.className = "seam-fx__ch";
+      s.textContent = glyphs[(Math.random() * glyphs.length) | 0];
+      s.style.left = x + (Math.random() - 0.5) * 80 + "px";
+      s.style.top = 20 + Math.random() * 60 + "vh";
+      s.style.setProperty("--dx", (direction * (20 + Math.random() * 80)) + "px");
+      s.style.setProperty("--dy", (-30 - Math.random() * 80) + "px");
+      s.style.animationDelay = Math.random() * 0.12 + "s";
+      layer.appendChild(s);
+      setTimeout(() => s.remove(), 1100);
+    }
+  }
+
   function wheelToPath(event) {
     if (event.defaultPrevented) return;
+    // Cosmos gate: only vertical scroll to enter site
+    if (document.documentElement.classList.contains("boot-await-scroll")) {
+      if (event.deltaY > 4 || event.deltaX > 4) {
+        event.preventDefault();
+        window.dispatchEvent(new CustomEvent("path-cosmos-scroll"));
+      }
+      return;
+    }
     if (
       event.target.closest(
-        ".deck, .mac-bar, .acc__panel, .jarvis-hud__panel, .sophia-hud__panel, .gesture-hud, .assist-panel__scroll, .jarvis-hud__chat-log, .sophia-hud__chat-log"
+        ".deck, .mac-bar, .acc__panel, .jarvis-hud__panel, .sophia-hud__panel, .gesture-hud, .assist-panel__scroll, .jarvis-hud__chat-log, .sophia-hud__chat-log, [data-vscroll]"
       )
     ) {
-      return;
+      // allow native scroll in explicit vscroll zones / chrome
+      if (event.target.closest("[data-vscroll]")) {
+        const sc = event.target.closest("[data-vscroll]");
+        const o = sc.scrollHeight - sc.clientHeight;
+        if (o > 8) {
+          const atTop = sc.scrollTop <= 1;
+          const atBottom = sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 2;
+          const dy = event.deltaY;
+          if ((dy < 0 && !atTop) || (dy > 0 && !atBottom)) return;
+        }
+      } else if (event.target.closest(".deck, .mac-bar, .acc__panel, .jarvis-hud__panel, .sophia-hud__panel, .gesture-hud, .assist-panel__scroll, .jarvis-hud__chat-log, .sophia-hud__chat-log")) {
+        return;
+      }
     }
 
     let dx = event.deltaX;
     let dy = event.deltaY;
-    // line / page modes → roughly pixel-like
     if (event.deltaMode === 1) {
       dx *= 16;
       dy *= 16;
@@ -150,42 +198,18 @@
     }
     if (dx === 0 && dy === 0) return;
 
-    // Shift+wheel → always orbit horizontally
-    if (event.shiftKey) {
-      event.preventDefault();
-      track.scrollLeft += dy !== 0 ? dy : dx;
-      return;
-    }
-
-    // Trackpad swipe left/right (allow slight diagonal)
-    if (Math.abs(dx) >= Math.abs(dy) * 0.5) {
-      event.preventDefault();
-      track.scrollLeft += dx;
-      return;
-    }
-
-    // Vertical-dominant gesture
-    const bay = event.target.closest(".bay");
-    // Origin uses overflow:visible for mesh face — never trap wheel there
-    const isOrigin = bay && bay.id === "bay-0";
-    const overflow = bay && !isOrigin ? bay.scrollHeight - bay.clientHeight : 0;
-    // Only treat as vertical page scroll if there's real overflow (> ~1 line)
-    if (bay && !isOrigin && overflow > 56) {
-      const atTop = bay.scrollTop <= 2;
-      const atBottom = bay.scrollTop + bay.clientHeight >= bay.scrollHeight - 4;
-      if ((dy < 0 && !atTop) || (dy > 0 && !atBottom)) {
-        // let the bay scroll natively
-        return;
-      }
-    }
-
-    // Default Path UX: vertical flick → next/prev bay
+    // Always map to horizontal orbit (classic Path UX)
     event.preventDefault();
-    track.scrollLeft += dy !== 0 ? dy : dx;
+    const before = track.scrollLeft;
+    const delta = event.shiftKey ? dy || dx : Math.abs(dx) >= Math.abs(dy) * 0.35 ? dx : dy;
+    track.scrollLeft += delta;
+    if (Math.abs(track.scrollLeft - before) > 2) {
+      spawnSeamBurst(delta >= 0 ? 1 : -1);
+    }
   }
 
-  // Single window listener avoids double-scroll when both track+window fire
-  window.addEventListener("wheel", wheelToPath, { passive: false });
+  window.addEventListener("wheel", wheelToPath, { passive: false, capture: true });
+  track.addEventListener("wheel", wheelToPath, { passive: false });
 
   track.addEventListener(
     "scroll",

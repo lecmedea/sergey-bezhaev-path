@@ -18,6 +18,10 @@
   const WARN_FLOOD_MS = 80000; // 1:20 — flood
   const COOKIE_KEY = 'sb_path_cookies_v3';
   const BOOT_DONE_KEY = 'sb_path_boot_done_v1'; // session: don't re-show gate after complete
+  const SPACE_BRIDGE = 'assets/video/space-bridge.mp4';
+  const SUN_IMG = 'assets/brand/sun.png';
+  const SUN_SFX = 'assets/ui/welcome.mp3'; // reuse punchy SFX for sun arrival
+
   const HEAD_VIDEO = 'assets/video/boot-head.mp4';
   const HEAD_VIDEO_2 = 'assets/video/boot-head-2.mp4';
   const HEAD2_AT_MS = 50000; // second character appears at 0:50
@@ -1395,69 +1399,140 @@
     } catch (e) { /* */ }
 
     const shell = document.querySelector('.site-shell');
-    const cosmos = document.createElement('div');
-    cosmos.className = 'boot-cosmos';
-    cosmos.innerHTML = '<canvas class="boot-cosmos__stars" id="bootCosmosStars" aria-hidden="true"></canvas>';
-    document.body.appendChild(cosmos);
-
     document.documentElement.classList.remove('is-booting', 'boot-materializing', 'boot-revealing');
-    document.documentElement.classList.add('boot-cosmos');
 
-    root.classList.add('is-flying-out');
+    // Phase A: fullscreen bridge video (user clip)
+    const bridge = document.createElement('div');
+    bridge.className = 'boot-bridge';
+    bridge.innerHTML = '<video class="boot-bridge__video" playsinline webkit-playsinline muted autoplay src="' + SPACE_BRIDGE + '"></video>';
+    document.body.appendChild(bridge);
+    const bvid = bridge.querySelector('video');
+    try {
+      bvid.muted = true;
+      bvid.play().catch(function () {});
+    } catch (e) { /* */ }
 
-    // Prepare origin blocks to fade in one-by-one during zoom (GSAP story)
-    let storyNodes = [];
-    if (shell) {
-      try {
-        storyNodes = window.PathStoryReveal?.prepareStoryReveal?.(shell) || [];
-      } catch (e) { storyNodes = []; }
-      shell.classList.add('is-space-zoom');
-      forceShowShell(shell);
-      try {
-        const track = document.getElementById('track');
-        if (track) track.scrollLeft = 0;
-      } catch (e) { /* */ }
-      // Start staggered materialization while still "in space"
-      try {
-        window.PathStoryReveal?.playStoryReveal?.(storyNodes, 1.05);
-      } catch (e) { /* */ }
-    }
-
-    const stopStars = runCosmosStars(document.getElementById('bootCosmosStars'), COSMIC_DUR);
-
-    let finished = false;
-    const finish = () => {
-      if (finished) return;
-      finished = true;
-      try { stopStars && stopStars(); } catch (e) { /* */ }
-      try { root.remove(); } catch (e) { /* */ }
-      try { cosmos.remove(); } catch (e) { /* */ }
-      clearBootClasses();
-      if (shell) {
-        shell.classList.remove('is-space-zoom');
-        forceShowShell(shell);
-        // ensure story nodes fully visible if GSAP skipped
-        if (window.gsap && storyNodes && storyNodes.length) {
-          try { window.gsap.set(storyNodes, { clearProps: 'all' }); } catch (e) { /* */ }
-        } else if (storyNodes) {
-          storyNodes.forEach((el) => {
-            el.style.opacity = '';
-            el.style.filter = '';
-            el.style.transform = '';
-          });
-        }
-      }
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
-      window.dispatchEvent(new CustomEvent('path-boot-complete'));
-      window.PathJarvis?.mount?.();
-      window.PathSophia?.mount?.();
-      try { window.PathAPI?.goToIndex?.(0, 'auto'); } catch (e) { /* */ }
+    const afterBridge = function () {
+      try { bridge.classList.add('is-out'); } catch (e) { /* */ }
+      setTimeout(function () {
+        try { bridge.remove(); } catch (e) { /* */ }
+        enterCosmosWithSun(root, shell);
+      }, 500);
     };
 
-    // mobile safety: always land on site
-    setTimeout(finish, COSMIC_DUR + 80);
-    setTimeout(finish, COSMIC_DUR + 1600);
+    // bridge length or max 6s
+    let bridged = false;
+    const goBridge = function () {
+      if (bridged) return;
+      bridged = true;
+      afterBridge();
+    };
+    if (bvid) {
+      bvid.addEventListener('ended', goBridge);
+      bvid.addEventListener('error', goBridge);
+    }
+    setTimeout(goBridge, 6500);
+  }
+
+  function enterCosmosWithSun(root, shell) {
+    const cosmos = document.createElement('div');
+    cosmos.className = 'boot-cosmos boot-cosmos--interactive';
+    cosmos.innerHTML =
+      '<canvas class="boot-cosmos__stars" id="bootCosmosStars" aria-hidden="true"></canvas>' +
+      '<img class="boot-cosmos__sun" id="bootCosmosSun" src="' + SUN_IMG + '" alt="" />' +
+      '<p class="boot-cosmos__hint" id="bootCosmosHint">Прокрутите вниз, чтобы войти в Path</p>';
+    document.body.appendChild(cosmos);
+    document.documentElement.classList.add('boot-cosmos', 'boot-await-scroll');
+
+    try { root.classList.add('is-flying-out'); } catch (e) { /* */ }
+    setTimeout(function () {
+      try { root.remove(); } catch (e) { /* */ }
+    }, 1400);
+
+    const stopStars = runCosmosStars(document.getElementById('bootCosmosStars'), 120000);
+    const sun = document.getElementById('bootCosmosSun');
+    // sun flies from viewer to center, settles at 7% size
+    requestAnimationFrame(function () {
+      if (sun) sun.classList.add('is-arrive');
+    });
+    try {
+      const a = new Audio(SUN_SFX);
+      a.volume = 0.55;
+      a.play().catch(function () {});
+    } catch (e) { /* */ }
+
+    let entered = false;
+    function enterSite() {
+      if (entered) return;
+      entered = true;
+      document.documentElement.classList.remove('boot-await-scroll');
+      window.removeEventListener('path-cosmos-scroll', enterSite);
+      window.removeEventListener('wheel', onWheelGate);
+      window.removeEventListener('touchmove', onTouchGate);
+
+      // prepare story nodes then zoom chrome
+      let storyNodes = [];
+      if (shell) {
+        try {
+          storyNodes = (window.PathStoryReveal && window.PathStoryReveal.prepareStoryReveal(shell)) || [];
+        } catch (e) { storyNodes = []; }
+        shell.classList.add('is-space-zoom', 'is-story-enter');
+        forceShowShell(shell);
+        try {
+          const track = document.getElementById('track');
+          if (track) track.scrollLeft = 0;
+        } catch (e) { /* */ }
+        try {
+          window.PathStoryReveal && window.PathStoryReveal.playStoryReveal(storyNodes, 0.35);
+        } catch (e) { /* */ }
+      }
+
+      cosmos.classList.add('is-fade');
+      // chrome slides after blocks
+      setTimeout(function () {
+        document.documentElement.classList.add('boot-chrome-in');
+        if (shell) {
+          shell.classList.add('is-chrome-in');
+        }
+      }, 1600);
+
+      setTimeout(function () {
+        try { stopStars && stopStars(); } catch (e) { /* */ }
+        try { cosmos.remove(); } catch (e) { /* */ }
+        clearBootClasses();
+        document.documentElement.classList.remove('boot-chrome-in');
+        if (shell) {
+          shell.classList.remove('is-space-zoom', 'is-story-enter', 'is-chrome-in');
+          forceShowShell(shell);
+          if (window.gsap && storyNodes && storyNodes.length) {
+            try { window.gsap.set(storyNodes, { clearProps: 'all' }); } catch (e) { /* */ }
+          }
+        }
+        document.documentElement.style.overflow = '';
+        document.body.style.overflow = '';
+        window.dispatchEvent(new CustomEvent('path-boot-complete'));
+        window.PathJarvis && window.PathJarvis.mount && window.PathJarvis.mount();
+        window.PathSophia && window.PathSophia.mount && window.PathSophia.mount();
+        try { window.PathAPI && window.PathAPI.goToIndex && window.PathAPI.goToIndex(0, 'auto'); } catch (e) { /* */ }
+      }, 4200);
+    }
+
+    function onWheelGate(e) {
+      if (e.deltaY > 6) {
+        e.preventDefault();
+        enterSite();
+      }
+    }
+    function onTouchGate(e) {
+      // any downward-ish touch move
+      enterSite();
+    }
+    window.addEventListener('path-cosmos-scroll', enterSite);
+    window.addEventListener('wheel', onWheelGate, { passive: false });
+    window.addEventListener('touchmove', onTouchGate, { passive: true });
+    // hint pulse
+    const hint = document.getElementById('bootCosmosHint');
+    if (hint) hint.classList.add('is-on');
   }
 
   function runSequence(root, media) {

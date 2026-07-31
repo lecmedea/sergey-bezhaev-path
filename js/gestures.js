@@ -123,8 +123,11 @@
     });
     const h = (maxY - minY) * vh;
     const w = (maxX - minX) * vw;
-    // large hand silhouette → closer; tuned for laptop cams
-    return h > vh * 0.12 || w > vw * 0.1;
+    // large hand silhouette → closer; looser on mobile cameras
+    const mobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+    const th = mobile ? 0.07 : 0.12;
+    const tw = mobile ? 0.06 : 0.1;
+    return h > vh * th || w > vw * tw;
   }
 
   function palmCenter(landmarks) {

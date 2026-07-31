@@ -44,11 +44,10 @@
   // Base strings (ru) + en; others fall back to en then ru
   const STR = {
     ru: {
-      hero_title: 'Bezhaev Industries',
-      hero_credit: 'Sergey Bezhaev 2026',
+      hero_title: 'Lecmedea Industries',
+      hero_credit: 'by Sergey Bezhaev',
       hero_sub: 'AI · Digital · Build',
-      hero_lead:
-        'Собираю системы из модулей: стратегия, код, контент, автоматизация. Не вертикальная лента — путь. Создаю у вас на глазах новое представление о web-дизайне: интерфейс как лаборатория, путь как продукт. Работаю жёстко, красиво и по делу.',
+      hero_lead: 'Каждый кейс — блок, который щёлкает на место. Создаю у вас на глазах новое представление о web-дизайне: интерфейс как лаборатория, путь как продукт. Работаю жёстко, красиво и по делу.',
       settings: 'Настройки',
       language: 'Язык',
       language_hint: 'Интерфейс Path · 30 языков · СНГ включены',
@@ -64,8 +63,8 @@
       gestures_hint: 'Взмах влево/вправо · хлопок = домой · до ~2 м'
     },
     en: {
-      hero_title: 'Bezhaev Industries',
-      hero_credit: 'Sergey Bezhaev 2026',
+      hero_title: 'Lecmedea Industries',
+      hero_credit: 'by Sergey Bezhaev',
       hero_sub: 'AI · Digital · Build',
       hero_lead:
         'I build systems from modules: strategy, code, content, automation. Not a vertical feed — a path. Before your eyes I create a new vision of web design: interface as a lab, path as product. Hard, beautiful, on purpose.',
