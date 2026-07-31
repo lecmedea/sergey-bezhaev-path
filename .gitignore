@@ -2,3 +2,8 @@ jarvis-src/node_modules/
 .DS_Store
 *.log
 _backup_boot_20260726/
+
+# Local-only Gemini key (never commit)
+js/gemini-local.js
+.env
+.env.*

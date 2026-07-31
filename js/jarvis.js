@@ -7,6 +7,7 @@
   'use strict';
 
   const KEY_LS = 'GEMINI_API_KEY';
+  const KEY_LS_ALT = 'jarvis_gemini_key';
   const POS_LS = 'sb_jarvis_fab_pos';
   const WELCOME_KEY = 'sb_path_welcome_played_v1';
   const $ = (s, r = document) => r.querySelector(s);
@@ -21,17 +22,56 @@
     return new URL('jarvis/', location.href).pathname;
   }
 
+  /** Resolve Gemini key: localStorage → window bootstrap (never hardcode in repo) */
   function getApiKey() {
     try {
-      return localStorage.getItem(KEY_LS) || '';
-    } catch {
-      return '';
-    }
+      const fromLs =
+        localStorage.getItem(KEY_LS) ||
+        localStorage.getItem(KEY_LS_ALT) ||
+        '';
+      if (fromLs && fromLs.trim()) return fromLs.trim();
+    } catch { /* */ }
+    try {
+      const fromWin = (window.__PATH_GEMINI_KEY || window.GEMINI_API_KEY || '').trim();
+      if (fromWin) {
+        // promote into localStorage so Sophia/Live share the same key
+        setApiKey(fromWin);
+        return fromWin;
+      }
+    } catch { /* */ }
+    return '';
   }
   function setApiKey(k) {
     try {
-      if (k) localStorage.setItem(KEY_LS, k.trim());
-      else localStorage.removeItem(KEY_LS);
+      const v = (k || '').trim();
+      if (v) {
+        localStorage.setItem(KEY_LS, v);
+        localStorage.setItem(KEY_LS_ALT, v);
+      } else {
+        localStorage.removeItem(KEY_LS);
+        localStorage.removeItem(KEY_LS_ALT);
+      }
+    } catch { /* */ }
+  }
+
+  function looksLikeGeminiKey(k) {
+    // Google AI Studio keys typically start with AIza
+    return /^AIza[0-9A-Za-z_-]{20,}$/.test((k || '').trim());
+  }
+
+  /** One-time install from ?gemini_key= / #gk= then strip from URL (never log the secret) */
+  function ingestKeyFromUrl() {
+    try {
+      const u = new URL(location.href);
+      let raw = u.searchParams.get('gemini_key') || u.searchParams.get('gk') || '';
+      if (!raw && location.hash && location.hash.indexOf('gk=') !== -1) {
+        raw = decodeURIComponent(location.hash.replace(/^#/, '').split('gk=')[1] || '');
+      }
+      if (!raw) return;
+      setApiKey(raw);
+      u.searchParams.delete('gemini_key');
+      u.searchParams.delete('gk');
+      history.replaceState(null, '', u.pathname + u.search + (u.hash && !u.hash.includes('gk=') ? u.hash : ''));
     } catch { /* */ }
   }
 
@@ -227,6 +267,7 @@
 
   function mount() {
     if (document.getElementById('jarvisHud')) return;
+    ingestKeyFromUrl();
     ensureVoices();
 
     const liveHref = jarvisBase();
@@ -285,8 +326,9 @@
           </form>
         </div>
         <div class="jarvis-hud__key">
-          <label for="jarvisKeyInput">Ключ Gemini</label>
-          <input id="jarvisKeyInput" type="text" inputmode="text" spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-form-type="other" name="gemini_api_token_field" placeholder="AIza… (не пароль)" />
+          <label for="jarvisKeyInput">Ключ Google Gemini (AI Studio)</label>
+          <input id="jarvisKeyInput" type="text" inputmode="text" spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-form-type="other" name="sb_gemini_token_x" placeholder="AIza… из aistudio.google.com/apikey" />
+          <p class="jarvis-hud__key-hint" id="jarvisKeyHint">Ключ только в localStorage браузера. Не sk-…, а AIza…</p>
         </div>
         <div class="jarvis-hud__links">
           <a href="${liveHref}" target="_blank" rel="noopener">Gemini Live ↗</a>
@@ -337,10 +379,48 @@
 
     panel.querySelectorAll('[data-jcmd]').forEach((b) => b.addEventListener('click', () => cmd(b.dataset.jcmd)));
 
+    ingestKeyFromUrl();
+
     const keyInput = $('#jarvisKeyInput');
+    const keyHint = $('#jarvisKeyHint');
+    function refreshKeyUi() {
+      const k = getApiKey();
+      if (keyInput && !keyInput.matches(':focus')) {
+        // never leave full secret visible after blur
+        keyInput.value = k ? k.slice(0, 6) + '…' + k.slice(-4) : '';
+        keyInput.dataset.full = k ? '1' : '0';
+      }
+      if (keyHint) {
+        if (!k) {
+          keyHint.textContent = 'Нет ключа. Возьми AIza… на aistudio.google.com/apikey и вставь сюда.';
+          keyHint.style.color = '#ff8a90';
+        } else if (!looksLikeGeminiKey(k)) {
+          keyHint.textContent = 'Ключ сохранён, но формат не AIza… — Google Gemini, скорее всего, отвергнет (sk-… это не Gemini).';
+          keyHint.style.color = '#ffb84d';
+        } else {
+          keyHint.textContent = 'Gemini подключён (ключ в localStorage этого браузера).';
+          keyHint.style.color = '#64e888';
+        }
+      }
+    }
     if (keyInput) {
-      keyInput.value = getApiKey();
-      keyInput.addEventListener('change', () => setApiKey(keyInput.value));
+      refreshKeyUi();
+      keyInput.addEventListener('focus', () => {
+        const k = getApiKey();
+        if (k) keyInput.value = k;
+      });
+      keyInput.addEventListener('blur', () => {
+        const v = keyInput.value.trim();
+        // if user left masked value, don't overwrite
+        if (v && !v.includes('…')) setApiKey(v);
+        refreshKeyUi();
+      });
+      keyInput.addEventListener('change', () => {
+        const v = keyInput.value.trim();
+        if (v && !v.includes('…')) setApiKey(v);
+        refreshKeyUi();
+        log(getApiKey() ? 'Ключ Gemini сохранён локально.' : 'Ключ очищен.');
+      });
     }
 
     async function handleText(text) {

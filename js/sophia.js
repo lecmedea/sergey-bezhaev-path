@@ -12,7 +12,12 @@
 
   function getApiKey() {
     try {
-      return localStorage.getItem(KEY_LS) || '';
+      return (
+        localStorage.getItem(KEY_LS) ||
+        localStorage.getItem('jarvis_gemini_key') ||
+        (window.__PATH_GEMINI_KEY || '') ||
+        ''
+      ).trim();
     } catch {
       return '';
     }

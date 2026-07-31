@@ -987,6 +987,13 @@ html.boot-cosmos .site-shell,
   padding: 8px 12px;
   cursor: pointer;
 }
+.jarvis-hud__key-hint {
+  margin: 6px 0 0;
+  font-size: 10px;
+  line-height: 1.35;
+  color: #a1a1a6;
+  opacity: 0.95;
+}
 .jarvis-hud__key {
   margin-top: 8px;
   font-size: 11px;
