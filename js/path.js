@@ -131,8 +131,8 @@
   let seamCooldown = 0;
   function spawnSeamBurst(direction) {
     const now = performance.now();
-    if (now - seamBurst < 180) return;
-    seamBurst = now;
+    if (now - lastSeamBurst < 180) return;
+    lastSeamBurst = now;
     const layer = document.getElementById("seamFx") || (() => {
       const el = document.createElement("div");
       el.id = "seamFx";
