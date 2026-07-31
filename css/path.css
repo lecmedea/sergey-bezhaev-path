@@ -159,6 +159,43 @@ a {
   min-width: 0;
 }
 
+.mac-bar__left {
+  gap: 10px;
+}
+
+/* Brand mark — left corner of chrome */
+.mac-bar__brand {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.18s ease;
+}
+.mac-bar__brand:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: scale(1.04);
+}
+.mac-bar__brand:active {
+  transform: scale(0.96);
+}
+.mac-bar__logo {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.35));
+  pointer-events: none;
+  user-select: none;
+}
+
 .mac-bar__right {
   justify-content: flex-end;
 }
@@ -1998,15 +2035,15 @@ body.is-chaos .bay {
   max-width: 1100px;
 }
 
-/* Hero brand logo */
+/* Hero brand logo — 2.5× smaller than prior 160px mark */
 .hero-brand {
-  margin: 0 0 14px;
+  margin: 0 0 12px;
 }
 .hero-brand__logo {
-  width: min(160px, 36vw);
+  width: min(64px, 14.4vw); /* 160 / 2.5 */
   height: auto;
   display: block;
-  filter: drop-shadow(0 8px 28px rgba(0,0,0,.45));
+  filter: drop-shadow(0 4px 14px rgba(0,0,0,.4));
 }
 
 /* Seam red glyph burst — full height band between bays */
