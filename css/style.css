@@ -20,21 +20,17 @@
   mix-blend-mode: screen;
 }
 
-/* Hide default cursor on fine pointers when trail is on */
+/* Hide system cursor when custom trail is active — only animated cursor remains */
 @media (hover: hover) and (pointer: fine) {
   html.has-cursor-trail,
-  html.has-cursor-trail body,
-  html.has-cursor-trail a,
-  html.has-cursor-trail button,
-  html.has-cursor-trail .btn,
-  html.has-cursor-trail .jarvis-hud__fab,
-  html.has-cursor-trail .sophia-hud__fab {
+  html.has-cursor-trail * {
     cursor: none !important;
   }
+  /* Keep text caret on form fields */
   html.has-cursor-trail input,
   html.has-cursor-trail textarea,
   html.has-cursor-trail select,
-  html.has-cursor-trail [contenteditable] {
+  html.has-cursor-trail [contenteditable="true"] {
     cursor: text !important;
   }
 }

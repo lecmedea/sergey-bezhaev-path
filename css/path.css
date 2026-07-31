@@ -368,8 +368,10 @@ a {
   overflow-x: auto;
   overflow-y: hidden;
   scroll-snap-type: x mandatory;
-  scroll-behavior: smooth;
+  /* smooth only for button/API jumps — wheel sets style.scrollBehavior=auto in path.js */
+  scroll-behavior: auto;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
   outline: none;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.2) transparent;

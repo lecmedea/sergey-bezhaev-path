@@ -3,6 +3,10 @@
  */
 (function () {
   const track = document.getElementById("track");
+  if (!track) {
+    console.error("[Path] #track missing — scroll engine aborted");
+    return;
+  }
   const bays = [...track.querySelectorAll(".bay")];
   const scrub = document.getElementById("scrub");
   const scrubFill = document.getElementById("scrubFill");
@@ -16,6 +20,9 @@
   const btnPrev = document.getElementById("btnPrev");
   const btnNext = document.getElementById("btnNext");
   const btnHome = document.getElementById("btnHome");
+  if (!scrub || !scrubFill || !scrubThumb || !scrubPlanets || !scrubNames) {
+    console.warn("[Path] scrub chrome incomplete — continuing with reduced UI");
+  }
 
   const PLANETS = [
     "sun", "mercury", "venus", "earth", "mars",
@@ -28,25 +35,29 @@
   let scrubbing = false;
 
   // planets + names under scrub
-  scrubPlanets.innerHTML = bays
-    .map((bay, i) => {
-      const p = PLANETS[i] || "pluto";
-      const name = bay.dataset.name || bay.dataset.label || String(i + 1);
-      return `<button type="button" data-planet-go="${i}" title="${name}" aria-label="${name}">
-        <img src="assets/planets/${p}.svg" alt="" width="22" height="22">
-      </button>`;
-    })
-    .join("");
+  if (scrubPlanets) {
+    scrubPlanets.innerHTML = bays
+      .map((bay, i) => {
+        const p = PLANETS[i] || "pluto";
+        const name = bay.dataset.name || bay.dataset.label || String(i + 1);
+        return `<button type="button" data-planet-go="${i}" title="${name}" aria-label="${name}">
+          <img src="assets/planets/${p}.svg" alt="" width="22" height="22">
+        </button>`;
+      })
+      .join("");
+  }
 
-  scrubNames.innerHTML = bays
-    .map((bay) => {
-      const name = bay.dataset.name || "";
-      return `<span>${name}</span>`;
-    })
-    .join("");
+  if (scrubNames) {
+    scrubNames.innerHTML = bays
+      .map((bay) => {
+        const name = bay.dataset.name || "";
+        return `<span>${name}</span>`;
+      })
+      .join("");
+  }
 
-  const planetBtns = [...scrubPlanets.querySelectorAll("button")];
-  const nameEls = [...scrubNames.querySelectorAll("span")];
+  const planetBtns = scrubPlanets ? [...scrubPlanets.querySelectorAll("button")] : [];
+  const nameEls = scrubNames ? [...scrubNames.querySelectorAll("span")] : [];
 
   planetBtns.forEach((btn) => {
     btn.addEventListener("click", () => goToIndex(Number(btn.dataset.planetGo)));
@@ -68,7 +79,14 @@
   function goToIndex(i, behavior = "smooth") {
     i = clamp(i, 0, total - 1);
     const left = bays[i].offsetLeft;
+    // Explicit smooth for chrome buttons; wheel uses auto + direct scrollLeft
+    track.style.scrollBehavior = behavior === "smooth" ? "smooth" : "auto";
     track.scrollTo({ left, behavior });
+    if (behavior === "smooth") {
+      setTimeout(() => {
+        track.style.scrollBehavior = "auto";
+      }, 600);
+    }
   }
 
   // Public API for JARVIS / gestures / i18n
@@ -97,10 +115,10 @@
   function updateUI() {
     const p = progress();
     const pct = Math.round(p * 100);
-    scrubFill.style.width = `${pct}%`;
-    scrubThumb.style.left = `${pct}%`;
-    scrub.setAttribute("aria-valuenow", String(pct));
-    progressPct.textContent = `${pct}%`;
+    if (scrubFill) scrubFill.style.width = `${pct}%`;
+    if (scrubThumb) scrubThumb.style.left = `${pct}%`;
+    if (scrub) scrub.setAttribute("aria-valuenow", String(pct));
+    if (progressPct) progressPct.textContent = `${pct}%`;
 
     const center = track.scrollLeft + track.clientWidth / 2;
     let nearest = 0;
@@ -114,8 +132,8 @@
       }
     });
     active = nearest;
-    bayIndex.textContent = `${active + 1} / ${total}`;
-    sectionLabel.textContent = bays[active].dataset.label || `0${active + 1}`;
+    if (bayIndex) bayIndex.textContent = `${active + 1} / ${total}`;
+    if (sectionLabel) sectionLabel.textContent = bays[active].dataset.label || `0${active + 1}`;
 
     planetBtns.forEach((el, i) => {
       el.classList.toggle("is-on", i <= active);
@@ -128,37 +146,44 @@
 
   // Trackpad / wheel → horizontal path (primary UX of this site).
   // Vertical content scroll only inside explicit [data-vscroll] regions mid-page.
-  let seamCooldown = 0;
+  // CRITICAL: lastSeamBurst must be declared — undeclared ref threw on every wheel and killed scroll.
+  let lastSeamBurst = 0;
+  let wheelSnapTimer = 0;
+
   function spawnSeamBurst(direction) {
-    const now = performance.now();
-    if (now - lastSeamBurst < 180) return;
-    lastSeamBurst = now;
-    const layer = document.getElementById("seamFx") || (() => {
-      const el = document.createElement("div");
-      el.id = "seamFx";
-      el.className = "seam-fx";
-      el.setAttribute("aria-hidden", "true");
-      document.body.appendChild(el);
-      return el;
-    })();
-    const glyphs = "SergeyBezhaev0123456789";
-    const x = direction > 0 ? window.innerWidth * 0.72 : window.innerWidth * 0.28;
-    for (let i = 0; i < 18; i++) {
-      const s = document.createElement("span");
-      s.className = "seam-fx__ch";
-      s.textContent = glyphs[(Math.random() * glyphs.length) | 0];
-      s.style.left = x + (Math.random() - 0.5) * 80 + "px";
-      s.style.top = 20 + Math.random() * 60 + "vh";
-      s.style.setProperty("--dx", (direction * (20 + Math.random() * 80)) + "px");
-      s.style.setProperty("--dy", (-30 - Math.random() * 80) + "px");
-      s.style.animationDelay = Math.random() * 0.12 + "s";
-      layer.appendChild(s);
-      setTimeout(() => s.remove(), 1100);
-    }
+    try {
+      const now = performance.now();
+      if (now - lastSeamBurst < 220) return;
+      lastSeamBurst = now;
+      let layer = document.getElementById("seamFx");
+      if (!layer) {
+        layer = document.createElement("div");
+        layer.id = "seamFx";
+        layer.className = "seam-fx";
+        layer.setAttribute("aria-hidden", "true");
+        document.body.appendChild(layer);
+      }
+      // Cap live nodes — avoid DOM thrash lag
+      while (layer.childElementCount > 24) layer.firstElementChild.remove();
+      const glyphs = "SergeyBezhaev0123456789";
+      const x = direction > 0 ? window.innerWidth * 0.72 : window.innerWidth * 0.28;
+      const n = 8;
+      for (let i = 0; i < n; i++) {
+        const s = document.createElement("span");
+        s.className = "seam-fx__ch";
+        s.textContent = glyphs[(Math.random() * glyphs.length) | 0];
+        s.style.left = x + (Math.random() - 0.5) * 80 + "px";
+        s.style.top = 20 + Math.random() * 60 + "vh";
+        s.style.setProperty("--dx", (direction * (20 + Math.random() * 80)) + "px");
+        s.style.setProperty("--dy", (-30 - Math.random() * 80) + "px");
+        s.style.animationDelay = Math.random() * 0.1 + "s";
+        layer.appendChild(s);
+        setTimeout(() => s.remove(), 900);
+      }
+    } catch (_) { /* never block scroll */ }
   }
 
   function wheelToPath(event) {
-    if (event.defaultPrevented) return;
     // Cosmos gate: only vertical scroll to enter site
     if (document.documentElement.classList.contains("boot-await-scroll")) {
       if (event.deltaY > 4 || event.deltaX > 4) {
@@ -167,12 +192,12 @@
       }
       return;
     }
-    if (
-      event.target.closest(
-        ".deck, .mac-bar, .acc__panel, .jarvis-hud__panel, .sophia-hud__panel, .gesture-hud, .assist-panel__scroll, .jarvis-hud__chat-log, .sophia-hud__chat-log, [data-vscroll]"
-      )
-    ) {
-      // allow native scroll in explicit vscroll zones / chrome
+
+    // Ignore wheels over nested scrollable chrome / assistants
+    const allowNative = event.target.closest(
+      ".deck, .mac-bar, .acc__panel, .jarvis-hud__panel, .sophia-hud__panel, .gesture-hud, .assist-panel__scroll, .jarvis-hud__chat-log, .sophia-hud__chat-log, [data-vscroll]"
+    );
+    if (allowNative) {
       if (event.target.closest("[data-vscroll]")) {
         const sc = event.target.closest("[data-vscroll]");
         const o = sc.scrollHeight - sc.clientHeight;
@@ -182,10 +207,13 @@
           const dy = event.deltaY;
           if ((dy < 0 && !atTop) || (dy > 0 && !atBottom)) return;
         }
-      } else if (event.target.closest(".deck, .mac-bar, .acc__panel, .jarvis-hud__panel, .sophia-hud__panel, .gesture-hud, .assist-panel__scroll, .jarvis-hud__chat-log, .sophia-hud__chat-log")) {
+      } else {
         return;
       }
     }
+
+    // Don't steal wheel while pointer is over a live iframe (case previews)
+    if (event.target.closest("iframe, .case-window, .case-pair")) return;
 
     let dx = event.deltaX;
     let dy = event.deltaY;
@@ -198,18 +226,40 @@
     }
     if (dx === 0 && dy === 0) return;
 
-    // Always map to horizontal orbit (classic Path UX)
+    // Map trackpad/mouse wheel → horizontal orbit (classic Path UX)
+    const delta = event.shiftKey
+      ? (dy || dx)
+      : Math.abs(dx) >= Math.abs(dy) * 0.28
+        ? dx
+        : dy;
+    if (!delta) return;
+
     event.preventDefault();
+    event.stopPropagation();
+
+    // Instant scroll during wheel — CSS scroll-behavior:smooth + snap fight rapid deltas
+    const prevBehavior = track.style.scrollBehavior;
+    const prevSnap = track.style.scrollSnapType;
+    track.style.scrollBehavior = "auto";
+    track.style.scrollSnapType = "none";
+
     const before = track.scrollLeft;
-    const delta = event.shiftKey ? dy || dx : Math.abs(dx) >= Math.abs(dy) * 0.35 ? dx : dy;
-    track.scrollLeft += delta;
-    if (Math.abs(track.scrollLeft - before) > 2) {
+    track.scrollLeft = before + delta;
+
+    clearTimeout(wheelSnapTimer);
+    wheelSnapTimer = setTimeout(() => {
+      track.style.scrollBehavior = prevBehavior || "";
+      track.style.scrollSnapType = prevSnap || "";
+    }, 140);
+
+    if (Math.abs(track.scrollLeft - before) > 3) {
       spawnSeamBurst(delta >= 0 ? 1 : -1);
+      if (!scrubbing) updateUI();
     }
   }
 
+  // ONE listener only (capture). Dual window+track listeners double-fired and broke scroll.
   window.addEventListener("wheel", wheelToPath, { passive: false, capture: true });
-  track.addEventListener("wheel", wheelToPath, { passive: false });
 
   track.addEventListener(
     "scroll",
@@ -236,9 +286,9 @@
     }
   });
 
-  btnPrev.addEventListener("click", () => goToIndex(active - 1));
-  btnNext.addEventListener("click", () => goToIndex(active + 1));
-  btnHome.addEventListener("click", () => goToIndex(0));
+  if (btnPrev) btnPrev.addEventListener("click", () => goToIndex(active - 1));
+  if (btnNext) btnNext.addEventListener("click", () => goToIndex(active + 1));
+  if (btnHome) btnHome.addEventListener("click", () => goToIndex(0));
 
   document.querySelectorAll("[data-go]").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -248,28 +298,33 @@
   });
 
   function setFromClientX(clientX) {
-    const rect = scrub.querySelector(".scrub__track").getBoundingClientRect();
+    if (!scrub) return;
+    const trackEl = scrub.querySelector(".scrub__track");
+    if (!trackEl) return;
+    const rect = trackEl.getBoundingClientRect();
     const t = clamp((clientX - rect.left) / rect.width, 0, 1);
     track.scrollLeft = t * maxScroll();
     updateUI();
   }
 
-  scrub.addEventListener("pointerdown", (event) => {
-    if (event.target.closest("[data-planet-go]")) return;
-    scrubbing = true;
-    scrub.setPointerCapture(event.pointerId);
-    setFromClientX(event.clientX);
-  });
-  scrub.addEventListener("pointermove", (event) => {
-    if (!scrubbing) return;
-    setFromClientX(event.clientX);
-  });
-  scrub.addEventListener("pointerup", () => {
-    scrubbing = false;
-  });
-  scrub.addEventListener("pointercancel", () => {
-    scrubbing = false;
-  });
+  if (scrub) {
+    scrub.addEventListener("pointerdown", (event) => {
+      if (event.target.closest("[data-planet-go]")) return;
+      scrubbing = true;
+      scrub.setPointerCapture(event.pointerId);
+      setFromClientX(event.clientX);
+    });
+    scrub.addEventListener("pointermove", (event) => {
+      if (!scrubbing) return;
+      setFromClientX(event.clientX);
+    });
+    scrub.addEventListener("pointerup", () => {
+      scrubbing = false;
+    });
+    scrub.addEventListener("pointercancel", () => {
+      scrubbing = false;
+    });
+  }
 
   // light cards
   const lights = [...document.querySelectorAll(".light-card")];
@@ -285,6 +340,7 @@
 
   // clock
   function tickClock() {
+    if (!macClock) return;
     const now = new Date();
     macClock.textContent = now.toLocaleTimeString("ru-RU", {
       hour: "2-digit",

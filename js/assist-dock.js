@@ -263,13 +263,25 @@
       }
     );
 
+    // RAF only while dragging or panel open — continuous forever-loop was a major lag source
+    let tickOn = false;
     function tick() {
+      if (!tickOn) return;
       if (draggingFab && panel.classList.contains('is-open')) followFromFab(0.25);
       if (draggingPanel) followFromPanel(0.2);
-      paintLine(line, fab, panel);
+      if (panel.classList.contains('is-open')) paintLine(line, fab, panel);
+      if (draggingFab || draggingPanel || panel.classList.contains('is-open')) {
+        requestAnimationFrame(tick);
+      } else {
+        tickOn = false;
+        line.style.opacity = '0';
+      }
+    }
+    function ensureTick() {
+      if (tickOn) return;
+      tickOn = true;
       requestAnimationFrame(tick);
     }
-    requestAnimationFrame(tick);
 
     const mo = new MutationObserver(() => {
       if (panel.classList.contains('is-open')) {
@@ -282,11 +294,17 @@
         }
         updateOffset();
         paintLine(line, fab, panel);
+        ensureTick();
       } else {
         line.style.opacity = '0';
+        tickOn = false;
       }
     });
     mo.observe(panel, { attributes: true, attributeFilter: ['class'] });
+
+    fab.addEventListener('pointerdown', ensureTick, { passive: true });
+    panel.addEventListener('pointerdown', ensureTick, { passive: true });
+    if (panel.classList.contains('is-open')) ensureTick();
 
     return true;
   }

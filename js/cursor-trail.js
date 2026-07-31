@@ -1,11 +1,11 @@
 /**
  * Cursor trail — inspired by https://github.com/Postnov/cursor-trail
- * Path palette: cyan/red neon trail + soft dual cursor.
+ * Path palette: cyan/red neon trail + custom cursor only (system cursor hidden).
  */
 (() => {
   'use strict';
 
-  // Skip on touch-only devices
+  // Skip on touch-only devices — keep system cursor there
   const fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
   if (!fine) return;
 
@@ -13,19 +13,23 @@
     color: 'rgba(90, 210, 255, 0.85)',
     colorHot: 'rgba(255, 70, 90, 0.9)',
     thickness: 1.25,
-    maxSegments: 48,
-    minDistance: 3,
+    maxSegments: 28,
+    minDistance: 4,
     inactivityTimeout: 4200
   };
 
-  // Keep system cursor visible (user requested) — trail is additive only
-  document.documentElement.classList.remove('has-cursor-trail');
+  // Hide system cursor — only animated custom cursor remains
+  document.documentElement.classList.add('has-cursor-trail');
 
   const segments = [];
   let lastX = null;
   let lastY = null;
   let first = true;
   let idleTimer = null;
+  let mx = 0;
+  let my = 0;
+  let needsPaint = false;
+  let raf = 0;
 
   const dot = document.createElement('div');
   dot.className = 'cursor-dot';
@@ -36,15 +40,11 @@
 
   function clearTrail() {
     if (!segments.length) return;
-    segments.forEach((el, i) => {
-      setTimeout(() => {
-        el.style.opacity = '0';
-      }, 40 * i);
+    const dying = segments.splice(0, segments.length);
+    dying.forEach((el, i) => {
+      el.style.opacity = '0';
+      setTimeout(() => el.remove(), 40 * i + 200);
     });
-    setTimeout(() => {
-      segments.forEach((el) => el.remove());
-      segments.length = 0;
-    }, 40 * segments.length + 280);
   }
 
   function bumpIdle() {
@@ -68,46 +68,57 @@
     el.style.background = col;
     el.style.boxShadow = '0 0 8px ' + col;
     el.style.opacity = '1';
-    el.style.transition = 'opacity 0.35s ease';
+    el.style.transition = 'opacity 0.3s ease';
     document.body.appendChild(el);
     segments.push(el);
     if (segments.length > trailSettings.maxSegments) {
       const old = segments.shift();
       old.style.opacity = '0';
-      setTimeout(() => old.remove(), 300);
+      setTimeout(() => old.remove(), 280);
     }
-    segments.forEach((seg, i) => {
-      seg.style.opacity = String((i + 1) / segments.length);
-    });
+    const n = segments.length;
+    for (let i = 0; i < n; i++) {
+      segments[i].style.opacity = String((i + 1) / n);
+    }
+  }
+
+  function paint() {
+    raf = 0;
+    if (!needsPaint) return;
+    needsPaint = false;
+    const x = mx;
+    const y = my;
+    dot.style.left = x + 'px';
+    dot.style.top = y + 'px';
+    ring.style.left = x + 'px';
+    ring.style.top = y + 'px';
+    if (first) {
+      lastX = x;
+      lastY = y;
+      first = false;
+      return;
+    }
+    if (lastX == null || lastY == null) {
+      lastX = x;
+      lastY = y;
+      return;
+    }
+    const dist = Math.hypot(x - lastX, y - lastY);
+    if (dist > trailSettings.minDistance) {
+      addSegment(lastX, lastY, x, y);
+      lastX = x;
+      lastY = y;
+    }
   }
 
   document.addEventListener(
     'mousemove',
     (e) => {
       bumpIdle();
-      const x = e.clientX;
-      const y = e.clientY;
-      dot.style.left = x + 'px';
-      dot.style.top = y + 'px';
-      ring.style.left = x + 'px';
-      ring.style.top = y + 'px';
-      if (first) {
-        lastX = x;
-        lastY = y;
-        first = false;
-        return;
-      }
-      if (lastX == null || lastY == null) {
-        lastX = x;
-        lastY = y;
-        return;
-      }
-      const dist = Math.hypot(x - lastX, y - lastY);
-      if (dist > trailSettings.minDistance) {
-        addSegment(lastX, lastY, x, y);
-        lastX = x;
-        lastY = y;
-      }
+      mx = e.clientX;
+      my = e.clientY;
+      needsPaint = true;
+      if (!raf) raf = requestAnimationFrame(paint);
     },
     { passive: true }
   );

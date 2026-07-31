@@ -130,9 +130,40 @@
   }
 
   function init() {
-    document
-      .querySelectorAll('.case-frame[data-live-src], .case-frame[data-embed-src]')
-      .forEach(buildPair);
+    const frames = [
+      ...document.querySelectorAll('.case-frame[data-live-src], .case-frame[data-embed-src]')
+    ];
+    if (!frames.length) return;
+
+    // Lazy dual-iframe: only build when bay is near viewport (4 iframes × heavy sites = lag)
+    const buildWhenNear = (frame) => {
+      if (frame.dataset.dualBuilt === '1' || frame.closest('.case-pair')) return;
+      buildPair(frame);
+    };
+
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((en) => {
+            if (!en.isIntersecting) return;
+            const bay = en.target;
+            bay.querySelectorAll('.case-frame[data-live-src], .case-frame[data-embed-src]').forEach(buildWhenNear);
+            io.unobserve(bay);
+          });
+        },
+        { root: document.getElementById('track'), rootMargin: '40% 80% 40% 80%', threshold: 0.01 }
+      );
+      const bays = new Set();
+      frames.forEach((f) => {
+        const bay = f.closest('.bay') || f;
+        if (!bays.has(bay)) {
+          bays.add(bay);
+          io.observe(bay);
+        }
+      });
+    } else {
+      frames.forEach(buildWhenNear);
+    }
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
