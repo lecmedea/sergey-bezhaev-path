@@ -368,7 +368,7 @@ a {
   overflow-x: auto;
   overflow-y: hidden;
   scroll-snap-type: x mandatory;
-  /* smooth only for button/API jumps — wheel sets style.scrollBehavior=auto in path.js */
+  /* smooth only for button/API jumps — wheel free-scrolls then JS snaps to full bay */
   scroll-behavior: auto;
   -webkit-overflow-scrolling: touch;
   /* pan-x alone blocked vertical touch scroll inside bays */
@@ -393,6 +393,7 @@ a {
   height: 100%;
   scroll-snap-align: start;
   scroll-snap-stop: always;
+  /* each bay is one full viewport page — never half-show a seam as rest state */
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior-y: contain;

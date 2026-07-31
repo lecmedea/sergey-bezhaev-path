@@ -77,25 +77,84 @@
     return m <= 0 ? 0 : track.scrollLeft / m;
   }
 
+  function bayLeft(i) {
+    i = clamp(i, 0, total - 1);
+    return bays[i].offsetLeft;
+  }
+
+  /** Always land on a full bay — never leave the seam in the middle of the screen. */
+  function snapToAlignedBay(behavior = "smooth") {
+    if (scrubbing) return;
+    const sl = track.scrollLeft;
+    const bayW = bays[0]?.offsetWidth || track.clientWidth || window.innerWidth;
+    // Bias slightly in last travel direction so a deliberate swipe commits to the next page
+    const bias = lastPathDir * bayW * 0.22;
+    let best = 0;
+    let bestD = Infinity;
+    for (let i = 0; i < total; i++) {
+      const d = Math.abs(bayLeft(i) - (sl + bias));
+      if (d < bestD) {
+        bestD = d;
+        best = i;
+      }
+    }
+    const left = bayLeft(best);
+    track.style.scrollSnapType = "x mandatory";
+    if (Math.abs(sl - left) < 2) {
+      track.style.scrollBehavior = "auto";
+      track.scrollLeft = left;
+      active = best;
+      updateUI();
+      return;
+    }
+    track.style.scrollBehavior = behavior === "smooth" ? "smooth" : "auto";
+    track.scrollTo({ left, behavior });
+    active = best;
+    updateUI();
+    // Hard-correct if smooth scroll is interrupted mid-seam
+    clearTimeout(snapToAlignedBay._hard);
+    snapToAlignedBay._hard = setTimeout(() => {
+      track.style.scrollBehavior = "auto";
+      if (Math.abs(track.scrollLeft - left) > 2) {
+        track.scrollLeft = left;
+      }
+      active = best;
+      updateUI();
+    }, behavior === "smooth" ? 480 : 0);
+  }
+
+  function scheduleBaySnap(ms) {
+    clearTimeout(wheelSnapTimer);
+    wheelSnapTimer = setTimeout(() => snapToAlignedBay("smooth"), ms != null ? ms : 150);
+  }
+
   function goToIndex(i, behavior = "smooth") {
     const prev = active;
     i = clamp(i, 0, total - 1);
-    const left = bays[i].offsetLeft;
+    const left = bayLeft(i);
+    clearTimeout(wheelSnapTimer);
+    track.style.scrollSnapType = "x mandatory";
     track.style.scrollBehavior = behavior === "smooth" ? "smooth" : "auto";
     track.scrollTo({ left, behavior });
+    active = i;
+    updateUI();
     if (i !== prev) {
       lastPathDir = i > prev ? 1 : -1;
-      // spawnSeamBurst defined later — hoisted as function declaration... use delayed call if needed
       try {
         spawnSeamBurst(lastPathDir);
         setTimeout(() => spawnSeamBurst(lastPathDir), 80);
       } catch (_) { /* early call before seam ready */ }
     }
-    if (behavior === "smooth") {
-      setTimeout(() => {
-        track.style.scrollBehavior = "auto";
-      }, 600);
-    }
+    // Hard land on exact bay start — no mid-seam stop
+    clearTimeout(goToIndex._hard);
+    goToIndex._hard = setTimeout(() => {
+      track.style.scrollBehavior = "auto";
+      if (Math.abs(track.scrollLeft - left) > 2) {
+        track.scrollLeft = left;
+      }
+      active = i;
+      updateUI();
+    }, behavior === "smooth" ? 500 : 0);
   }
 
   // Public API for JARVIS / gestures / i18n
@@ -195,19 +254,12 @@
 
   function applyPathDelta(delta) {
     if (!delta) return false;
-    const prevBehavior = track.style.scrollBehavior;
-    const prevSnap = track.style.scrollSnapType;
+    // Free-scroll during gesture (snap off), then settle onto a full bay
     track.style.scrollBehavior = "auto";
     track.style.scrollSnapType = "none";
 
     const before = track.scrollLeft;
     track.scrollLeft = before + delta;
-
-    clearTimeout(wheelSnapTimer);
-    wheelSnapTimer = setTimeout(() => {
-      track.style.scrollBehavior = prevBehavior || "";
-      track.style.scrollSnapType = prevSnap || "";
-    }, 140);
 
     const moved = Math.abs(track.scrollLeft - before) > 2;
     if (moved) {
@@ -215,6 +267,8 @@
       spawnSeamBurst(lastPathDir);
       if (!scrubbing) updateUI();
     }
+    // After finger/wheel stops — snap to a complete page (not mid-seam)
+    scheduleBaySnap(160);
     return moved;
   }
 
@@ -352,6 +406,19 @@
     "scroll",
     () => {
       if (!scrubbing) updateUI();
+      // Touch / trackpad momentum can leave us mid-seam without wheel events
+      if (!scrubbing && track.style.scrollSnapType === "none") {
+        scheduleBaySnap(180);
+      }
+    },
+    { passive: true }
+  );
+
+  // After any free horizontal gesture ends, force full-page align
+  track.addEventListener(
+    "scrollend",
+    () => {
+      if (!scrubbing) snapToAlignedBay("smooth");
     },
     { passive: true }
   );
@@ -398,6 +465,7 @@
     scrub.addEventListener("pointerdown", (event) => {
       if (event.target.closest("[data-planet-go]")) return;
       scrubbing = true;
+      track.style.scrollSnapType = "none";
       scrub.setPointerCapture(event.pointerId);
       setFromClientX(event.clientX);
     });
@@ -407,9 +475,11 @@
     });
     scrub.addEventListener("pointerup", () => {
       scrubbing = false;
+      snapToAlignedBay("smooth");
     });
     scrub.addEventListener("pointercancel", () => {
       scrubbing = false;
+      snapToAlignedBay("smooth");
     });
   }
 
