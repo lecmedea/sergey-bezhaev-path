@@ -33,6 +33,7 @@
   const total = bays.length;
   let active = 0;
   let scrubbing = false;
+  let lastPathDir = 1;
 
   // planets + names under scrub
   if (scrubPlanets) {
@@ -77,11 +78,19 @@
   }
 
   function goToIndex(i, behavior = "smooth") {
+    const prev = active;
     i = clamp(i, 0, total - 1);
     const left = bays[i].offsetLeft;
-    // Explicit smooth for chrome buttons; wheel uses auto + direct scrollLeft
     track.style.scrollBehavior = behavior === "smooth" ? "smooth" : "auto";
     track.scrollTo({ left, behavior });
+    if (i !== prev) {
+      lastPathDir = i > prev ? 1 : -1;
+      // spawnSeamBurst defined later — hoisted as function declaration... use delayed call if needed
+      try {
+        spawnSeamBurst(lastPathDir);
+        setTimeout(() => spawnSeamBurst(lastPathDir), 80);
+      } catch (_) { /* early call before seam ready */ }
+    }
     if (behavior === "smooth") {
       setTimeout(() => {
         track.style.scrollBehavior = "auto";
@@ -144,100 +153,48 @@
     });
   }
 
-  // Trackpad / wheel → horizontal path (primary UX of this site).
-  // Vertical content scroll only inside explicit [data-vscroll] regions mid-page.
-  // CRITICAL: lastSeamBurst must be declared — undeclared ref threw on every wheel and killed scroll.
+  // Wheel: vertical → bay content first; horizontal (or edge spill) → Path orbit.
   let lastSeamBurst = 0;
   let wheelSnapTimer = 0;
 
-  function spawnSeamBurst(direction) {
-    try {
-      const now = performance.now();
-      if (now - lastSeamBurst < 220) return;
-      lastSeamBurst = now;
-      let layer = document.getElementById("seamFx");
-      if (!layer) {
-        layer = document.createElement("div");
-        layer.id = "seamFx";
-        layer.className = "seam-fx";
-        layer.setAttribute("aria-hidden", "true");
-        document.body.appendChild(layer);
-      }
-      // Cap live nodes — avoid DOM thrash lag
-      while (layer.childElementCount > 24) layer.firstElementChild.remove();
-      const glyphs = "SergeyBezhaev0123456789";
-      const x = direction > 0 ? window.innerWidth * 0.72 : window.innerWidth * 0.28;
-      const n = 8;
-      for (let i = 0; i < n; i++) {
-        const s = document.createElement("span");
-        s.className = "seam-fx__ch";
-        s.textContent = glyphs[(Math.random() * glyphs.length) | 0];
-        s.style.left = x + (Math.random() - 0.5) * 80 + "px";
-        s.style.top = 20 + Math.random() * 60 + "vh";
-        s.style.setProperty("--dx", (direction * (20 + Math.random() * 80)) + "px");
-        s.style.setProperty("--dy", (-30 - Math.random() * 80) + "px");
-        s.style.animationDelay = Math.random() * 0.1 + "s";
-        layer.appendChild(s);
-        setTimeout(() => s.remove(), 900);
-      }
-    } catch (_) { /* never block scroll */ }
+  function canScrollY(el, dy) {
+    if (!el) return false;
+    const max = el.scrollHeight - el.clientHeight;
+    if (max <= 4) return false;
+    const top = el.scrollTop;
+    if (dy < 0 && top > 1) return true;
+    if (dy > 0 && top < max - 2) return true;
+    return false;
   }
 
-  function wheelToPath(event) {
-    // Cosmos gate: only vertical scroll to enter site
-    if (document.documentElement.classList.contains("boot-await-scroll")) {
-      if (event.deltaY > 4 || event.deltaX > 4) {
-        event.preventDefault();
-        window.dispatchEvent(new CustomEvent("path-cosmos-scroll"));
+  /** Nearest overflow-y scroller under the pointer (bay / panel / data-vscroll). */
+  function findVerticalScroller(from) {
+    let el = from && from.nodeType === 1 ? from : null;
+    const stop = track.parentElement || document.body;
+    while (el && el !== stop && el !== document.documentElement) {
+      if (el === track) break;
+      if (el.classList && (el.classList.contains("bay") || el.hasAttribute("data-vscroll"))) {
+        if (el.scrollHeight > el.clientHeight + 4) return el;
       }
-      return;
-    }
-
-    // Ignore wheels over nested scrollable chrome / assistants
-    const allowNative = event.target.closest(
-      ".deck, .mac-bar, .acc__panel, .jarvis-hud__panel, .sophia-hud__panel, .gesture-hud, .assist-panel__scroll, .jarvis-hud__chat-log, .sophia-hud__chat-log, [data-vscroll]"
-    );
-    if (allowNative) {
-      if (event.target.closest("[data-vscroll]")) {
-        const sc = event.target.closest("[data-vscroll]");
-        const o = sc.scrollHeight - sc.clientHeight;
-        if (o > 8) {
-          const atTop = sc.scrollTop <= 1;
-          const atBottom = sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 2;
-          const dy = event.deltaY;
-          if ((dy < 0 && !atTop) || (dy > 0 && !atBottom)) return;
+      try {
+        const st = getComputedStyle(el);
+        const oy = st.overflowY;
+        if (
+          (oy === "auto" || oy === "scroll" || oy === "overlay") &&
+          el.scrollHeight > el.clientHeight + 4
+        ) {
+          return el;
         }
-      } else {
-        return;
-      }
+      } catch (_) { /* */ }
+      el = el.parentElement;
     }
+    const bay = bays[active];
+    if (bay && bay.scrollHeight > bay.clientHeight + 4) return bay;
+    return null;
+  }
 
-    // Don't steal wheel while pointer is over a live iframe (case previews)
-    if (event.target.closest("iframe, .case-window, .case-pair")) return;
-
-    let dx = event.deltaX;
-    let dy = event.deltaY;
-    if (event.deltaMode === 1) {
-      dx *= 16;
-      dy *= 16;
-    } else if (event.deltaMode === 2) {
-      dx *= track.clientWidth;
-      dy *= track.clientHeight;
-    }
-    if (dx === 0 && dy === 0) return;
-
-    // Map trackpad/mouse wheel → horizontal orbit (classic Path UX)
-    const delta = event.shiftKey
-      ? (dy || dx)
-      : Math.abs(dx) >= Math.abs(dy) * 0.28
-        ? dx
-        : dy;
-    if (!delta) return;
-
-    event.preventDefault();
-    event.stopPropagation();
-
-    // Instant scroll during wheel — CSS scroll-behavior:smooth + snap fight rapid deltas
+  function applyPathDelta(delta) {
+    if (!delta) return false;
     const prevBehavior = track.style.scrollBehavior;
     const prevSnap = track.style.scrollSnapType;
     track.style.scrollBehavior = "auto";
@@ -252,13 +209,143 @@
       track.style.scrollSnapType = prevSnap || "";
     }, 140);
 
-    if (Math.abs(track.scrollLeft - before) > 3) {
-      spawnSeamBurst(delta >= 0 ? 1 : -1);
+    const moved = Math.abs(track.scrollLeft - before) > 2;
+    if (moved) {
+      lastPathDir = delta >= 0 ? 1 : -1;
+      spawnSeamBurst(lastPathDir);
       if (!scrubbing) updateUI();
     }
+    return moved;
   }
 
-  // ONE listener only (capture). Dual window+track listeners double-fired and broke scroll.
+  function spawnSeamBurst(direction) {
+    try {
+      const now = performance.now();
+      if (now - lastSeamBurst < 90) return;
+      lastSeamBurst = now;
+      let layer = document.getElementById("seamFx");
+      if (!layer) {
+        layer = document.createElement("div");
+        layer.id = "seamFx";
+        layer.className = "seam-fx";
+        layer.setAttribute("aria-hidden", "true");
+        document.body.appendChild(layer);
+      }
+      while (layer.childElementCount > 96) layer.firstElementChild.remove();
+
+      const glyphs = "SergeyBezhaevPATH0123456789ЛЕКМЕДЕА";
+      const seamX =
+        direction > 0
+          ? window.innerWidth * (0.78 + Math.random() * 0.12)
+          : window.innerWidth * (0.08 + Math.random() * 0.12);
+      const barH = 48;
+      const deckH = 100;
+      const usableH = Math.max(200, window.innerHeight - barH - deckH);
+      const n = 36 + ((Math.random() * 18) | 0);
+
+      for (let i = 0; i < n; i++) {
+        const s = document.createElement("span");
+        const big = Math.random() > 0.72;
+        s.className = "seam-fx__ch" + (big ? " seam-fx__ch--lg" : "");
+        s.textContent = glyphs[(Math.random() * glyphs.length) | 0];
+        const t = i / Math.max(1, n - 1);
+        const y = barH + t * usableH + (Math.random() - 0.5) * 28;
+        const xJitter = (Math.random() - 0.5) * 120;
+        s.style.left = seamX + xJitter + "px";
+        s.style.top = y + "px";
+        const outward = direction * (40 + Math.random() * 160);
+        const along = (Math.random() - 0.5) * 140;
+        s.style.setProperty("--dx", outward + "px");
+        s.style.setProperty("--dy", along + "px");
+        s.style.setProperty("--rot", (Math.random() - 0.5) * 80 + "deg");
+        s.style.animationDelay = Math.random() * 0.18 + "s";
+        s.style.animationDuration = 0.75 + Math.random() * 0.55 + "s";
+        layer.appendChild(s);
+        setTimeout(() => s.remove(), 1400);
+      }
+      const spine = document.createElement("div");
+      spine.className = "seam-fx__spine";
+      spine.style.left = seamX + "px";
+      spine.style.setProperty("--dir", String(direction));
+      layer.appendChild(spine);
+      setTimeout(() => spine.remove(), 700);
+    } catch (_) { /* never block scroll */ }
+  }
+
+  function wheelToPath(event) {
+    if (document.documentElement.classList.contains("boot-await-scroll")) {
+      if (event.deltaY > 4 || event.deltaX > 4) {
+        event.preventDefault();
+        window.dispatchEvent(new CustomEvent("path-cosmos-scroll"));
+      }
+      return;
+    }
+
+    if (
+      event.target.closest(
+        ".deck, .mac-bar, .acc__panel, .jarvis-hud__panel, .sophia-hud__panel, .gesture-hud, .assist-panel__scroll, .jarvis-hud__chat-log, .sophia-hud__chat-log"
+      )
+    ) {
+      return;
+    }
+
+    if (event.target.closest("iframe, .case-window, .case-pair")) return;
+
+    let dx = event.deltaX;
+    let dy = event.deltaY;
+    if (event.deltaMode === 1) {
+      dx *= 16;
+      dy *= 16;
+    } else if (event.deltaMode === 2) {
+      dx *= track.clientWidth;
+      dy *= track.clientHeight;
+    }
+    if (dx === 0 && dy === 0) return;
+
+    if (event.shiftKey) {
+      event.preventDefault();
+      applyPathDelta(dy || dx);
+      return;
+    }
+
+    const absX = Math.abs(dx);
+    const absY = Math.abs(dy);
+    const horizontalIntent = absX >= absY * 0.55 && absX > 0.5;
+    const verticalIntent = absY > absX * 0.85;
+
+    // Vertical first: scroll bay / nested content when there is room
+    if (verticalIntent && !horizontalIntent) {
+      const sc =
+        (event.target.closest && event.target.closest("[data-vscroll]")) ||
+        findVerticalScroller(event.target);
+      if (sc && canScrollY(sc, dy)) {
+        // Capture-phase + preventDefault would kill native — apply manually
+        event.preventDefault();
+        sc.scrollTop += dy;
+        return;
+      }
+      // No vertical room → convert to path
+      event.preventDefault();
+      applyPathDelta(dy);
+      return;
+    }
+
+    if (horizontalIntent || absX > 0.5) {
+      event.preventDefault();
+      applyPathDelta(dx !== 0 ? dx : dy);
+      return;
+    }
+
+    const sc = findVerticalScroller(event.target);
+    if (sc && canScrollY(sc, dy)) {
+      event.preventDefault();
+      sc.scrollTop += dy;
+      return;
+    }
+    event.preventDefault();
+    applyPathDelta(dy || dx);
+  }
+
   window.addEventListener("wheel", wheelToPath, { passive: false, capture: true });
 
   track.addEventListener(

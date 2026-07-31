@@ -333,15 +333,16 @@
         </div>
         <div class="jarvis-hud__chat">
           <div class="jarvis-hud__chat-log" id="jarvisChatLog"></div>
-          <form id="jarvisChatForm" autocomplete="off">
-            <input id="jarvisChatInput" type="text" maxlength="800" placeholder="Команда или вопрос…" />
+          <form id="jarvisChatForm" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-form-type="other">
+            <input id="jarvisChatInput" type="search" enterkeyhint="send" maxlength="800" placeholder="Команда или вопрос…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" name="sb_jarvis_chat_q" />
             <button type="submit">→</button>
           </form>
         </div>
-        <div class="jarvis-hud__key">
-          <label for="jarvisKeyInput">Ключ Google Gemini (AI Studio)</label>
-          <input id="jarvisKeyInput" type="text" inputmode="text" spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-form-type="other" name="sb_gemini_token_x" placeholder="AIza… из aistudio.google.com/apikey" />
-          <p class="jarvis-hud__key-hint" id="jarvisKeyHint">Ключ только в localStorage браузера. Не sk-…, а AIza…</p>
+        <div class="jarvis-hud__key" data-lpignore="true" data-1p-ignore="true">
+          <span class="jarvis-hud__key-label" id="jarvisKeyLabel">Gemini · AI Studio (только localStorage)</span>
+          <!-- contenteditable — NOT <input>: Safari iCloud Passwords hijacks password-like inputs -->
+          <div id="jarvisKeyInput" class="jarvis-key-ce" contenteditable="true" role="textbox" tabindex="0" spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off" inputmode="text" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" aria-labelledby="jarvisKeyLabel" data-placeholder="вставь AIza… токен сюда"></div>
+          <p class="jarvis-hud__key-hint" id="jarvisKeyHint">Только в localStorage браузера. Формат Google AI Studio: AIza… (не sk-…).</p>
         </div>
         <div class="jarvis-hud__links">
           <a href="${liveHref}" target="_blank" rel="noopener">Gemini Live ↗</a>
@@ -396,43 +397,67 @@
 
     const keyInput = $('#jarvisKeyInput');
     const keyHint = $('#jarvisKeyHint');
+    function keyText() {
+      return (keyInput?.textContent || '').replace(/\u200b/g, '').trim();
+    }
+    function setKeyText(t) {
+      if (!keyInput) return;
+      keyInput.textContent = t || '';
+      keyInput.classList.toggle('is-empty', !t);
+    }
     function refreshKeyUi() {
       const k = getApiKey();
-      if (keyInput && !keyInput.matches(':focus')) {
+      if (keyInput && document.activeElement !== keyInput) {
         // never leave full secret visible after blur
-        keyInput.value = k ? k.slice(0, 6) + '…' + k.slice(-4) : '';
+        setKeyText(k ? k.slice(0, 6) + '…' + k.slice(-4) : '');
         keyInput.dataset.full = k ? '1' : '0';
       }
       if (keyHint) {
         if (!k) {
-          keyHint.textContent = 'Нет ключа. Возьми AIza… на aistudio.google.com/apikey и вставь сюда.';
+          keyHint.textContent = 'Нет токена. AI Studio → AIza… → вставь в поле выше.';
           keyHint.style.color = '#ff8a90';
         } else if (!looksLikeGeminiKey(k)) {
-          keyHint.textContent = 'Ключ сохранён, но формат не AIza… — Google Gemini, скорее всего, отвергнет (sk-… это не Gemini).';
+          keyHint.textContent = 'Сохранено, но формат не AIza… — Gemini, скорее всего, отвергнет (sk-… это не Gemini).';
           keyHint.style.color = '#ffb84d';
         } else {
-          keyHint.textContent = 'Gemini подключён (ключ в localStorage этого браузера).';
+          keyHint.textContent = 'Gemini подключён (токен в localStorage этого браузера).';
           keyHint.style.color = '#64e888';
         }
       }
     }
     if (keyInput) {
+      // Block Safari password manager heuristics on this node
+      keyInput.setAttribute('autocomplete', 'off');
+      keyInput.setAttribute('data-lpignore', 'true');
+      keyInput.setAttribute('data-1p-ignore', 'true');
       refreshKeyUi();
       keyInput.addEventListener('focus', () => {
         const k = getApiKey();
-        if (k) keyInput.value = k;
+        if (k) setKeyText(k);
+        keyInput.classList.remove('is-empty');
       });
       keyInput.addEventListener('blur', () => {
-        const v = keyInput.value.trim();
+        const v = keyText();
         // if user left masked value, don't overwrite
-        if (v && !v.includes('…')) setApiKey(v);
+        if (v && !v.includes('…')) {
+          setApiKey(v);
+          log(getApiKey() ? 'Токен Gemini сохранён локально.' : 'Токен очищен.');
+        } else if (!v) {
+          setApiKey('');
+        }
         refreshKeyUi();
       });
-      keyInput.addEventListener('change', () => {
-        const v = keyInput.value.trim();
-        if (v && !v.includes('…')) setApiKey(v);
-        refreshKeyUi();
-        log(getApiKey() ? 'Ключ Gemini сохранён локально.' : 'Ключ очищен.');
+      keyInput.addEventListener('paste', (e) => {
+        e.preventDefault();
+        const clip = (e.clipboardData || window.clipboardData)?.getData('text') || '';
+        const cleaned = clip.replace(/\s+/g, '').trim();
+        document.execCommand('insertText', false, cleaned);
+      });
+      keyInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          keyInput.blur();
+        }
       });
     }
 
@@ -445,7 +470,7 @@
         speak('Готово.');
         return;
       }
-      const key = getApiKey() || keyInput?.value?.trim();
+      const key = getApiKey() || keyText();
       if (key) {
         append('bot', '…');
         try {

@@ -999,7 +999,15 @@ html.boot-cosmos .site-shell,
   font-size: 11px;
   color: #6e6e73;
 }
-.jarvis-hud__key input {
+.jarvis-hud__key-label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 11px;
+  color: #8e8e93;
+}
+/* contenteditable — Safari must NOT treat this as a password field */
+.jarvis-hud__key input,
+.jarvis-key-ce {
   width: 100%;
   margin-top: 4px;
   border-radius: 8px;
@@ -1009,6 +1017,22 @@ html.boot-cosmos .site-shell,
   padding: 8px;
   font: inherit;
   font-size: 12px;
+  box-sizing: border-box;
+  min-height: 36px;
+  outline: none;
+  word-break: break-all;
+  -webkit-user-select: text;
+  user-select: text;
+}
+.jarvis-key-ce:empty::before,
+.jarvis-key-ce.is-empty:not(:focus)::before {
+  content: attr(data-placeholder);
+  color: #6e6e73;
+  pointer-events: none;
+}
+.jarvis-key-ce:focus {
+  border-color: rgba(90, 210, 255, 0.45);
+  box-shadow: 0 0 0 1px rgba(90, 210, 255, 0.2);
 }
 
 @media (max-width: 640px) {

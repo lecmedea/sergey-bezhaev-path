@@ -182,8 +182,8 @@
         </div>
         <div class="sophia-hud__chat">
           <div class="sophia-hud__chat-log" id="sophiaChatLog"></div>
-          <form id="sophiaChatForm">
-            <input id="sophiaChatInput" type="text" maxlength="800" placeholder="Сказать Софии…" />
+          <form id="sophiaChatForm" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-form-type="other">
+            <input id="sophiaChatInput" type="search" enterkeyhint="send" maxlength="800" placeholder="Сказать Софии…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" name="sb_sophia_chat_q" />
             <button type="submit">→</button>
           </form>
         </div>

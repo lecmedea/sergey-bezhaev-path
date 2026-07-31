@@ -66,7 +66,7 @@
       padding: 12px;
       border-top: 1px solid var(--line);
     }
-    input[type="text"], input[type="password"] {
+    input[type="text"], input[type="search"], .jarvis-key-ce {
       flex: 1;
       min-width: 0;
       border-radius: 10px;
@@ -76,6 +76,18 @@
       padding: 10px 12px;
       font: inherit;
       font-size: 14px;
+    }
+    .jarvis-key-ce {
+      width: 100%;
+      min-height: 40px;
+      outline: none;
+      word-break: break-all;
+      -webkit-user-select: text;
+      user-select: text;
+    }
+    .jarvis-key-ce:empty::before {
+      content: attr(data-placeholder);
+      color: var(--muted);
     }
     button {
       border: 0;
@@ -107,12 +119,12 @@
       <p>Bezhaev Industries · лёгкий чат на базовом веб-стеке</p>
     </header>
     <div id="log" aria-live="polite"></div>
-    <form id="f" autocomplete="off">
-      <input id="q" type="text" maxlength="500" placeholder="Спросить…" aria-label="Сообщение" required>
+    <form id="f" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-form-type="other">
+      <input id="q" type="search" enterkeyhint="send" maxlength="500" placeholder="Спросить…" aria-label="Сообщение" required autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-form-type="other" name="sb_jchat_q">
       <button type="submit">→</button>
     </form>
     <div class="keybar">
-      <input id="k" type="text" inputmode="text" spellcheck="false" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-form-type="other" name="gemini_api_token_field" placeholder="Gemini API key (optional, localStorage)">
+      <div id="k" class="jarvis-key-ce" contenteditable="true" role="textbox" spellcheck="false" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" inputmode="text" data-placeholder="AIza… token (local only)"></div>
     </div>
     <footer>
       Offline-база Path всегда. С ключом — Gemini 2.0 Flash.
@@ -124,7 +136,10 @@
     const KEY = 'GEMINI_API_KEY';
     const log = document.getElementById('log');
     const k = document.getElementById('k');
-    try { k.value = localStorage.getItem(KEY) || ''; } catch {}
+    try {
+      const saved = localStorage.getItem(KEY) || '';
+      if (k) k.textContent = saved;
+    } catch {}
 
     const KB = [
       [/кто ты|jarvis|джарвис/i, 'Я лёгкий JARVIS chatbot сайта Sergey Bezhaev / Bezhaev Industries.'],
@@ -173,7 +188,7 @@
       if (!text) return;
       q.value = '';
       add('me', text);
-      const key = (k.value || '').trim();
+      const key = ((k && (k.textContent || k.innerText)) || '').replace(/\u200b/g, '').trim();
       try { if (key) localStorage.setItem(KEY, key); } catch {}
       if (key) {
         add('bot', '…');
