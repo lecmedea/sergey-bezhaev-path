@@ -404,7 +404,7 @@ a {
   flex-direction: row;
   overflow-x: auto;
   overflow-y: hidden;
-  scroll-snap-type: x mandatory;
+  scroll-snap-type: x proximity;
   /* smooth only for button/API jumps — wheel free-scrolls then JS snaps to full bay */
   scroll-behavior: auto;
   -webkit-overflow-scrolling: touch;
@@ -429,14 +429,14 @@ a {
   width: 100vw;
   height: 100%;
   scroll-snap-align: start;
-  scroll-snap-stop: always;
+  scroll-snap-stop: normal;
   /* each bay is one full viewport page — never half-show a seam as rest state */
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior-y: contain;
   overscroll-behavior-x: none;
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
+  touch-action: pan-x pan-y;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
   background:

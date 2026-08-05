@@ -34,6 +34,7 @@
   let active = 0;
   let scrubbing = false;
   let lastPathDir = 1;
+  let programmaticUntil = 0;
 
   // planets + names under scrub
   if (scrubPlanets) {
@@ -87,19 +88,17 @@
     if (scrubbing) return;
     const sl = track.scrollLeft;
     const bayW = bays[0]?.offsetWidth || track.clientWidth || window.innerWidth;
-    // Bias slightly in last travel direction so a deliberate swipe commits to the next page
-    const bias = lastPathDir * bayW * 0.22;
     let best = 0;
     let bestD = Infinity;
     for (let i = 0; i < total; i++) {
-      const d = Math.abs(bayLeft(i) - (sl + bias));
+      const d = Math.abs(bayLeft(i) - sl);
       if (d < bestD) {
         bestD = d;
         best = i;
       }
     }
     const left = bayLeft(best);
-    track.style.scrollSnapType = "x mandatory";
+    track.style.scrollSnapType = "x proximity";
     if (Math.abs(sl - left) < 2) {
       track.style.scrollBehavior = "auto";
       track.scrollLeft = left;
@@ -123,27 +122,20 @@
     }, behavior === "smooth" ? 480 : 0);
   }
 
-  function scheduleBaySnap(ms) {
-    clearTimeout(wheelSnapTimer);
-    wheelSnapTimer = setTimeout(() => snapToAlignedBay("smooth"), ms != null ? ms : 150);
-  }
-
   function goToIndex(i, behavior = "smooth") {
     const prev = active;
     i = clamp(i, 0, total - 1);
     const left = bayLeft(i);
     clearTimeout(wheelSnapTimer);
-    track.style.scrollSnapType = "x mandatory";
+    wheelSnapTimer = 0;
+    track.style.scrollSnapType = "x proximity";
     track.style.scrollBehavior = behavior === "smooth" ? "smooth" : "auto";
+    programmaticUntil = performance.now() + (behavior === "smooth" ? 520 : 40);
     track.scrollTo({ left, behavior });
     active = i;
     updateUI();
     if (i !== prev) {
       lastPathDir = i > prev ? 1 : -1;
-      try {
-        spawnSeamBurst(lastPathDir);
-        setTimeout(() => spawnSeamBurst(lastPathDir), 80);
-      } catch (_) { /* early call before seam ready */ }
     }
     // Hard land on exact bay start — no mid-seam stop
     clearTimeout(goToIndex._hard);
@@ -212,7 +204,7 @@
     });
   }
 
-  // Wheel: vertical → bay content first; horizontal (or edge spill) → Path orbit.
+  // Wheel/trackpad: X is the primary site axis. Explicit nested scrollers keep Y.
   let lastSeamBurst = 0;
   let wheelSnapTimer = 0;
 
@@ -247,29 +239,51 @@
       } catch (_) { /* */ }
       el = el.parentElement;
     }
-    const bay = bays[active];
-    if (bay && bay.scrollHeight > bay.clientHeight + 4) return bay;
     return null;
+  }
+
+  let wheelGestureStart = 0;
+  let wheelGestureDelta = 0;
+  let pendingPathDelta = 0;
+  let pathFrame = 0;
+
+  function settlePathGesture() {
+    wheelSnapTimer = 0;
+    const bayW = bays[0]?.offsetWidth || track.clientWidth || window.innerWidth;
+    const threshold = Math.min(96, bayW * 0.09);
+    const direction = Math.sign(wheelGestureDelta);
+    const nearest = clamp(Math.round(track.scrollLeft / Math.max(1, bayW)), 0, total - 1);
+    const target = Math.abs(wheelGestureDelta) >= threshold
+      ? clamp(wheelGestureStart + direction, 0, total - 1)
+      : nearest;
+    wheelGestureDelta = 0;
+    goToIndex(target, "smooth");
   }
 
   function applyPathDelta(delta) {
     if (!delta) return false;
-    // Free-scroll during gesture (snap off), then settle onto a full bay
+    if (!wheelSnapTimer) {
+      const bayW = bays[0]?.offsetWidth || track.clientWidth || window.innerWidth;
+      wheelGestureStart = clamp(Math.round(track.scrollLeft / Math.max(1, bayW)), 0, total - 1);
+      wheelGestureDelta = 0;
+    }
+    wheelGestureDelta += delta;
+    pendingPathDelta += delta;
     track.style.scrollBehavior = "auto";
     track.style.scrollSnapType = "none";
-
     const before = track.scrollLeft;
-    track.scrollLeft = before + delta;
-
-    const moved = Math.abs(track.scrollLeft - before) > 2;
-    if (moved) {
-      lastPathDir = delta >= 0 ? 1 : -1;
-      spawnSeamBurst(lastPathDir);
-      if (!scrubbing) updateUI();
+    if (!pathFrame) {
+      pathFrame = requestAnimationFrame(() => {
+        pathFrame = 0;
+        track.scrollLeft += pendingPathDelta;
+        pendingPathDelta = 0;
+        if (!scrubbing) updateUI();
+      });
     }
-    // After finger/wheel stops — snap to a complete page (not mid-seam)
-    scheduleBaySnap(160);
-    return moved;
+    lastPathDir = delta >= 0 ? 1 : -1;
+    clearTimeout(wheelSnapTimer);
+    wheelSnapTimer = setTimeout(settlePathGesture, 130);
+    return Math.abs(track.scrollLeft - before) > 1 || pendingPathDelta !== 0;
   }
 
   function spawnSeamBurst(direction) {
@@ -378,7 +392,7 @@
         sc.scrollTop += dy;
         return;
       }
-      // No vertical room → convert to path
+      // Outside an explicit inner scroller, vertical motion advances the X path.
       event.preventDefault();
       applyPathDelta(dy);
       return;
@@ -406,10 +420,6 @@
     "scroll",
     () => {
       if (!scrubbing) updateUI();
-      // Touch / trackpad momentum can leave us mid-seam without wheel events
-      if (!scrubbing && track.style.scrollSnapType === "none") {
-        scheduleBaySnap(180);
-      }
     },
     { passive: true }
   );
@@ -418,7 +428,9 @@
   track.addEventListener(
     "scrollend",
     () => {
-      if (!scrubbing) snapToAlignedBay("smooth");
+      if (!scrubbing && !wheelSnapTimer && performance.now() > programmaticUntil) {
+        snapToAlignedBay("auto");
+      }
     },
     { passive: true }
   );

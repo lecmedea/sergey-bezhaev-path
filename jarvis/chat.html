@@ -124,7 +124,7 @@
       <button type="submit">→</button>
     </form>
     <div class="keybar">
-      <div id="k" class="jarvis-key-ce" contenteditable="true" role="textbox" spellcheck="false" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" inputmode="text" data-placeholder="AIza… token (local only)"></div>
+      <button id="k" class="jarvis-key-ce" type="button">Настроить Gemini</button>
     </div>
     <footer>
       Offline-база Path всегда. С ключом — Gemini 2.0 Flash.
@@ -138,8 +138,20 @@
     const k = document.getElementById('k');
     try {
       const saved = localStorage.getItem(KEY) || '';
-      if (k) k.textContent = saved;
+      if (k) k.textContent = saved ? 'Gemini подключён · изменить' : 'Настроить Gemini';
     } catch {}
+    k?.addEventListener('click', () => {
+      let saved = '';
+      try { saved = localStorage.getItem(KEY) || ''; } catch {}
+      const value = window.prompt('Gemini API key (оставьте пустым, чтобы отключить)', saved);
+      if (value === null) return;
+      const clean = value.replace(/\s+/g, '');
+      try {
+        if (clean) localStorage.setItem(KEY, clean);
+        else localStorage.removeItem(KEY);
+      } catch {}
+      k.textContent = clean ? 'Gemini подключён · изменить' : 'Настроить Gemini';
+    });
 
     const KB = [
       [/кто ты|jarvis|джарвис/i, 'Я лёгкий JARVIS chatbot сайта Sergey Bezhaev / Bezhaev Industries.'],
@@ -188,8 +200,8 @@
       if (!text) return;
       q.value = '';
       add('me', text);
-      const key = ((k && (k.textContent || k.innerText)) || '').replace(/\u200b/g, '').trim();
-      try { if (key) localStorage.setItem(KEY, key); } catch {}
+      let key = '';
+      try { key = localStorage.getItem(KEY) || ''; } catch {}
       if (key) {
         add('bot', '…');
         const last = log.lastElementChild;
