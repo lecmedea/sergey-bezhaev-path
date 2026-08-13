@@ -667,11 +667,11 @@ html.boot-cosmos .site-shell,
   z-index: 2;
   width: auto;
 }
-.boot__gate[data-plate="01"] .boot__plate-actions { left: 19%; right: 19%; bottom: 23.2%; height: 9.2%; }
-.boot__gate[data-plate="02"] .boot__plate-actions { left: 17.5%; right: 17.5%; bottom: 22.4%; height: 9.7%; }
-.boot__gate[data-plate="03"] .boot__plate-actions { left: 18%; right: 18%; bottom: 22.2%; height: 9.9%; }
-.boot__gate[data-plate="04"] .boot__plate-actions { left: 17.8%; right: 17.8%; bottom: 22.8%; height: 9.6%; }
-.boot__gate[data-plate="05"] .boot__plate-actions { left: 16.8%; right: 16.8%; bottom: 21.8%; height: 10.1%; }
+.boot__gate[data-plate="01"] .boot__plate-actions { left: 15.8%; right: 15.8%; bottom: 18.5%; height: 10.8%; gap: 5.6%; }
+.boot__gate[data-plate="02"] .boot__plate-actions { left: 16%; right: 17.2%; bottom: 16.8%; height: 10.8%; gap: 4.7%; }
+.boot__gate[data-plate="03"] .boot__plate-actions { left: 17.3%; right: 17.1%; bottom: 17.7%; height: 9.3%; gap: 2.1%; }
+.boot__gate[data-plate="04"] .boot__plate-actions { left: 12.8%; right: 13.2%; bottom: 13.9%; height: 10.8%; gap: 2.9%; }
+.boot__gate[data-plate="05"] .boot__plate-actions { left: 16.6%; right: 16.5%; bottom: 13.4%; height: 10.2%; gap: 4%; }
 
 .boot__plate-btn {
   appearance: none;
@@ -746,11 +746,7 @@ html.boot-cosmos .site-shell,
     border-radius: 8px;
   }
   .boot__plate-actions {
-    left: 15% !important;
-    right: 15% !important;
-    bottom: 12.5% !important;
-    height: 9% !important;
-    gap: 2%;
+    /* Plate-specific percentages remain valid at every responsive size. */
   }
 }
 
@@ -1460,24 +1456,28 @@ html.boot-cosmos .site-shell,
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 70vmin;
-  height: 70vmin;
+  width: 85vmin;
+  height: 85vmin;
   max-width: none;
   transform: translate(-50%, -50%) scale(2.8);
   opacity: 0;
   object-fit: contain;
-  filter: drop-shadow(0 0 40px rgba(255, 160, 40, 0.55));
-  transition: transform 1.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s ease, width 1.8s cubic-bezier(0.16, 1, 0.3, 1), height 1.8s cubic-bezier(0.16, 1, 0.3, 1);
+  filter: drop-shadow(0 0 40px rgba(255, 160, 40, 0.65));
+  mix-blend-mode: screen;
+  clip-path: circle(36% at 50% 50%);
+  transition: transform 2.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.7s ease;
   z-index: 2;
   pointer-events: none;
 }
 .boot-cosmos__sun.is-arrive {
   opacity: 1;
-  width: 7vmin;
-  height: 7vmin;
-  min-width: 48px;
-  min-height: 48px;
-  transform: translate(-50%, -50%) scale(1);
+  transform: translate(-50%, -50%) scale(.205);
+  animation: cosmicSunBank 2.6s cubic-bezier(.16,1,.3,1) both;
+}
+@keyframes cosmicSunBank {
+  0% { transform: translate(65vw,-50%) scale(2.8) rotate(14deg); opacity: 0; }
+  48% { transform: translate(18vw,-50%) scale(.34) rotate(-7deg); opacity: 1; }
+  100% { transform: translate(-50%,-50%) scale(.205) rotate(0); opacity: 1; }
 }
 .boot-cosmos__hint {
   position: absolute;

@@ -18,8 +18,9 @@
     inactivityTimeout: 4200
   };
 
-  // Hide system cursor — only animated custom cursor remains
-  document.documentElement.classList.add('has-cursor-trail');
+  // Keep the native cursor until the first real pointer coordinate exists.
+  // Hiding it during the gate used to leave both custom elements at (0, 0).
+  let cursorReady = false;
 
   const segments = [];
   let lastX = null;
@@ -114,6 +115,12 @@
   document.addEventListener(
     'mousemove',
     (e) => {
+      if (!cursorReady) {
+        cursorReady = true;
+        document.documentElement.classList.add('has-cursor-trail');
+        dot.classList.add('is-ready');
+        ring.classList.add('is-ready');
+      }
       bumpIdle();
       mx = e.clientX;
       my = e.clientY;

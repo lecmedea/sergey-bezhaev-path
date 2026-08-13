@@ -109,18 +109,20 @@ export default function App() {
 
            <form onSubmit={handleSaveKey} className="text-left space-y-3 mb-4">
              <label className="block text-xs font-mono text-slate-400 uppercase tracking-wider">Gemini API Key</label>
-             <input
-               type="text"
+             <textarea
+               rows={2}
+               inputMode="text"
                autoComplete="off"
                data-lpignore="true"
                data-1p-ignore="true"
                data-form-type="other"
                spellCheck={false}
+               aria-label="Токен Gemini, не пароль"
+               name="jarvis_runtime_token_note"
                value={keyDraft}
                onChange={(e) => setKeyDraft(e.target.value)}
                placeholder="AIza…"
                className="w-full px-3 py-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 font-mono text-sm focus:outline-none focus:border-cyan-500"
-               autoComplete="off"
              />
              {keyError && <p className="text-red-400 text-xs">{keyError}</p>}
              <button 

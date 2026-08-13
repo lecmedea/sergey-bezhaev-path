@@ -66,7 +66,7 @@
       padding: 12px;
       border-top: 1px solid var(--line);
     }
-    input[type="text"], input[type="search"], .jarvis-key-ce {
+    input[type="text"], input[type="password"] {
       flex: 1;
       min-width: 0;
       border-radius: 10px;
@@ -76,18 +76,6 @@
       padding: 10px 12px;
       font: inherit;
       font-size: 14px;
-    }
-    .jarvis-key-ce {
-      width: 100%;
-      min-height: 40px;
-      outline: none;
-      word-break: break-all;
-      -webkit-user-select: text;
-      user-select: text;
-    }
-    .jarvis-key-ce:empty::before {
-      content: attr(data-placeholder);
-      color: var(--muted);
     }
     button {
       border: 0;
@@ -119,12 +107,12 @@
       <p>Bezhaev Industries · лёгкий чат на базовом веб-стеке</p>
     </header>
     <div id="log" aria-live="polite"></div>
-    <form id="f" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-form-type="other">
-      <input id="q" type="search" enterkeyhint="send" maxlength="500" placeholder="Спросить…" aria-label="Сообщение" required autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-form-type="other" name="sb_jchat_q">
+    <form id="f" autocomplete="off">
+      <input id="q" type="text" maxlength="500" placeholder="Спросить…" aria-label="Сообщение" required>
       <button type="submit">→</button>
     </form>
     <div class="keybar">
-      <button id="k" class="jarvis-key-ce" type="button">Настроить Gemini</button>
+      <textarea id="k" rows="1" inputmode="text" spellcheck="false" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" name="jarvis_runtime_token_note" aria-label="Токен Gemini, не пароль" placeholder="Gemini API key (optional, localStorage)"></textarea>
     </div>
     <footer>
       Offline-база Path всегда. С ключом — Gemini 2.0 Flash.
@@ -136,22 +124,7 @@
     const KEY = 'GEMINI_API_KEY';
     const log = document.getElementById('log');
     const k = document.getElementById('k');
-    try {
-      const saved = localStorage.getItem(KEY) || '';
-      if (k) k.textContent = saved ? 'Gemini подключён · изменить' : 'Настроить Gemini';
-    } catch {}
-    k?.addEventListener('click', () => {
-      let saved = '';
-      try { saved = localStorage.getItem(KEY) || ''; } catch {}
-      const value = window.prompt('Gemini API key (оставьте пустым, чтобы отключить)', saved);
-      if (value === null) return;
-      const clean = value.replace(/\s+/g, '');
-      try {
-        if (clean) localStorage.setItem(KEY, clean);
-        else localStorage.removeItem(KEY);
-      } catch {}
-      k.textContent = clean ? 'Gemini подключён · изменить' : 'Настроить Gemini';
-    });
+    try { k.value = localStorage.getItem(KEY) || ''; } catch {}
 
     const KB = [
       [/кто ты|jarvis|джарвис/i, 'Я лёгкий JARVIS chatbot сайта Sergey Bezhaev / Bezhaev Industries.'],
@@ -200,8 +173,8 @@
       if (!text) return;
       q.value = '';
       add('me', text);
-      let key = '';
-      try { key = localStorage.getItem(KEY) || ''; } catch {}
+      const key = (k.value || '').trim();
+      try { if (key) localStorage.setItem(KEY, key); } catch {}
       if (key) {
         add('bot', '…');
         const last = log.lastElementChild;

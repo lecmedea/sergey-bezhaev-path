@@ -46,8 +46,10 @@
   pointer-events: none;
   z-index: 99999;
   mix-blend-mode: screen;
+  opacity: 0;
   transition: transform 0.12s ease, opacity 0.2s ease;
 }
+.cursor-dot.is-ready { opacity: 1; }
 .cursor-dot.is-down {
   transform: scale(0.65);
   opacity: 0.7;
@@ -63,8 +65,10 @@
   pointer-events: none;
   z-index: 99999;
   mix-blend-mode: screen;
-  transition: width 0.2s ease, height 0.2s ease, margin 0.2s ease, border-color 0.2s ease;
+  opacity: 0;
+  transition: width 0.2s ease, height 0.2s ease, margin 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
 }
+.cursor-ring.is-ready { opacity: 1; }
 .cursor-ring.is-hover {
   width: 42px;
   height: 42px;

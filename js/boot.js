@@ -1,5 +1,5 @@
 /**
- * PATH OS boot — exactly 90s (1:30) from gate click → site
+ * PATH OS boot — exactly 98s (1:38) from gate click → cosmic handoff
  * Slow eyelids 10s → matrix + EQ + terminals
  * Head calm first 12s, then fast; infection green→red; warnings; packages log
  * Gate: cookies + enable sound (required)
@@ -7,8 +7,8 @@
 (() => {
   'use strict';
 
-  const BOOT_END_MS = 90000; // 1:30 total — site must be visible
-  const MATERIALIZE_AT_MS = 84000; // start cosmic exit → site zoom
+  const BOOT_END_MS = 98000; // matches the 1:38 primary video edit
+  const MATERIALIZE_AT_MS = 97200; // transition only after the final video frame
   const COSMIC_DUR = 4200; // fly into space + zoom + story stagger
   const WAKE_MS = 10000; // slow eyelids
   const HEAD_CALM_MS = 12000; // head moves gently first 12s
@@ -18,7 +18,6 @@
   const WARN_FLOOD_MS = 80000; // 1:20 — flood
   const COOKIE_KEY = 'sb_path_cookies_v3';
   const BOOT_DONE_KEY = 'sb_path_boot_done_v1'; // session: don't re-show gate after complete
-  const SPACE_BRIDGE = 'assets/video/space-bridge.mp4';
   const SUN_IMG = 'assets/brand/sun.png';
   const SUN_SFX = 'assets/ui/welcome.mp3'; // reuse punchy SFX for sun arrival
 
@@ -1401,37 +1400,10 @@
     const shell = document.querySelector('.site-shell');
     document.documentElement.classList.remove('is-booting', 'boot-materializing', 'boot-revealing');
 
-    // Phase A: fullscreen bridge video (user clip)
-    const bridge = document.createElement('div');
-    bridge.className = 'boot-bridge';
-    bridge.innerHTML = '<video class="boot-bridge__video" playsinline webkit-playsinline muted autoplay src="' + SPACE_BRIDGE + '"></video>';
-    document.body.appendChild(bridge);
-    const bvid = bridge.querySelector('video');
-    try {
-      bvid.muted = true;
-      bvid.play().catch(function () {});
-    } catch (e) { /* */ }
-
-    const afterBridge = function () {
-      try { bridge.classList.add('is-out'); } catch (e) { /* */ }
-      setTimeout(function () {
-        try { bridge.remove(); } catch (e) { /* */ }
-        enterCosmosWithSun(root, shell);
-      }, 500);
-    };
-
-    // bridge length or max 6s
-    let bridged = false;
-    const goBridge = function () {
-      if (bridged) return;
-      bridged = true;
-      afterBridge();
-    };
-    if (bvid) {
-      bvid.addEventListener('ended', goBridge);
-      bvid.addEventListener('error', goBridge);
-    }
-    setTimeout(goBridge, 6500);
+    // The boot frame itself becomes the camera: zoom through it directly into
+    // the star field. The former spark-portal bridge caused a visible edit cut.
+    requestAnimationFrame(function () { root.classList.add('is-flying-out'); });
+    setTimeout(function () { enterCosmosWithSun(root, shell); }, 620);
   }
 
   function enterCosmosWithSun(root, shell) {
@@ -1619,7 +1591,7 @@
     const pctEl = $('#bootPct', root);
     const phaseEl = $('#bootPhase', root);
 
-    // Continuous infection drive + progress bar (100% at 1:30)
+    // Continuous infection drive + progress bar (100% at 1:38)
     let infectRaf = 0;
     function infectTick(now) {
       if (ctrl.aborted) return;
