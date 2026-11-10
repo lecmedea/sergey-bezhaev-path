@@ -58,7 +58,6 @@
   document.body.appendChild(root);
   const button = root.querySelector('button');
   const heroImages = [...root.querySelectorAll('.web-slinger__hero img')];
-  heroImages.forEach((image, index) => { image.src = frames[sequences[index][0]]; });
 
   function later(fn, delay) { const id = setTimeout(() => { pending.delete(id); fn(); }, delay); pending.add(id); }
   function stopAudio() { if (!audio) return; audio.pause(); audio.currentTime = 0; audio = null; }
@@ -73,6 +72,7 @@
     button.classList.add('is-active'); button.setAttribute('aria-label', 'Остановить полёт');
     root.classList.remove('is-firing'); void root.offsetWidth; root.classList.add('is-firing');
     if (!reducedMotion.matches) {
+      heroImages.forEach((image, index) => { image.src = frames[sequences[index][0]]; });
       audio = new Audio(new URL('../assets/audio/spider-man-8-bit.mp3', script.src));
       audio.volume = .78; audio.currentTime = 0; audio.play().catch(() => {});
       heroImages.forEach((image, hero) => { for (let step = 0; step < 55; step += 1) later(() => { if (runId === thisRun) image.src = frames[sequences[hero][step % sequences[hero].length]]; }, step * 215 + hero * 70); });

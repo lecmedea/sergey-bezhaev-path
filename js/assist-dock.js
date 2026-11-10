@@ -342,7 +342,7 @@
     }, 250);
   }
 
-  window.PathAssistDock = { init, rebind: () => { bound.clear(); init(); } };
+  window.PathAssistDock = { init, rebind: init };
   document.addEventListener('path-boot-complete', () => setTimeout(init, 100));
   document.addEventListener('DOMContentLoaded', () => setTimeout(init, 400));
   // if scripts load after DOM ready

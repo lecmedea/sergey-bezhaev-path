@@ -53,7 +53,7 @@
           ${fallbackSrc ? `<img class="case-frame__fallback" src="${esc(fallbackSrc)}" alt="" loading="lazy" decoding="async">` : ''}
           <div class="case-desktop__viewport">
             <iframe class="case-frame__iframe case-frame__iframe--desk" title="${esc(domain)} · desktop"
-              src="${esc(embed)}" loading="lazy" referrerpolicy="no-referrer"
+              data-src="${esc(embed)}" loading="lazy" referrerpolicy="no-referrer"
               sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
           </div>
         </div>
@@ -66,7 +66,7 @@
           <div class="case-phone__screen">
             ${fallbackSrc ? `<img class="case-frame__fallback case-frame__fallback--mob" src="${esc(fallbackSrc)}" alt="" loading="lazy" decoding="async">` : ''}
             <iframe class="case-frame__iframe case-frame__iframe--mob" title="${esc(domain)} · mobile"
-              src="${esc(embed)}" loading="lazy" referrerpolicy="no-referrer"
+              data-src="${esc(embed)}" loading="lazy" referrerpolicy="no-referrer"
               sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
           </div>
           <div class="case-phone__home" aria-hidden="true"></div>
@@ -112,6 +112,7 @@
     let loaded = 0;
     const onLoad = (el, win) => {
       el?.addEventListener('load', () => {
+        if (!el.hasAttribute('src')) return;
         loaded++;
         win?.classList.add('is-live');
         const lock = win?.querySelector('.case-lock');
@@ -129,41 +130,31 @@
     }, 8000);
   }
 
-  function init() {
-    const frames = [
-      ...document.querySelectorAll('.case-frame[data-live-src], .case-frame[data-embed-src]')
-    ];
-    if (!frames.length) return;
+  function setPreviewActive(pair, active) {
+    pair.querySelectorAll('iframe[data-src]').forEach((frame) => {
+      if (!active) frame.removeAttribute('src');
+      else if (!frame.hasAttribute('src')) frame.src = frame.dataset.src;
+    });
+  }
 
-    // Lazy dual-iframe: only build when bay is near viewport (4 iframes × heavy sites = lag)
-    const buildWhenNear = (frame) => {
-      if (frame.dataset.dualBuilt === '1' || frame.closest('.case-pair')) return;
-      buildPair(frame);
-    };
-
-    if ('IntersectionObserver' in window) {
-      const io = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((en) => {
-            if (!en.isIntersecting) return;
-            const bay = en.target;
-            bay.querySelectorAll('.case-frame[data-live-src], .case-frame[data-embed-src]').forEach(buildWhenNear);
-            io.unobserve(bay);
-          });
-        },
-        { root: document.getElementById('track'), rootMargin: '40% 80% 40% 80%', threshold: 0.01 }
-      );
-      const bays = new Set();
-      frames.forEach((f) => {
-        const bay = f.closest('.bay') || f;
-        if (!bays.has(bay)) {
-          bays.add(bay);
-          io.observe(bay);
-        }
-      });
-    } else {
-      frames.forEach(buildWhenNear);
+  function showBay(bay, active) {
+    if (active) {
+      bay.querySelectorAll('.case-frame[data-live-src], .case-frame[data-embed-src]').forEach(buildPair);
     }
+    bay.querySelectorAll('.case-pair').forEach((pair) => setPreviewActive(pair, active));
+  }
+
+  function init() {
+    const frames = [...document.querySelectorAll('.case-frame[data-live-src], .case-frame[data-embed-src]')];
+    const bays = new Set(frames.map((frame) => frame.closest('.bay') || frame));
+    if (!('IntersectionObserver' in window)) {
+      bays.forEach((bay) => showBay(bay, true));
+      return;
+    }
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => showBay(entry.target, entry.isIntersecting));
+    }, { root: document.getElementById('track'), rootMargin: '0px', threshold: 0.01 });
+    bays.forEach((bay) => observer.observe(bay));
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
