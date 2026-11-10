@@ -1,5 +1,5 @@
 /**
- * Path engine: horizontal travel + orbit scrub + themes + house + accordion
+ * Path engine: horizontal travel + orbit scrub + themes + accordion
  */
 (function () {
   const track = document.getElementById("track");
@@ -25,9 +25,7 @@
   }
 
   const PLANETS = [
-    "sun", "mercury", "venus", "earth", "mars",
-    "jupiter", "saturn", "uranus", "neptune", "pluto",
-    "jupiter", "saturn", "uranus", "neptune", "pluto"
+    "sun", "mercury", "venus", "earth", "mars", "jupiter", "saturn", "uranus", "neptune", "pluto", "jupiter", "saturn", "neptune", "pluto"
   ];
 
   const total = bays.length;
@@ -122,31 +120,19 @@
     }, behavior === "smooth" ? 480 : 0);
   }
 
-  function goToIndex(i, behavior = "smooth") {
+  function goToIndex(i) {
     const prev = active;
     i = clamp(i, 0, total - 1);
-    const left = bayLeft(i);
     clearTimeout(wheelSnapTimer);
+    clearTimeout(snapToAlignedBay._hard);
     wheelSnapTimer = 0;
     track.style.scrollSnapType = "x proximity";
-    track.style.scrollBehavior = behavior === "smooth" ? "smooth" : "auto";
-    programmaticUntil = performance.now() + (behavior === "smooth" ? 520 : 40);
-    track.scrollTo({ left, behavior });
+    track.style.scrollBehavior = "auto";
+    programmaticUntil = performance.now() + 40;
+    track.scrollTo({ left: bayLeft(i), behavior: "instant" });
     active = i;
     updateUI();
-    if (i !== prev) {
-      lastPathDir = i > prev ? 1 : -1;
-    }
-    // Hard land on exact bay start — no mid-seam stop
-    clearTimeout(goToIndex._hard);
-    goToIndex._hard = setTimeout(() => {
-      track.style.scrollBehavior = "auto";
-      if (Math.abs(track.scrollLeft - left) > 2) {
-        track.scrollLeft = left;
-      }
-      active = i;
-      updateUI();
-    }, behavior === "smooth" ? 500 : 0);
+    if (i !== prev) lastPathDir = i > prev ? 1 : -1;
   }
 
   // Public API for JARVIS / gestures / i18n
@@ -576,153 +562,6 @@
       goToIndex(active);
       closeAllAcc();
     });
-  }
-
-  // ——— House interactive ———
-  const houseStage = document.getElementById("houseStage");
-  if (houseStage) {
-    const houseImg = document.getElementById("houseImg");
-    const doorHot = document.getElementById("doorHot");
-    const lampHot = document.getElementById("lampHot");
-    const houseHint = document.getElementById("houseHint");
-    const houseState = document.getElementById("houseState");
-    const houseBack = document.getElementById("houseBack");
-    const houseStreet = document.getElementById("houseStreet");
-    const doorAudio = document.getElementById("doorClick");
-
-    const HOUSE = {
-      closed: "assets/house/house-closed.jpg",
-      open: "assets/house/house-open.jpg",
-      party: "assets/house/house-party.jpg",
-      dark: "assets/house/house-dark.jpg"
-    };
-
-    let doorOpen = false;
-    let lightMode = "normal"; // normal | party | dark
-    const history = ["street"];
-
-    function playClick() {
-      if (!doorAudio) return;
-      try {
-        doorAudio.currentTime = 0;
-        // prefer wav if mp3 missing
-        if (!doorAudio.querySelector("source") || !doorAudio.src) {
-          doorAudio.src = "assets/ui/click.wav";
-        }
-        doorAudio.play().catch(() => {});
-      } catch (_) {}
-    }
-
-    function streetSrc() {
-      if (lightMode === "dark") return HOUSE.dark;
-      if (lightMode === "party") return HOUSE.party;
-      return doorOpen ? HOUSE.open : HOUSE.closed;
-    }
-
-    function showScene(name) {
-      houseStage.querySelectorAll(".house-scene").forEach((s) => {
-        s.classList.toggle("is-active", s.dataset.scene === name);
-      });
-      houseStage.classList.toggle("is-zoom", name !== "street");
-    }
-
-    function setStateText() {
-      if (history[history.length - 1] !== "street") {
-        houseState.textContent = `комната · ${history[history.length - 1]}`;
-        return;
-      }
-      const d = doorOpen ? "открыта" : "закрыта";
-      const l =
-        lightMode === "party" ? "дискотека" : lightMode === "dark" ? "свет выкл" : "свет норм";
-      houseState.textContent = `улица · дверь ${d} · ${l}`;
-      houseHint.textContent = doorOpen
-        ? "Дверь открыта · кликни ещё раз, чтобы провалиться внутрь"
-        : "Кликни дверь · фонарь меняет свет в окнах";
-    }
-
-    function refreshStreet() {
-      houseImg.src = streetSrc();
-      lampHot.classList.toggle("is-party", lightMode === "party");
-      lampHot.classList.toggle("is-dark", lightMode === "dark");
-      setStateText();
-    }
-
-    function enterRoom(room) {
-      history.push(room);
-      showScene(room);
-      setStateText();
-      playClick();
-    }
-
-    doorHot.addEventListener("click", () => {
-      playClick();
-      if (!doorOpen) {
-        doorOpen = true;
-        if (lightMode === "dark") lightMode = "normal";
-        refreshStreet();
-        return;
-      }
-      // second click → enter
-      enterRoom("hall");
-    });
-
-    lampHot.addEventListener("click", () => {
-      playClick();
-      if (lightMode === "normal") lightMode = "party";
-      else if (lightMode === "party") lightMode = "dark";
-      else lightMode = "normal";
-      // party/dark force closed door visual variants
-      if (lightMode !== "normal") doorOpen = false;
-      refreshStreet();
-    });
-
-    houseStage.querySelectorAll("[data-room]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        enterRoom(btn.dataset.room);
-      });
-    });
-
-    houseStage.querySelectorAll("[data-switch]").forEach((sw) => {
-      sw.addEventListener("click", () => {
-        playClick();
-        const scene = sw.closest(".house-scene");
-        if (scene) scene.classList.toggle("is-lights-off");
-      });
-    });
-
-    houseBack.addEventListener("click", () => {
-      if (history.length <= 1) {
-        showScene("street");
-        history.length = 0;
-        history.push("street");
-        houseStage.classList.remove("is-zoom");
-        setStateText();
-        return;
-      }
-      history.pop();
-      const prev = history[history.length - 1];
-      showScene(prev);
-      if (prev === "street") houseStage.classList.remove("is-zoom");
-      setStateText();
-      playClick();
-    });
-
-    houseStreet.addEventListener("click", () => {
-      history.length = 0;
-      history.push("street");
-      showScene("street");
-      houseStage.classList.remove("is-zoom");
-      setStateText();
-      playClick();
-    });
-
-    refreshStreet();
-  }
-
-  // audio src fix
-  const doorAudioEl = document.getElementById("doorClick");
-  if (doorAudioEl) {
-    doorAudioEl.src = "assets/ui/click.wav";
   }
 
   // init
