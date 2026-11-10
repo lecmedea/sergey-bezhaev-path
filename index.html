@@ -13,8 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/path.css?v=20260805-scrollfix">
-  <link rel="stylesheet" href="css/assistants.css?v=20261110-direct-entry">
+  <link rel="stylesheet" href="css/path.css?v=20261110-remove-extras">
   <link rel="stylesheet" href="css/style.css?v=20260813-cursor-ready">
 </head>
 <body class="path-body">
@@ -105,10 +104,7 @@
           <div class="acc__panel" id="acc-soft" hidden>
             <button type="button" data-go="5">Grantek Cable</button>
             <button type="button" data-go="6">Стек и софт</button>
-            <a href="jarvis/" target="_blank" rel="noopener">JARVIS · Gemini Live ↗</a>
-            <a href="jarvis/chat.html" target="_blank" rel="noopener">JARVIS · лёгкий chatbot ↗</a>
-            <button type="button" id="btnOpenJarvis">JARVIS · HUD / чат (J)</button>
-            <p class="acc__hint">2ГИС e-mail parser · TG chat → Excel · AI coding · static sites · bots · Jarvis Live</p>
+            <p class="acc__hint">2ГИС e-mail parser · TG chat → Excel · AI coding · static sites · bots</p>
           </div>
         </div>
       </nav>
@@ -141,7 +137,7 @@
           <p class="lead" data-i18n="hero_lead">
             Каждый кейс — блок, который щёлкает на место.
             Создаю у вас на глазах <strong>новое представление о web-дизайне</strong>: интерфейс как лаборатория,
-            путь как продукт, ассистенты, жесты, живые кейсы — не шаблонная «лендинг-лента».
+            путь как продукт, жесты, живые кейсы — не шаблонная «лендинг-лента».
             Работаю жёстко, красиво и по делу. Если «сделай красиво за 20к и забудь» — мимо.
           </p>
           <div class="trend-row" aria-label="Теги">
@@ -196,7 +192,7 @@
           </p>
           <ul class="chip-row">
             <li>Москва / remote</li>
-            <li>+7 999 996-22-06</li>
+            <li>+7 906 065 0718</li>
             <li>lecmedea@gmail.com</li>
             <li>@notoruis</li>
             <li>@iicnica</li>
@@ -914,7 +910,7 @@
         <div class="contact-row">
           <a class="btn btn--primary" href="mailto:lecmedea@gmail.com">lecmedea@gmail.com</a>
           <a class="btn btn--ghost" href="https://t.me/notoruis" target="_blank" rel="noopener">Telegram @notoruis</a>
-          <a class="btn btn--ghost" href="tel:+79999962206">+7 999 996-22-06</a>
+          <a class="btn btn--ghost" href="tel:+79060650718">+7 906 065 0718</a>
         </div>
         <p class="end-sign">Site author Sergey Bezhaev · lecmedea@gmail.com · 2025–2026</p>
         <p class="end-sign end-sign--dim">Все права на авторскую разработку защищены · ГК РФ IV часть</p>
@@ -922,18 +918,18 @@
     </section>
   </main>
 
-  <!-- Bottom control deck: asteroid + planets -->
+  <!-- Bottom control deck: static sphere + planets -->
   <footer class="deck" aria-label="Path controls">
     <div class="deck__left">
       <button type="button" class="deck-btn" id="btnPrev" aria-label="Previous">◀</button>
       <button type="button" class="deck-btn" id="btnNext" aria-label="Next">▶</button>
-      <button type="button" class="deck-btn deck-btn--text" id="btnHome">Солнце</button>
+      <button type="button" class="deck-btn deck-btn--text" id="btnHome">В начало</button>
     </div>
     <div class="deck__center">
       <div class="scrub scrub--orbit" id="scrub" role="slider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0" aria-label="Path progress">
         <div class="scrub__track">
           <div class="scrub__fill" id="scrubFill"></div>
-          <img class="scrub__asteroid" id="scrubThumb" src="assets/ui/scrub-asteroid.gif" alt="" draggable="false">
+          <span class="scrub__sphere" id="scrubThumb" aria-hidden="true"></span>
         </div>
         <div class="scrub__planets" id="scrubPlanets" aria-hidden="true"></div>
         <div class="scrub__names" id="scrubNames" aria-hidden="true"></div>
@@ -957,21 +953,9 @@
   <script src="js/i18n.js?v=20260731-headerlogo"></script>
   <script src="js/gestures.js?v=20260731-headerlogo"></script>
   <script src="js/case-frames.js?v=20261110-performance"></script>
-  <script src="js/jarvis.js?v=20260805-passwordfix"></script>
-  <script src="js/sophia.js?v=20260731-headerlogo"></script>
-  <script src="js/assist-dock.js?v=20261110-performance"></script>
   <script src="js/stars.js?v=20260731-headerlogo"></script>
   <script src="js/hero-mesh.js?v=20260731-headerlogo"></script>
   <script src="js/yt-player.js?v=20260731-headerlogo"></script>
-  <script src="js/site-ready.js?v=20261110-direct-entry"></script>
-  <script src="js/web-slinger.js?v=20261110-performance" data-brand="path"></script>
-  <script>
-    document.getElementById('btnOpenJarvis')?.addEventListener('click', () => {
-      window.PathJarvis?.mount?.();
-      document.getElementById('jarvisPanel')?.classList.add('is-open');
-      document.getElementById('jarvisFab')?.focus();
-    });
-  </script>
 </body>
 </html>
 <!-- rebuild 20260726-pack
