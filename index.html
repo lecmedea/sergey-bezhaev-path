@@ -17,8 +17,8 @@
   <link rel="stylesheet" href="css/assistants.css?v=20261110-direct-entry">
   <link rel="stylesheet" href="css/style.css?v=20260813-cursor-ready">
 </head>
-<body class="path-body" data-barba="wrapper">
-  <div data-barba="container" data-barba-namespace="home">
+<body class="path-body">
+  <div>
   <!-- Top chrome — без traffic lights, аккордеоны -->
   <header class="mac-bar" aria-label="Workspace bar">
     <div class="mac-bar__left">
@@ -280,7 +280,7 @@
           </div>
           <div class="case-frame__shot">
             <img class="case-frame__fallback" src="assets/shot-azimut.jpg" alt="Azimut Clinic" loading="lazy" decoding="async">
-            <iframe class="case-frame__iframe" title="Azimut Clinic live" src="https://azimut-medline-site.vercel.app/" loading="lazy" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+            <iframe class="case-frame__iframe" title="Azimut Clinic live" data-src="https://azimut-medline-site.vercel.app/" loading="lazy" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
           </div>
         </div>
       </div>
@@ -318,7 +318,7 @@
             </div>
             <div class="case-frame__shot">
               <img class="case-frame__fallback" src="assets/shot-grillz.jpg" alt="Grillz Customs" loading="lazy" decoding="async">
-              <iframe class="case-frame__iframe" title="Grillz Customs live" src="https://grillzcustoms.ru/" loading="lazy" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+              <iframe class="case-frame__iframe" title="Grillz Customs live" data-src="https://grillzcustoms.ru/" loading="lazy" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
             </div>
           </div>
           <figure class="grillz-shine">
@@ -369,7 +369,7 @@
           </div>
           <div class="case-frame__shot">
             <img class="case-frame__fallback" src="assets/shot-elena.jpg" alt="Elena Shop" loading="lazy" decoding="async">
-            <iframe class="case-frame__iframe" title="Elena Shop live" src="https://xn--80ajaxl.shop/" loading="lazy" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+            <iframe class="case-frame__iframe" title="Elena Shop live" data-src="https://xn--80ajaxl.shop/" loading="lazy" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
           </div>
         </div>
       </div>
@@ -414,7 +414,7 @@
             <span class="case-lock">live</span>
           </div>
           <div class="case-frame__shot">
-            <iframe class="case-frame__iframe" title="Grantek Cable live" src="https://lecmedea.github.io/Grantek-cabel/" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+            <iframe class="case-frame__iframe" title="Grantek Cable live" data-src="https://lecmedea.github.io/Grantek-cabel/" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
           </div>
         </div>
       </div>
@@ -695,16 +695,16 @@
             <div class="house-scene is-active" data-scene="street">
               <div class="street-compose">
                 <button type="button" class="hotspot hotspot--door" id="doorHot" aria-label="Дверь"></button>
-                <img class="house-img" id="houseImg" src="assets/house/house-closed.jpg" alt="Дом на улице">
+                <img class="house-img" id="houseImg" loading="lazy" decoding="async" src="assets/house/house-closed.jpg" alt="Дом на улице">
                 <button type="button" class="hotspot hotspot--lamp" id="lampHot" aria-label="Фонарь">
-                  <img src="assets/house/lamp.jpg" alt="">
+                  <img loading="lazy" decoding="async" src="assets/house/lamp.jpg" alt="">
                 </button>
               </div>
               <p class="house-hint" id="houseHint">Кликни дверь · фонарь меняет свет в окнах</p>
             </div>
             <!-- rooms -->
             <div class="house-scene" data-scene="hall">
-              <img class="room-img" src="assets/house/room-hall.jpg" alt="Прихожая / лестница" data-lightable>
+              <img class="room-img" loading="lazy" decoding="async" src="assets/house/room-hall.jpg" alt="Прихожая / лестница" data-lightable>
               <button type="button" class="wall-switch" data-switch aria-label="Выключатель" title="Свет"></button>
               <div class="room-nav">
                 <button type="button" data-room="living">Гостиная →</button>
@@ -717,7 +717,7 @@
               </div>
             </div>
             <div class="house-scene" data-scene="living">
-              <img class="room-img" src="assets/house/room-living.jpg" alt="Гостиная" data-lightable>
+              <img class="room-img" loading="lazy" decoding="async" src="assets/house/room-living.jpg" alt="Гостиная" data-lightable>
               <button type="button" class="wall-switch" data-switch aria-label="Выключатель"></button>
               <div class="room-nav">
                 <button type="button" data-room="hall">← Зал</button>
@@ -728,7 +728,7 @@
               </div>
             </div>
             <div class="house-scene" data-scene="bedroom">
-              <img class="room-img" src="assets/house/room-bedroom.jpg" alt="Спальня" data-lightable>
+              <img class="room-img" loading="lazy" decoding="async" src="assets/house/room-bedroom.jpg" alt="Спальня" data-lightable>
               <button type="button" class="wall-switch" data-switch aria-label="Выключатель"></button>
               <div class="room-nav">
                 <button type="button" data-room="hall">← Зал</button>
@@ -739,7 +739,7 @@
               </div>
             </div>
             <div class="house-scene" data-scene="bath">
-              <img class="room-img" src="assets/house/room-bath.jpg" alt="Ванная" data-lightable>
+              <img class="room-img" loading="lazy" decoding="async" src="assets/house/room-bath.jpg" alt="Ванная" data-lightable>
               <button type="button" class="wall-switch" data-switch aria-label="Выключатель"></button>
               <div class="room-nav">
                 <button type="button" data-room="hall">← Зал</button>
@@ -749,7 +749,7 @@
               </div>
             </div>
             <div class="house-scene" data-scene="attic">
-              <img class="room-img" src="assets/house/room-attic.jpg" alt="Чердак" data-lightable>
+              <img class="room-img" loading="lazy" decoding="async" src="assets/house/room-attic.jpg" alt="Чердак" data-lightable>
               <button type="button" class="wall-switch" data-switch aria-label="Выключатель"></button>
               <div class="room-nav">
                 <button type="button" data-room="hall">↓ Вниз</button>
@@ -948,26 +948,23 @@
 
   <p class="site-credit">Site author Sergey Bezhaev lecmedea@gmail.com 2025–2026</p>
 
-  </div><!-- /barba container -->
+  </div><!-- /site content -->
 
   <audio id="doorClick" preload="auto" src="assets/ui/click.wav"></audio>
 
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@barba/core@2.10.3/dist/barba.umd.js"></script>
-  <script src="js/barba-app.js?v=20260731-headerlogo"></script>
   <script src="js/cursor-trail.js?v=20260813-cursor-ready"></script>
   <script src="js/path.js?v=20260805-scrollfix"></script>
   <script src="js/i18n.js?v=20260731-headerlogo"></script>
   <script src="js/gestures.js?v=20260731-headerlogo"></script>
-  <script src="js/case-frames.js?v=20260731-headerlogo"></script>
+  <script src="js/case-frames.js?v=20261110-performance"></script>
   <script src="js/jarvis.js?v=20260805-passwordfix"></script>
   <script src="js/sophia.js?v=20260731-headerlogo"></script>
-  <script src="js/assist-dock.js?v=20260731-headerlogo"></script>
+  <script src="js/assist-dock.js?v=20261110-performance"></script>
   <script src="js/stars.js?v=20260731-headerlogo"></script>
   <script src="js/hero-mesh.js?v=20260731-headerlogo"></script>
   <script src="js/yt-player.js?v=20260731-headerlogo"></script>
   <script src="js/site-ready.js?v=20261110-direct-entry"></script>
-  <script src="js/web-slinger.js?v=20260813-12s" data-brand="path"></script>
+  <script src="js/web-slinger.js?v=20261110-performance" data-brand="path"></script>
   <script>
     document.getElementById('btnOpenJarvis')?.addEventListener('click', () => {
       window.PathJarvis?.mount?.();
