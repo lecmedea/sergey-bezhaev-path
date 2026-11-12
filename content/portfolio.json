@@ -1,4 +1,37 @@
 {
   "version": 1,
-  "items": []
+  "items": [
+    {
+      "id": "existing-azimut",
+      "title": "Azimut Clinic",
+      "summary": "Сайт клиники: интерфейс и digital-контур",
+      "path": "/#bay-2",
+      "kind": "case",
+      "revision": 1
+    },
+    {
+      "id": "existing-grillz",
+      "title": "Grillz Customs Moscow",
+      "summary": "Сайт и упаковка бренда грилз",
+      "path": "/#bay-3",
+      "kind": "case",
+      "revision": 1
+    },
+    {
+      "id": "existing-elena",
+      "title": "Elena Shop",
+      "summary": "Интернет-магазин и визуальная история",
+      "path": "/#bay-4",
+      "kind": "case",
+      "revision": 1
+    },
+    {
+      "id": "existing-grantek",
+      "title": "Grantek Cable",
+      "summary": "Сайт промышленного проекта",
+      "path": "/#bay-5",
+      "kind": "case",
+      "revision": 1
+    }
+  ]
 }
