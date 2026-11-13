@@ -32,6 +32,22 @@
       "path": "/#bay-5",
       "kind": "case",
       "revision": 1
+    },
+    {
+      "id": "existing-Zubki",
+      "title": "Zubki TOOTH. Цифровая точность — понятный сервис.",
+      "summary": "Кейс · зуботехническая лаборатория · B2B",
+      "path": "/#bay-15",
+      "kind": "case",
+      "revision": 1
+    },
+    {
+      "id": "existing-Металлолом",
+      "title": "Грантек Металлолом. От оценки — к приёмке.",
+      "summary": "Кейс · металлоприёмка · сервис",
+      "path": "/#bay-16",
+      "kind": "case",
+      "revision": 1
     }
   ]
 }

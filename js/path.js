@@ -25,7 +25,7 @@
   }
 
   const PLANETS = [
-    "sun", "mercury", "venus", "earth", "mars", "jupiter", "saturn", "uranus", "neptune", "pluto", "jupiter", "saturn", "neptune", "pluto"
+    "sun", "mercury", "venus", "earth", "mars", "jupiter", "venus", "earth", "saturn", "uranus", "neptune", "pluto", "jupiter", "saturn", "neptune", "pluto"
   ];
 
   const total = bays.length;
