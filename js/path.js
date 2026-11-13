@@ -25,7 +25,7 @@
   }
 
   const PLANETS = [
-    "sun", "mercury", "venus", "earth", "mars", "jupiter", "venus", "earth", "saturn", "uranus", "neptune", "pluto", "jupiter", "saturn", "neptune", "pluto"
+    "sun", "mercury", "venus", "earth", "mars", "jupiter", "venus", "earth", "saturn", "uranus", "neptune", "pluto", "jupiter", "saturn", "venus", "neptune", "pluto"
   ];
 
   const total = bays.length;
@@ -191,18 +191,7 @@
   }
 
   // Wheel/trackpad: X is the primary site axis. Explicit nested scrollers keep Y.
-  let lastSeamBurst = 0;
   let wheelSnapTimer = 0;
-
-  function canScrollY(el, dy) {
-    if (!el) return false;
-    const max = el.scrollHeight - el.clientHeight;
-    if (max <= 4) return false;
-    const top = el.scrollTop;
-    if (dy < 0 && top > 1) return true;
-    if (dy > 0 && top < max - 2) return true;
-    return false;
-  }
 
   /** Nearest overflow-y scroller under the pointer (bay / panel / data-vscroll). */
   function findVerticalScroller(from) {
@@ -272,135 +261,59 @@
     return Math.abs(track.scrollLeft - before) > 1 || pendingPathDelta !== 0;
   }
 
-  function spawnSeamBurst(direction) {
-    try {
-      const now = performance.now();
-      if (now - lastSeamBurst < 90) return;
-      lastSeamBurst = now;
-      let layer = document.getElementById("seamFx");
-      if (!layer) {
-        layer = document.createElement("div");
-        layer.id = "seamFx";
-        layer.className = "seam-fx";
-        layer.setAttribute("aria-hidden", "true");
-        document.body.appendChild(layer);
-      }
-      while (layer.childElementCount > 96) layer.firstElementChild.remove();
-
-      const glyphs = "SergeyBezhaevPATH0123456789ЛЕКМЕДЕА";
-      const seamX =
-        direction > 0
-          ? window.innerWidth * (0.78 + Math.random() * 0.12)
-          : window.innerWidth * (0.08 + Math.random() * 0.12);
-      const barH = 48;
-      const deckH = 100;
-      const usableH = Math.max(200, window.innerHeight - barH - deckH);
-      const n = 36 + ((Math.random() * 18) | 0);
-
-      for (let i = 0; i < n; i++) {
-        const s = document.createElement("span");
-        const big = Math.random() > 0.72;
-        s.className = "seam-fx__ch" + (big ? " seam-fx__ch--lg" : "");
-        s.textContent = glyphs[(Math.random() * glyphs.length) | 0];
-        const t = i / Math.max(1, n - 1);
-        const y = barH + t * usableH + (Math.random() - 0.5) * 28;
-        const xJitter = (Math.random() - 0.5) * 120;
-        s.style.left = seamX + xJitter + "px";
-        s.style.top = y + "px";
-        const outward = direction * (40 + Math.random() * 160);
-        const along = (Math.random() - 0.5) * 140;
-        s.style.setProperty("--dx", outward + "px");
-        s.style.setProperty("--dy", along + "px");
-        s.style.setProperty("--rot", (Math.random() - 0.5) * 80 + "deg");
-        s.style.animationDelay = Math.random() * 0.18 + "s";
-        s.style.animationDuration = 0.75 + Math.random() * 0.55 + "s";
-        layer.appendChild(s);
-        setTimeout(() => s.remove(), 1400);
-      }
-      const spine = document.createElement("div");
-      spine.className = "seam-fx__spine";
-      spine.style.left = seamX + "px";
-      spine.style.setProperty("--dir", String(direction));
-      layer.appendChild(spine);
-      setTimeout(() => spine.remove(), 700);
-    } catch (_) { /* never block scroll */ }
+  function chooseWheelAxis(dx, dy) {
+    return Math.abs(dx) > Math.abs(dy) * 1.5 ? "x" : "y";
   }
 
+  let lockedWheelAxis = null;
+  let lastWheelAt = 0;
   function wheelToPath(event) {
-    if (document.documentElement.classList.contains("boot-await-scroll")) {
-      if (event.deltaY > 4 || event.deltaX > 4) {
-        event.preventDefault();
-        window.dispatchEvent(new CustomEvent("path-cosmos-scroll"));
-      }
-      return;
+    if (event.ctrlKey || event.target.closest(".deck, .mac-bar, .acc__panel, iframe")) return;
+    const scale = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? track.clientHeight : 1;
+    const dx = event.deltaX * scale;
+    const dy = event.deltaY * scale;
+    if (!dx && !dy) return;
+    const now = performance.now();
+    if (now - lastWheelAt > 220 || !lockedWheelAxis) {
+      lockedWheelAxis = event.shiftKey ? "x" : chooseWheelAxis(dx, dy);
     }
-
-    if (
-      event.target.closest(
-        ".deck, .mac-bar, .acc__panel, .jarvis-hud__panel, .sophia-hud__panel, .gesture-hud, .assist-panel__scroll, .jarvis-hud__chat-log, .sophia-hud__chat-log"
-      )
-    ) {
-      return;
-    }
-
-    if (event.target.closest("iframe, .case-window, .case-pair")) return;
-
-    let dx = event.deltaX;
-    let dy = event.deltaY;
-    if (event.deltaMode === 1) {
-      dx *= 16;
-      dy *= 16;
-    } else if (event.deltaMode === 2) {
-      dx *= track.clientWidth;
-      dy *= track.clientHeight;
-    }
-    if (dx === 0 && dy === 0) return;
-
-    if (event.shiftKey) {
-      event.preventDefault();
-      applyPathDelta(dy || dx);
-      return;
-    }
-
-    const absX = Math.abs(dx);
-    const absY = Math.abs(dy);
-    const horizontalIntent = absX >= absY * 0.55 && absX > 0.5;
-    const verticalIntent = absY > absX * 0.85;
-
-    // Vertical first: scroll bay / nested content when there is room
-    if (verticalIntent && !horizontalIntent) {
-      const sc =
-        (event.target.closest && event.target.closest("[data-vscroll]")) ||
-        findVerticalScroller(event.target);
-      if (sc && canScrollY(sc, dy)) {
-        // Capture-phase + preventDefault would kill native — apply manually
-        event.preventDefault();
-        sc.scrollTop += dy;
-        return;
-      }
-      // Outside an explicit inner scroller, vertical motion advances the X path.
-      event.preventDefault();
-      applyPathDelta(dy);
-      return;
-    }
-
-    if (horizontalIntent || absX > 0.5) {
-      event.preventDefault();
-      applyPathDelta(dx !== 0 ? dx : dy);
-      return;
-    }
-
-    const sc = findVerticalScroller(event.target);
-    if (sc && canScrollY(sc, dy)) {
-      event.preventDefault();
-      sc.scrollTop += dy;
-      return;
-    }
+    lastWheelAt = now;
     event.preventDefault();
-    applyPathDelta(dy || dx);
+    if (lockedWheelAxis === "x") {
+      applyPathDelta(event.shiftKey ? dy || dx : dx);
+    } else {
+      const scroller = findVerticalScroller(event.target);
+      if (scroller) scroller.scrollTop += dy;
+    }
   }
 
   window.addEventListener("wheel", wheelToPath, { passive: false, capture: true });
+
+  let touchGesture = null;
+  track.addEventListener("touchstart", (event) => {
+    if (event.touches.length !== 1 || event.target.closest("button, a, input, iframe, .case-pair")) {
+      touchGesture = null;
+      return;
+    }
+    const point = event.touches[0];
+    touchGesture = { x: point.clientX, y: point.clientY, axis: null, scroller: findVerticalScroller(event.target) };
+  }, { passive: true });
+  track.addEventListener("touchmove", (event) => {
+    if (!touchGesture || event.touches.length !== 1) return;
+    const point = event.touches[0];
+    const dx = touchGesture.x - point.clientX;
+    const dy = touchGesture.y - point.clientY;
+    if (!touchGesture.axis && Math.hypot(dx, dy) < 8) return;
+    touchGesture.axis ||= chooseWheelAxis(dx, dy);
+    event.preventDefault();
+    if (touchGesture.axis === "x") applyPathDelta(dx);
+    else if (touchGesture.scroller) touchGesture.scroller.scrollTop += dy;
+    touchGesture.x = point.clientX;
+    touchGesture.y = point.clientY;
+  }, { passive: false });
+  track.addEventListener("touchend", () => { touchGesture = null; }, { passive: true });
+  track.addEventListener("touchcancel", () => { touchGesture = null; }, { passive: true });
+
 
   track.addEventListener(
     "scroll",
@@ -423,10 +336,10 @@
 
   window.addEventListener("keydown", (event) => {
     if (event.target.closest("input, textarea")) return;
-    if (event.key === "ArrowRight" || event.key === "PageDown") {
+    if (event.key === "ArrowRight") {
       event.preventDefault();
       goToIndex(active + 1);
-    } else if (event.key === "ArrowLeft" || event.key === "PageUp") {
+    } else if (event.key === "ArrowLeft") {
       event.preventDefault();
       goToIndex(active - 1);
     } else if (event.key === "Home") {
@@ -532,38 +445,6 @@
   });
 
   // ——— Themes ———
-  const THEME_KEY = "path-theme";
-  function applyTheme(name) {
-    document.documentElement.setAttribute("data-theme", name);
-    localStorage.setItem(THEME_KEY, name);
-    document.querySelectorAll(".theme-card").forEach((card) => {
-      card.classList.toggle("is-active", card.dataset.theme === name);
-    });
-  }
-  document.querySelectorAll("[data-theme]").forEach((card) => {
-    if (!card.classList.contains("theme-card")) return;
-    card.addEventListener("click", () => applyTheme(card.dataset.theme));
-  });
-  const saved = localStorage.getItem(THEME_KEY);
-  if (saved) applyTheme(saved);
-
-  // chaos switch
-  const btnChaos = document.getElementById("btnChaos");
-  if (btnChaos) {
-    btnChaos.addEventListener("click", () => {
-      document.body.classList.add("is-chaos");
-      closeAllAcc();
-      setTimeout(() => document.body.classList.remove("is-chaos"), 8000);
-    });
-  }
-  const btnSnap = document.getElementById("btnSnap");
-  if (btnSnap) {
-    btnSnap.addEventListener("click", () => {
-      goToIndex(active);
-      closeAllAcc();
-    });
-  }
-
   // init
   updateUI();
   window.addEventListener("resize", updateUI);
