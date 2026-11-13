@@ -2028,3 +2028,18 @@ body.path-body { background-image: linear-gradient(115deg, #050507 0%, #050507 8
  .scrub__meta { white-space: nowrap; font-size: 10px; }
  .scrub__names { display: none; }
 }
+
+/* Content actions are plain text links; navigation controls keep their affordance. */
+.track .btn, .track .btn:hover {
+  background: transparent;
+  color: var(--text);
+  border: 0;
+  border-radius: 0;
+  padding: 8px 0;
+  box-shadow: none;
+  text-decoration: underline;
+  text-underline-offset: 6px;
+  text-decoration-color: #777;
+}
+.track .btn:hover { text-decoration-color: #9df4df; color: #9df4df; }
+.hero-cta, .yt-channels { column-gap: 28px; }
