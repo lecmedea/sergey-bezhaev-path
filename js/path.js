@@ -24,9 +24,35 @@
     console.warn("[Path] scrub chrome incomplete — continuing with reduced UI");
   }
 
-  const PLANETS = [
-    "sun", "mercury", "venus", "earth", "mars", "jupiter", "venus", "earth", "saturn", "uranus", "neptune", "pluto", "jupiter", "saturn", "venus", "neptune", "pluto"
-  ];
+  const siteCases = bays.filter(bay => bay.hasAttribute('data-site-case'));
+  const catalogIndex = bays.findIndex(bay => bay.id === 'bay-sites');
+  const sitesStrip = document.getElementById('sitesStrip');
+  const sitesToggle = document.getElementById('sitesToggle');
+  let casesExpanded = false;
+  const icon = window.PathIcon || (() => '');
+  if (sitesStrip) sitesStrip.innerHTML = siteCases.map(bay =>
+    `<button type="button" data-site-go="${bays.indexOf(bay)}">${icon(bay.dataset.icon)}${bay.dataset.name}</button>`
+  ).join('');
+  sitesStrip?.querySelectorAll('[data-site-go]').forEach(btn => btn.addEventListener('click', () => goToIndex(Number(btn.dataset.siteGo))));
+  sitesToggle?.addEventListener('click', () => {
+    if (casesExpanded) goToIndex(catalogIndex);
+    else { setCasesExpanded(true); track.scrollTo({ left: bayLeft(active), behavior: "instant" }); updateUI(); }
+  });
+  function setCasesExpanded(expanded) {
+    casesExpanded = expanded;
+    siteCases.forEach(bay => { bay.hidden = !expanded; });
+    sitesStrip?.classList.toggle('is-open', expanded);
+    if (sitesStrip) sitesStrip.inert = !expanded;
+    sitesToggle?.setAttribute('aria-expanded', String(expanded));
+    const label = document.getElementById('sitesToggleLabel');
+    if (label) label.textContent = expanded ? '/ свернуть' : '/ развернуть';
+    planetBtns?.forEach((btn, i) => { btn.hidden = bays[i].hidden; });
+    nameEls?.forEach((el, i) => { el.hidden = bays[i].hidden; });
+  }
+  function relativeIndex(delta) {
+    const visible = bays.map((bay,i) => bay.hidden ? -1 : i).filter(i => i >= 0);
+    return visible[clamp(visible.indexOf(active) + delta, 0, visible.length - 1)];
+  }
 
   const total = bays.length;
   let active = 0;
@@ -38,10 +64,9 @@
   if (scrubPlanets) {
     scrubPlanets.innerHTML = bays
       .map((bay, i) => {
-        const p = PLANETS[i] || "pluto";
         const name = bay.dataset.name || bay.dataset.label || String(i + 1);
-        return `<button type="button" data-planet-go="${i}" title="${name}" aria-label="${name}">
-          <img src="assets/planets/${p}.svg" alt="" width="22" height="22">
+        return `<button type="button" data-planet-go="${i}" title="${name}" aria-label="${name}" ${bay.hidden ? "hidden" : ""}>
+          ${icon(bay.dataset.icon)}
         </button>`;
       })
       .join("");
@@ -51,7 +76,7 @@
     scrubNames.innerHTML = bays
       .map((bay) => {
         const name = bay.dataset.name || "";
-        return `<span>${name}</span>`;
+        return `<span ${bay.hidden ? "hidden" : ""}>${name}</span>`;
       })
       .join("");
   }
@@ -89,6 +114,7 @@
     let best = 0;
     let bestD = Infinity;
     for (let i = 0; i < total; i++) {
+      if (bays[i].hidden) continue;
       const d = Math.abs(bayLeft(i) - sl);
       if (d < bestD) {
         bestD = d;
@@ -120,16 +146,19 @@
     }, behavior === "smooth" ? 480 : 0);
   }
 
-  function goToIndex(i) {
+  function goToIndex(i, behavior = "auto") {
     const prev = active;
     i = clamp(i, 0, total - 1);
+    if (siteCases.includes(bays[i]) && !casesExpanded) setCasesExpanded(true);
+    else if (i === catalogIndex && casesExpanded) setCasesExpanded(false);
     clearTimeout(wheelSnapTimer);
     clearTimeout(snapToAlignedBay._hard);
     wheelSnapTimer = 0;
     track.style.scrollSnapType = "x proximity";
     track.style.scrollBehavior = "auto";
-    programmaticUntil = performance.now() + 40;
-    track.scrollTo({ left: bayLeft(i), behavior: "instant" });
+    const smooth = behavior === "smooth" && !matchMedia("(prefers-reduced-motion: reduce)").matches;
+    programmaticUntil = performance.now() + (smooth ? 1200 : 80);
+    track.scrollTo({ left: bayLeft(i), behavior: smooth ? "smooth" : "instant" });
     active = i;
     updateUI();
     if (i !== prev) lastPathDir = i > prev ? 1 : -1;
@@ -139,16 +168,16 @@
   window.PathAPI = {
     goToIndex,
     goRelative(delta) {
-      goToIndex(active + delta);
+      goToIndex(relativeIndex(delta));
     },
     goHome() {
       goToIndex(0);
     },
     goNext() {
-      goToIndex(active + 1);
+      goToIndex(relativeIndex(1));
     },
     goPrev() {
-      goToIndex(active - 1);
+      goToIndex(relativeIndex(-1));
     },
     getActive() {
       return active;
@@ -170,6 +199,7 @@
     let nearest = 0;
     let best = Infinity;
     bays.forEach((bay, i) => {
+      if (bay.hidden) return;
       const mid = bay.offsetLeft + bay.offsetWidth / 2;
       const d = Math.abs(mid - center);
       if (d < best) {
@@ -178,7 +208,12 @@
       }
     });
     active = nearest;
-    if (bayIndex) bayIndex.textContent = `${active + 1} / ${total}`;
+    const visibleBays = bays.filter(bay => !bay.hidden);
+    if (bayIndex) bayIndex.textContent = `${visibleBays.indexOf(bays[active]) + 1} / ${visibleBays.length}`;
+    sitesStrip?.querySelectorAll("[data-site-go]").forEach(btn => {
+      if (Number(btn.dataset.siteGo) === active) btn.setAttribute("aria-current", "page");
+      else btn.removeAttribute("aria-current");
+    });
     if (sectionLabel) sectionLabel.textContent = bays[active].dataset.label || `0${active + 1}`;
 
     planetBtns.forEach((el, i) => {
@@ -227,9 +262,10 @@
     const bayW = bays[0]?.offsetWidth || track.clientWidth || window.innerWidth;
     const threshold = Math.min(96, bayW * 0.09);
     const direction = Math.sign(wheelGestureDelta);
-    const nearest = clamp(Math.round(track.scrollLeft / Math.max(1, bayW)), 0, total - 1);
+    const visible = bays.map((bay,i) => bay.hidden ? -1 : i).filter(i => i >= 0);
+    const nearest = visible.reduce((best,i) => Math.abs(bayLeft(i)-track.scrollLeft) < Math.abs(bayLeft(best)-track.scrollLeft) ? i : best, visible[0]);
     const target = Math.abs(wheelGestureDelta) >= threshold
-      ? clamp(wheelGestureStart + direction, 0, total - 1)
+      ? visible[clamp(visible.indexOf(wheelGestureStart) + direction, 0, visible.length - 1)]
       : nearest;
     wheelGestureDelta = 0;
     goToIndex(target, "smooth");
@@ -239,7 +275,7 @@
     if (!delta) return false;
     if (!wheelSnapTimer) {
       const bayW = bays[0]?.offsetWidth || track.clientWidth || window.innerWidth;
-      wheelGestureStart = clamp(Math.round(track.scrollLeft / Math.max(1, bayW)), 0, total - 1);
+      wheelGestureStart = active;
       wheelGestureDelta = 0;
     }
     wheelGestureDelta += delta;
@@ -338,10 +374,10 @@
     if (event.target.closest("input, textarea")) return;
     if (event.key === "ArrowRight") {
       event.preventDefault();
-      goToIndex(active + 1);
+      goToIndex(relativeIndex(1));
     } else if (event.key === "ArrowLeft") {
       event.preventDefault();
-      goToIndex(active - 1);
+      goToIndex(relativeIndex(-1));
     } else if (event.key === "Home") {
       event.preventDefault();
       goToIndex(0);
@@ -351,13 +387,13 @@
     }
   });
 
-  if (btnPrev) btnPrev.addEventListener("click", () => goToIndex(active - 1));
-  if (btnNext) btnNext.addEventListener("click", () => goToIndex(active + 1));
+  if (btnPrev) btnPrev.addEventListener("click", () => goToIndex(relativeIndex(-1)));
+  if (btnNext) btnNext.addEventListener("click", () => goToIndex(relativeIndex(1)));
   if (btnHome) btnHome.addEventListener("click", () => goToIndex(0));
 
   document.querySelectorAll("[data-go]").forEach((btn) => {
     btn.addEventListener("click", () => {
-      goToIndex(Number(btn.dataset.go));
+      goToIndex(Number(btn.dataset.go), "smooth");
       closeAllAcc();
     });
   });
@@ -447,6 +483,6 @@
   // ——— Themes ———
   // init
   updateUI();
-  window.addEventListener("resize", updateUI);
+  window.addEventListener("resize", () => { track.scrollTo({ left: bayLeft(active), behavior: "instant" }); updateUI(); });
   track.focus({ preventScroll: true });
 })();
